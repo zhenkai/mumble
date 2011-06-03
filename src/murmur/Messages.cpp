@@ -382,6 +382,8 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	log(uSource, "Authenticated");
 
 	emit userConnected(uSource);
+/* yangxu */
+pGroupManager->setLocalUser(uSource);
 }
 
 void Server::msgBanList(ServerUser *uSource, MumbleProto::BanList &msg) {

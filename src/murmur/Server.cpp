@@ -46,6 +46,22 @@
 
 #define UDP_PACKET_SIZE 1024
 
+/* yangxu */
+void Server::newRemoteClient(RemoteUser *u) {
+    MumbleProto::UserState mpus;
+    mpus.set_session(u->uiSession);
+    mpus.set_name(u->qsName.toLocal8Bit().constData());
+
+    sendAll(mpus);
+}
+
+void Server::delRemoteClient(int uid) {
+    MumbleProto::UserRemove mpur;
+    mpur.set_session(uid);
+
+    sendAll(mpur);
+}
+
 LogEmitter::LogEmitter(QObject *p) : QObject(p) {
 };
 
@@ -198,6 +214,14 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 	readChannels();
 	readLinks();
 	initializeCert();
+
+    /* yangxu */
+    pGroupManager = new GroupManager(&ndnMediaPro);
+    connect(pGroupManager, SIGNAL(remoteUserJoin(RemoteUser *)), this, SLOT(newRemoteClient(RemoteUser *)));
+    connect(pGroupManager, SIGNAL(remoteUserLeave(int)), this, SLOT(delRemoteClient(int)));
+
+   connect(&ndnMediaPro.ndnState, SIGNAL(remoteMediaArrivalSig(QString)),
+        this, SLOT(receiveRemoteData(QString)));
 
 	int major, minor, patch;
 	QString release;
@@ -794,6 +818,10 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 		foreach(p, c->qlUsers) {
 			ServerUser *pDst = static_cast<ServerUser *>(p);
 			SENDTO;
+
+            /* senwang*/
+            QString strFullName = pGroupManager->getFullLocalName();
+            ndnMediaPro.sendLocalMedia(strFullName,buffer, len);
 		}
 
 		if (! c->qhLinks.isEmpty()) {
@@ -1096,6 +1124,14 @@ void Server::connectionClosed(QAbstractSocket::SocketError err, const QString &r
 	}
 
 	u->deleteLater();
+
+	/* zhenkai */
+	// send out leave notification
+	pGroupManager->sendLeaveInterest();
+
+	/* zhenkai */
+	// close murmurd after the call is finished
+	std::exit(0);
 
 	if (qhUsers.isEmpty())
 		stopThread();
@@ -1626,4 +1662,19 @@ bool Server::isTextAllowed(QString &text, bool &changed) {
 
 		return (length <= iMaxTextMessageLength);
 	}
+}
+
+/* senwang*/
+void Server::receiveRemoteData(QString strUserName) {
+
+    int res = 0;
+    QByteArray qba;
+    char buf[5000];
+    res = ndnMediaPro.getRemoteMedia(strUserName, buf, sizeof(buf));
+    if (res <= 0) return;
+    QHash<unsigned int, ServerUser *>::const_iterator i;
+    for (i = qhUsers.constBegin(); i != qhUsers.constEnd(); i++ ) {
+        sendMessage(i.value(), buf, res, qba, true);
+	}
+
 }

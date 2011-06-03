@@ -40,6 +40,9 @@
 #include "Net.h"
 #include "ACL.h"
 #include "DBus.h"
+/* yangxu */
+#include "GroupManager/GroupManager.h"
+#include "MediaProcess/media_pro.h"
 
 #ifdef USE_BONJOUR
 #include "BonjourServer.h"
@@ -310,6 +313,20 @@ class Server : public QThread {
 		void setConf(const QString &key, const QVariant &value);
 		void dblog(const QString &str);
 
+        /* yangxu */
+    private:
+        GroupManager *pGroupManager;
+        NdnMediaProcess ndnMediaPro;
+
+    public slots:
+        // cheat localUsers to treat remotuser
+        void newRemoteClient(RemoteUser *);
+        void delRemoteClient(int);
+
+        /* senwang*/
+    public slots:
+        void receiveRemoteData(QString strUserName);
+		
 		// From msgHandler. Implementation in Messages.cpp
 #define MUMBLE_MH_MSG(x) void msg##x(ServerUser *, MumbleProto:: x &);
 		MUMBLE_MH_ALL
