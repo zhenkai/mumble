@@ -1,0 +1,14 @@
+Makefile
+Makefile.Debug
+Makefile.Release
+debug/
+release/
+asio
+local/
+indent.sh
+*.bat
+vc90.pdb
+vc100.pdb
+*~
+*.pb.h
+*.pb.cc
