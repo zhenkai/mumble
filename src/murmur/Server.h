@@ -326,6 +326,8 @@ class Server : public QThread {
         /* senwang*/
     public slots:
         void receiveRemoteData(QString strUserName);
+	
+	public:
 		
 		// From msgHandler. Implementation in Messages.cpp
 #define MUMBLE_MH_MSG(x) void msg##x(ServerUser *, MumbleProto:: x &);

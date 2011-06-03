@@ -1,0 +1,22 @@
+This is a draft description on how to use the NDN version of murmur.
+
+1. Go to the follow link to download the mumble client:
+http://mumble.sourceforge.net/
+If you are using Linux, you may want to look at this instead:
+http://mumble.sourceforge.net/Installing_Mumble
+
+2. Launch the ccnd and connect to the ccn hub near you.
+Type the following command:
+ccndstart
+ccndc add / udp ccnhub.near.you 9695 
+(if you want to use ucla hub, it's spurs.cs.ucla.edu)
+
+3. Find the executable of murmurd when prompted by actd
+
+4. Launch the Mumble client and start chatting! If you use this code for the first time, you need to click "Add New" when prompted to select server. Put whatever you want in the "Servername" field. Put "localhost" or "127.0.0.1" in the "Address" Field. Leave "Port" field as is. And choose a username you like. This server will appear in your "favorite" list, and next time you don't have to go through this process again.
+
+Footnote: 
+Mumble does not pay much attention to feedback elimination as Skype does, so we recommend you use earbuds or headsets.
+
+If it does not work and you see an error msg "URP!! interest has been corrupted ccn_client.c:1358", please click "join" in the actd again to restart the murmurd.
+

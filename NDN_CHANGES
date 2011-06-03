@@ -1,0 +1,620 @@
+commit 7757c89ca4178f9c0f7cd55e7f7346d4e815fed7
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 01:02:26 2011 -0700
+
+    add murmur.pro
+
+commit 7aef3d37e02470cbe0234b88ee81a81a74a506e4
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 00:43:00 2011 -0700
+
+    delete
+
+commit edb088bcf72a952e4511521fa8189a3506412192
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jun 2 22:48:27 2011 -0700
+
+    delete files that are not modified by us
+
+commit 421281f85026346c509c3024314a03660f3351d3
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon May 30 22:17:22 2011 -0700
+
+    adjust debug info
+
+commit 86c4a582d5bce682d9fbbb534e49730e4fd593bb
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon May 30 22:01:09 2011 -0700
+
+    add debug
+
+commit 6049763dc8c0d515bd1cbb674ffa8c775a5891bb
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon May 30 21:47:08 2011 -0700
+
+    Revert "send interest in batch mode"
+    
+    This reverts commit 24346909d04cfabb557eda981f76eafacae93ef5.
+
+commit 24346909d04cfabb557eda981f76eafacae93ef5
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon May 30 11:01:42 2011 -0700
+
+    send interest in batch mode
+
+commit ede48f02c91f1e2c21d247a2a509dcc86c64f81b
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 13:15:49 2011 -0700
+
+    remove useless code
+
+commit a1879647e051326b9881fa8a7332f897046f12a3
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 11:37:33 2011 -0700
+
+    simplify the test for to see whether it is the first interest
+
+commit 18ce4b0cf6c3ed3cc427c5ede132238e8508293f
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 11:33:30 2011 -0700
+
+    reexpress the first Interest if lost
+
+commit b35e9238ba77229d7dc8015680a4d359a51299cc
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 11:09:45 2011 -0700
+
+    do not send periodical interest if seq < 0
+
+commit d3e024639ab7cfb9bef699563aaa871e961c2fd2
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 10:55:02 2011 -0700
+
+    fix signed_info bug
+
+commit 12fa77c460f5f53573efba7adf755e0401dab12d
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 00:37:19 2011 -0700
+
+    fix keystore init bu
+
+commit aac9514c920a0b57a685c24522ba5891636f8fa2
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 00:34:19 2011 -0700
+
+    save signed_info
+
+commit 72cc4512b8ff26529bdf425aee0d5eb11f84b9a8
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 27 00:24:01 2011 -0700
+
+    udp behavior; del C style name and related func in UserDataBuf
+
+commit ae2988c2e6ac48c330bfd8c2244599852665a636
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 26 19:51:38 2011 -0700
+
+    udp behavior
+
+commit dab0ee67439fcfde3ab91433a199cd2b13b5113f
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 26 17:03:29 2011 -0700
+
+    still fighting with the free bug
+
+commit 20ccf537819ad2d1b35ec6a634731a76a0042040
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 26 16:48:14 2011 -0700
+
+    debugging weird memory bug
+
+commit f464d7ab4a606c41256a129c9d847ce7afd7f7f4
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 26 15:50:00 2011 -0700
+
+    fix ccn init bug
+
+commit dca3199f6fb22cbfc28e7e99b47b868b2b758208
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 26 15:23:42 2011 -0700
+
+    re-structure GroupManager
+
+commit 9e2793702706a14a56fd6685590fa2dbedf4fdcf
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 26 12:47:50 2011 -0700
+
+    free memory bug fixed
+
+commit 184085bff25c879fc679e8616812a4c225e0bea0
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 20 15:05:36 2011 -0700
+
+    200
+
+commit 0634c64cd9219609851f68860ecff71268e4b2f6
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 20 15:02:24 2011 -0700
+
+    hint_ahead = 100
+
+commit fe6a7c2365415ca698da549cb7dffe44b51d3996
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri May 20 14:21:10 2011 -0700
+
+    fetch next via exclude filter
+
+commit efc6e5c115f758048b8a3c6d321a97479aa524b6
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 19 20:07:55 2011 -0700
+
+    modified default permission of user
+
+commit f4cbb8154be56014fd76096d93a9b854338b2b51
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue May 17 17:55:29 2011 -0700
+
+    free buffer after decryption
+
+commit 3a1fecb49f884aa7cd615e9be6b3e90984a88a7e
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue May 17 17:43:22 2011 -0700
+
+    correctly handle user leave (normal works)
+
+commit d0efe07d442ece0f43211d574b8813d95be45451
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue May 17 15:10:41 2011 -0700
+
+    init NdnContext after we read the config file
+
+commit af9de56eb9cd13e763eaa0d9ab2a98974fbecb3a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue May 17 00:22:22 2011 -0700
+
+    read config from ~/.actd/.config in xml format
+
+commit a6a9181c65902ba4881c6428b6b6fd827f6eb6b9
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 12 17:18:46 2011 -0700
+
+    enumerate before start voice thread; mysterious bug seems to be disappeared as a result (ran 30 tests and the bug did not happen, and it usually happens within 15 tests)
+
+commit c27bb3db89ceb958829952926aad7ada60dde7ae
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 12 17:03:07 2011 -0700
+
+    add enc/dec for private conferences
+
+commit 257ed677742513bdd69f9832caaccb8529b0d374
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 12 15:58:01 2011 -0700
+
+    set isPrivate for G/M; key for G/M
+
+commit 4001549be1224c6121afe8710fc3dfb3ac5076b8
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 12 15:33:27 2011 -0700
+
+    add debug for the mysterious bug (interest-corrupted); but does not help much: the interests are the same!!
+
+commit 6965025781cc371990ddca3cd5e47a78435ada0a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 12 13:27:17 2011 -0700
+
+    init cached_keystore before use
+
+commit 4bc66fea0ce8b08b4cc4a0e8cd38a178f2e86ed3
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu May 5 14:08:16 2011 -0700
+
+    add keylocator
+
+commit ff8956feb0dcfc7a51bf94a49dd39b32bfdbdec8
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Apr 19 13:07:57 2011 -0700
+
+    add description of the interest corrupt bug
+
+commit 6256736d0f696add5e63e8eacc43ecec4ca569c5
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Apr 19 12:49:34 2011 -0700
+
+    include conf name in interest
+
+commit 588b286dedf0db923e4dcba993aed672a560de93
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Apr 18 16:21:02 2011 -0700
+
+    change readme
+
+commit f1fb2f1c463bce5f7f5025f395c07fa2ea9331ae
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 21:09:24 2011 -0700
+
+    user conference in name
+
+commit 89cffe2fc42048dced0e6d70765a3a7ef15a5d66
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 20:59:37 2011 -0700
+
+    actually use leave handler
+
+commit 6123fdcba42acebbc9b600ea9ce4eece593d23b1
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 20:52:20 2011 -0700
+
+    send leave
+
+commit f1bf325eee638dced2f59cffc63795b1d6da9759
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 20:47:37 2011 -0700
+
+    enable leave
+
+commit 21207f4163637f53638a6b7109a4174d1bfed27a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 18:52:18 2011 -0700
+
+    it works! fix bug (infinite loop in iterating qmRemoteUsers)
+
+commit 5c181081addef9b60e81292ceac2afcde066f6bf
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 18:25:21 2011 -0700
+
+    whatever
+
+commit 7b86f548f24e5ebfbc57c1eac661869b5030ede6
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 16:28:39 2011 -0700
+
+    media seq set init to 0
+
+commit 58e0f88709d8af8bcd436fe2f46dd809abbf39f3
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 16:11:16 2011 -0700
+
+    add debug infor
+
+commit 8ddfdadc77abf4140f0a21f8c96d28a834a07cd1
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 13:37:37 2011 -0700
+
+    disable feature of skipping segment in mediapro
+
+commit 0de9efab5b97bc9acfb6c95cec97f3af230a1b88
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 13:13:47 2011 -0700
+
+    fix small bug about name and prefix
+
+commit 0865687ee7b37df5745cbc657d5dfdb4a0b3ca52
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Apr 14 13:01:44 2011 -0700
+
+    fix bug that swap user and prefix
+
+commit 4ffd06efbdfcd5c082c70dc43f2b811407db2107
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 23:54:45 2011 -0700
+
+    do not send interest when timed out; use timer to trigger
+
+commit ed4d6862c56dfdf0e9bb3ea8f38eab5dd578ff65
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 21:19:16 2011 -0700
+
+    nothing much
+
+commit b77374518d9bc21ba92e0ce703a950c243fe621c
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 20:52:34 2011 -0700
+
+    fix bug about content name
+
+commit e97158ba7b953e0ccda455d0f32086fbf9bb68ab
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 20:41:31 2011 -0700
+
+    get rid of exit added for debug
+
+commit 2f5923ec9019a1d344dd839dd65bbefab2fefa85
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 20:39:24 2011 -0700
+
+    temporarily remove channel from interest for debugging
+
+commit 56ecd30740070a91617c18c1d0ddc5576b676496
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 19:54:49 2011 -0700
+
+    server exits when the connect is torn down
+
+commit e5094991204641c2c8f8c02505c5215c70eb002c
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 19:21:01 2011 -0700
+
+    store username in Groupmanager
+
+commit 2b07dcb733b21ff32e4e12507ea30f8b5fed2a3a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 17:55:01 2011 -0700
+
+    get rid of DBus in .pro. Fix crash caused by pNdnContex
+
+commit 516b832063582737031c7248c322ff4f9aaae546
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Apr 13 17:02:41 2011 -0700
+
+    fix bugs about names of remote users
+
+commit 6abacd764d82162c794df10395f037f5fdfed190
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Apr 12 20:06:50 2011 -0700
+
+    it runs
+
+commit 62db1751bc7e053ef6fe440385c49049c1aa2f48
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Apr 12 16:56:17 2011 -0700
+
+    almost compiles
+
+commit 8b18f37d185837570fc984024379ec50c97aff63
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Apr 11 23:13:49 2011 -0700
+
+    1. remove timers in RemoteUser class. 2. get rid of signal interests (used to announce conference and do the refresh), except leave interest. 3. get rid of a large amount of unnessary code (may be several hundreds lines). 4. revision unfinished (need to sleep). 5. oh man, the new design is much simpler to implement! especially after I implemented the conference management tool!
+
+commit 008ebf83491792ebba7fa24a6e9467b72df51578
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 20:25:07 2011 -0800
+
+    fix the leave interest bug (channel comp incomplete)
+
+commit ce346a005c03486c30a74a630b1407e2752b83a2
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 16:52:03 2011 -0800
+
+    basically revert the effect of commit "add FINAL statement to ccn upcall"
+
+commit 83eec4732c4a00ab8b4d440e7ed592ae6946fba3
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 15:58:20 2011 -0800
+
+    disabled the QMutexes in GroupManager and MediaProcessor
+
+commit 39d7588ed3b61535d74bc817fa88c08a472f8182
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 15:09:44 2011 -0800
+
+    diable passive templ on GroupManager; set freshness in GroupManager to be 10 seconds
+
+commit 3bc9a9370fee9f52c8ec4103eb651695946788e0
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 12:48:51 2011 -0800
+
+    changed ACL.cpp to grant "MakeTempChannel" permission
+
+commit 9b9d55cc3b9f82a30b6e4d5f8a4e3136e76c3975
+Merge: de5228c b084e2e
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 11:56:22 2011 -0800
+
+    Merge branch 'tdd' of github.com:zhenkai/nurnur into tdd
+
+commit de5228c4ace5bc52c24e690dfac028f29ee17130
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 11:55:38 2011 -0800
+
+    add change log (NDN_CHANGES)
+
+commit b084e2e11d63ab86e60344bcd7573c51861ffa06
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Feb 23 00:20:45 2011 -0800
+
+    add FINAL statement to ccn upcall
+
+commit 4bd93b7ae94a623c00543c7cb77c723911c5f58f
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Feb 22 21:59:20 2011 -0800
+
+    actually send leave message
+
+commit bf49cb96cab3b30eeacddc06c20ea849bed63a9e
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Feb 22 21:28:51 2011 -0800
+
+    add optional leave notification
+
+commit 68ffe1c27d4fcfac27dc952723aa980712629817
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Feb 22 19:15:43 2011 -0800
+
+    enable interest lifetime
+
+commit 2cbb75bb5d0cd916fd6ec583dfed81dab3301ef7
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Feb 22 18:15:02 2011 -0800
+
+    small bug in last commit fixed
+
+commit 0fb346d1468eaf326718495c2d1c99e6bbcb0918
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Feb 22 18:10:45 2011 -0800
+
+    append responder's username to the name in reply, so the exclude filter can work
+
+commit 23f87550484f8d92c74a585f974c3f8d83b5ca94
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Feb 21 22:10:25 2011 -0800
+
+    skipping enabled; use tagged_blob in exclude filter
+
+commit a4258c204de96f003767111b8fcbc18cb7f5abb7
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 21:30:59 2011 -0800
+
+    update NDN_INSTALL
+
+commit 955fe81ff74b2ade3a78182b64d512f076255f02
+Merge: d849d07 1cda135
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 20:17:12 2011 -0800
+
+    Merge branch 'tdd' of github.com:zhenkai/nurnur into tdd
+
+commit d849d07a939ce6f21d09e664e95d3f888c276323
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 19:02:38 2011 -0800
+
+    Revert "trash"
+    
+    This reverts commit 4117bdc65b1369f9663d84a9bf9c317f04361ba9.
+
+commit 4117bdc65b1369f9663d84a9bf9c317f04361ba9
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 19:02:23 2011 -0800
+
+    trash
+
+commit 1cda1359e2a9ef9742af223a788604e914cfa0ff
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 18:39:39 2011 -0800
+
+    changed log message
+
+commit 8bb19c27493b17a48a77b0e61e2f61895d97b5af
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 18:18:56 2011 -0800
+
+    disable skipping function;
+
+commit 86ec2f67b35926c32e55a2b0baadbf5959c04fa8
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 18:16:17 2011 -0800
+
+    small changes to comments
+
+commit db525bc59396b64e8e8b9cf951c66613be936bed
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 17:27:09 2011 -0800
+
+    enable skipping missing segment
+
+commit b93061b5edb185ab6c8df587900ab8b64bd96443
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 16:47:38 2011 -0800
+
+    return LONG_MAX for seq when the queue is empty
+
+commit 2141569048517c256f5f321b793a008be6466167
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 16:27:48 2011 -0800
+
+    pipeline handler, seq position changed from comps->n -3 to comps->n-2
+
+commit afe18e78c6f4b10cb3a4e1ee57fed51e1f88bcd9
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 14:31:22 2011 -0800
+
+    queue based fast recovery
+
+commit a68357a37425b637c1eb00d935c8a2cbe459eb9b
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 13:45:52 2011 -0800
+
+    get rid of words "rtp"
+
+commit 1ec3dd15766df92ba18ea71214206070d625e218
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 13:11:03 2011 -0800
+
+    gitingore and fix a bug for pipeline handler
+
+commit b142709b1986eccbc488563021b71c6e3cc05081
+Merge: b38c6f5 811d5f5
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 01:03:29 2011 -0800
+
+    Merge branch 'tdd' of github.com:zhenkai/nurnur into tdd
+
+commit b38c6f52771824defe287f0191294e836115374d
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 01:03:11 2011 -0800
+
+    Revert "trash"
+    
+    This reverts commit 2ba4f3ea7a37b96fc5b58ba60dceedbaf0add83b.
+
+commit 2ba4f3ea7a37b96fc5b58ba60dceedbaf0add83b
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 01:02:39 2011 -0800
+
+    trash
+
+commit 811d5f557723cfd2c58007d9ca5b22a93234339a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Feb 17 00:55:53 2011 -0800
+
+    Fast recovery works with multiple parties call`
+
+commit 99a55790eb0420df143d9c717bae0e3e93032119
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Jan 19 22:49:42 2011 -0800
+
+    debug msg for GroupManager
+
+commit 7571cf6bf83222d489510ae3369da4be510056a5
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jan 18 15:16:00 2011 -0800
+
+    get rid of further printing..
+
+commit 67b0d52515548b87fd284d52a8ca65fff77ebfda
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jan 18 15:06:50 2011 -0800
+
+    get rid of a lot of printing statements
+
+commit a5db28e5d9e8305bbcfe3238a6088726687e65d1
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jan 14 22:40:01 2011 -0800
+
+    install doc updated
+
+commit adf8cbcce4166db19bb8208430e938367cba6b4a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jan 14 22:22:04 2011 -0800
+
+    polish writeups
+
+commit 2484619528061248184a72d7f62ed3b968d94a72
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jan 14 13:45:24 2011 -0800
+
+    attach user prefix to the refresh interest and compare this user prefix with the stored one; user is regarded as the same user only if both username and user prefix remains the same
+
+commit c108c2a8d2de3a12e996488be95ac6f7d5707ec6
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jan 13 17:30:47 2011 -0800
+
+    longer refresh interval
+
+commit f3b77eabbed0f7483ef3bc6bc9562f572f0bac65
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Jan 12 14:38:27 2011 -0800
+
+    added debug
+
+commit be56e7bc6f68becf6db06c05d8c128b407d0619f
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jan 11 15:18:10 2011 -0800
+
+    improved doc
+
+commit 9193e2c3fbc8a8eb4b52805c2269b544e7909ba5
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jan 10 20:11:02 2011 -0800
+
+    Initial Commit

@@ -1,0 +1,40 @@
+There is a draft instruction on compiling NDN murmur.
+
+The default setting now is to compile murmur only (server only, no client), without ice support.
+
+We assume you install your ccnx code to /usr/local, otherwise you may need to modify and LIBPATH and INCLUDEPATH in murmur.pro. 
+
+For Debain/Ubuntu user, the following command will make sure you have the needed libraries and dependencies:
+apt-get install qt4-dev-tools libqt4-dev libboost-dev \
+				libssl-dev g++ \
+				libpulse-dev libcap-dev  \
+				libprotobuf-dev protobuf-compiler  \
+				libavahi-compat-libdnssd-dev libsndfile1-dev libxi-dev
+
+And yes, some of them are not necessary as they are only for Mumble client. We will take them off in the next release.
+
+Now type the following command to compile murmur:
+qmake main.pro -recursive
+make  
+
+For Mac OS X user, we also have a pre-built build environment for you:
+http://www.scorpius-project.org/mumble-osx-dev/MumbleDeveloper.tar.bz2
+
+Unarchive it to your / (root directory).
+To set up your environment for a build, execute
+source /MumbleDeveloper/bin/mumble-x86-64-build-env
+
+now type the following command to compile murmur:
+qmake main.pro -recursive
+make
+
+If you want to build the dependency by yourself, you can refer to:
+http://mumble.sourceforge.net/BuildingMacOSX
+
+Note that if you encounter problem with "lipo", try to the following:
+rm `find . -name "Makefile*"` 
+qmake -config no-universal -recursive main.pro
+
+If you are compiling against the ports openssl for the code, you have to compile your ccnx against the same (version of) openssl.
+
+(Thanks to Nick Briggs for reporting these tips)
