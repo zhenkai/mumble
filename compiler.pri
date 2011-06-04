@@ -123,7 +123,7 @@ macx {
 	QMAKE_LIBDIR *= $$(MUMBLE_PREFIX)/lib
 
 	XCODE_PATH=$$system(xcode-select -print-path)
-	QMAKE_MAC_SDK = $${XCODE_PATH}/SDKs/MacOSX10.5.sdk
+	QMAKE_MAC_SDK = $${XCODE_PATH}/SDKs/MacOSX10.6.sdk
 
 	QMAKE_CC = $${XCODE_PATH}/usr/bin/gcc-4.2
 	QMAKE_CXX = $${XCODE_PATH}/usr/bin/g++-4.2

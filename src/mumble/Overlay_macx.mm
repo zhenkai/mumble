@@ -207,7 +207,7 @@ void OverlayClient::updateMouse() {
 		for (int i = 0; i < [reps count]; i++) {
 			NSImageRep *rep = [reps objectAtIndex:i];
 			if ([rep class] == [NSBitmapImageRep class]) {
-				cgimg = [(NSBitmapImageRep *)rep CGImage];
+				//cgimg = [(NSBitmapImageRep *)rep CGImage];
 			}
 		}
 
