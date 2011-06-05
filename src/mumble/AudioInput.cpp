@@ -676,7 +676,10 @@ void AudioInput::encodeAudioFrame() {
 	speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
 	if (sesEcho && psSpeaker) {
-		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
+		/* Zhenkai */
+		//speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
+		speex_echo_playback(sesEcho, psSpeaker);
+		speex_echo_capture(sesEcho, psMic, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
 	} else {
