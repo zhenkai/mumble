@@ -129,6 +129,7 @@ class GroupManager: public QThread {
 		QString confName;
 		QString userName;
 		bool isPrivate;
+		QMutex ruMutex;
 
         QTimer *enumTimer;
 		QTimer *aliveTimer;

@@ -269,6 +269,7 @@ int NdnMediaProcess::hint_ahead = 100;
 void NdnMediaProcess::tick() {
 	localSeq++;
 	// send new interest for every speaker
+	ruMutex.lock();
 	QHash<QString, UserDataBuf *>::const_iterator it = qhRemoteUser.constBegin(); 	
 	while (it != qhRemoteUser.constEnd()) {
 		QString userName = it.key();
@@ -291,7 +292,7 @@ void NdnMediaProcess::tick() {
 		}
 		it++;	
 	}
-
+	ruMutex.unlock();
 }
 
 void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *info, UserDataBuf *userBuf) {
@@ -347,9 +348,11 @@ NdnMediaProcess::~NdnMediaProcess()
         delete it.value(); 
     }
 
+	ruMutex.lock();
     for ( it = qhRemoteUser.begin(); it != qhRemoteUser.end(); ++it ) {
         delete it.value();
     }
+	ruMutex.unlock();
 }
 
 void NdnMediaProcess::setSK(QByteArray sk) {
@@ -362,11 +365,14 @@ void NdnMediaProcess::addRemoteUser(QString strUserName)
     data_buffer_init(&ndnState, rUser, "recv");
     rUser->user_name = strUserName;
     rUser->user_type = REMOTE_USER;
+	ruMutex.lock();
     qhRemoteUser.insert(strUserName, rUser); 
+	ruMutex.unlock();
 }
 
 void NdnMediaProcess::deleteRemoteUser(QString strUserName)
 {
+	ruMutex.lock();
     UserDataBuf *p =  qhRemoteUser.value(strUserName);
     if (p == NULL) {
         return;
@@ -374,6 +380,8 @@ void NdnMediaProcess::deleteRemoteUser(QString strUserName)
     qhRemoteUser.remove(strUserName); 
     if (p->interested == 0) delete p;
     else p->iNeedDestroy = 1;
+	
+	ruMutex.unlock();
 }
 
 void NdnMediaProcess::addLocalUser(QString strUserName)
@@ -522,6 +530,7 @@ int NdnMediaProcess::checkInterest()
 {
     int res = 0;
     QHash<QString,UserDataBuf *>::iterator it; 
+	ruMutex.lock();
     for ( it = qhRemoteUser.begin(); it != qhRemoteUser.end(); ++it ) {
         if (!it.value()->interested) {
             /* Use a template to express our order preference for the first packet. */
@@ -550,6 +559,7 @@ int NdnMediaProcess::checkInterest()
             ccn_charbuf_destroy(&templ);
         }
     }
+	ruMutex.unlock();
     return res;
 }
 
@@ -701,8 +711,10 @@ int NdnMediaProcess::getRemoteMedia(QString strUserName,char* msg, int msg_len)
 {
     int res;
 
+	ruMutex.lock();
     UserDataBuf *p = qhRemoteUser.value(strUserName); 
     res = ndn_wait_message(p, msg, msg_len);
+	ruMutex.unlock();
 
     if (res < 0) {
         errno = EAGAIN;

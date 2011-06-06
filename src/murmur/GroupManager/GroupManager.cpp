@@ -300,7 +300,9 @@ int GroupManager::addRemoteUser(QString qPrefix, QString username) {
     u->uiSession = qqRSesIds.dequeue();
     u->cChannel = localUser->cChannel;
 
+	ruMutex.lock();
     qhRemoteUsers.insert(username, u);
+	ruMutex.unlock();
     
     // fire a signal to notify other modules that a new user joins the call
     emit remoteUserJoin(u);
@@ -310,6 +312,7 @@ int GroupManager::addRemoteUser(QString qPrefix, QString username) {
 // set timestamp of the existed remote user record in this call
 bool GroupManager::remoteUserExist(QString qPrefix, QString remoteUser) {
 
+	ruMutex.lock();
 	bool bExist = true;
 	QHash<QString, RemoteUser *>::const_iterator it = qhRemoteUsers.find(remoteUser);
 	
@@ -324,18 +327,20 @@ bool GroupManager::remoteUserExist(QString qPrefix, QString remoteUser) {
 		else
 			u->refreshReceived();
 	}
-
+	ruMutex.unlock();
     return bExist;
 }
 
 void GroupManager::deleteRemoteUser(QString remoteUser) {
     debug(QString("deleteRemoteUser(%1)").arg(remoteUser));
     RemoteUser *u = NULL;
+	ruMutex.lock();
     u = qhRemoteUsers[remoteUser];
     if (u == NULL) {
         return; 
     }
     qhRemoteUsers.remove(remoteUser);
+	ruMutex.unlock();
 
     QString temp = QString(u->getPrefix()) + "/" + u->qsName;
     pNdnMediaPro->deleteRemoteUser(temp);
@@ -354,13 +359,16 @@ void GroupManager::userLeft(RemoteUser *ru) {
 }
 
 void GroupManager::checkAlive() {
+	ruMutex.lock();
 	QHash<QString, RemoteUser *>::iterator i = qhRemoteUsers.begin();
 	debug("check alive timer triggered");
 	while (i != qhRemoteUsers.end()) {
 		RemoteUser * ru = i.value();
 		if (ru->isStaled()) {
 			if (!ru->hasLeft()) {
+				ruMutex.unlock();
 				userLeft(ru);
+				ruMutex.lock();
 			}
 			delete ru;
 			i = qhRemoteUsers.erase(i); 
@@ -372,6 +380,7 @@ void GroupManager::checkAlive() {
 		}
 
 	}
+	ruMutex.unlock();
 }
 
 
@@ -555,6 +564,7 @@ void GroupManager::enumerate() {
 
 	// TODO: get rid of the bloom filter
     // update exclusive filter according to recently known remote users
+	ruMutex.lock();
     QHash<QString, RemoteUser *>::const_iterator it = (pGroupManager->qhRemoteUsers).constBegin();
     while (it != (pGroupManager->qhRemoteUsers).constEnd())
     {
@@ -565,6 +575,7 @@ void GroupManager::enumerate() {
 		}
 		++it;
     }
+	ruMutex.unlock();
 
 	// exclude self
 	if (pGroupManager->userName.isEmpty())
@@ -611,10 +622,12 @@ void GroupManager::handleLeave(ccn_upcall_info *info) {
 	 // get leaver
 	 QString user = leaver;
 	 //pGroupManager->deleteRemoteUser(user);
+	 ruMutex.lock();
 	 RemoteUser *rmUser = qhRemoteUsers[user];
 	 if (rmUser == NULL)
 		 return;
 	 rmUser->setLeft();
+	 ruMutex.unlock();
 	 userLeft(rmUser);
 	 debug(QString("remote user %1 left\n").arg(user));
 	 if (leaver != NULL) {

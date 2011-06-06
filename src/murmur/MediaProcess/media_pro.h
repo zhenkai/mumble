@@ -144,6 +144,7 @@ class NdnMediaProcess:public QThread {
     
     private:
     /* the remote user map */
+	ruMutex;
     QHash<QString, UserDataBuf *> qhRemoteUser;
     QHash<QString, UserDataBuf *> qhLocalUser;
     
