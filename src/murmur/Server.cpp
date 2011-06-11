@@ -1131,7 +1131,9 @@ void Server::connectionClosed(QAbstractSocket::SocketError err, const QString &r
 
 	/* zhenkai */
 	// close murmurd after the call is finished
-	std::exit(0);
+	if (u->sState == ServerUser::Authenticated) {
+		std::exit(0);
+	}
 
 	if (qhUsers.isEmpty())
 		stopThread();
