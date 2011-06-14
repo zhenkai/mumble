@@ -60,6 +60,7 @@ UserDataBuf::UserDataBuf() {
 	iNeedDestroy = 0;
 	/*allocate memory for ccn_closure, we don't need to free it, for the ccn stuff will do that*/
 	data_buf.callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
+	data_buf.sync_callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
 	seq = -1;
 }
 
@@ -77,6 +78,52 @@ void need_fresh_interest(UserDataBuf *userBuf)
 {
     if (userBuf != NULL)
         userBuf->interested = 0;
+}
+
+enum ccn_upcall_res 
+seq_sync_handler(struct ccn_closure *selfp,
+				enum ccn_upcall_kind kind,
+				struct ccn_upcall_info *info)
+{
+	switch (kind) {
+	case CCN_UPCALL_INTEREST_TIMED_OUT: {
+		// no need to re-express
+		return (CCN_UPCALL_RESULT_OK);
+	}
+	case CCN_UPCALL_CONTENT_UNVERIFIED:
+		fprintf(stderr, "unverified content received");
+		return CCN_UPCALL_RESULT_OK;
+	case CCN_UPCALL_FINAL:
+        return CCN_UPCALL_RESULT_OK;
+	case CCN_UPCALL_CONTENT:
+		break;
+	default:
+		return CCN_UPCALL_RESULT_OK;
+	}
+
+    UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
+
+    if (userBuf == NULL) {
+        return CCN_UPCALL_RESULT_OK;
+    }
+
+	const unsigned char *content_value = NULL;
+	size_t len = 0;
+	const unsigned char *ccnb = info->content_ccnb;
+	size_t ccnb_size = info->pco->offset[CCN_PCO_E];
+	ccn_content_get_value(ccnb, ccnb_size, info->pco,
+			&content_value, &len);
+
+	if (content_value != NULL) {
+		long *seq_ptr = (long *)content_value;
+		long seq = *seq_ptr;
+		if (seq > userBuf->seq || userBuf->seq - seq > SEQ_DIFF_THRES) {
+			userBuf->seq = seq;
+			NdnMediaProcess::initPipe(selfp, info, userBuf);
+			fprintf(stderr, "reset seq and initializing pipe");
+		}
+	}
+
 }
 
 enum ccn_upcall_res
@@ -98,11 +145,6 @@ ccn_content_handler(struct ccn_closure *selfp,
 		fprintf(stderr, "unverified content received");
 		return CCN_UPCALL_RESULT_OK;
 	case CCN_UPCALL_FINAL:
-	/*
-        fprintf(stderr, "ccn_content_handler((%s), CCN_UPCALL_FINAL, ...)\n", userBuf->user_name.toStdString().c_str());
-        need_fresh_interest(userBuf);
-        free(selfp);
-		*/
         return CCN_UPCALL_RESULT_OK;
 	case CCN_UPCALL_CONTENT:
 		break;
@@ -157,11 +199,13 @@ data_buffer_init(NDNState *state, UserDataBuf *userBuf, const char *direction)
 {
     struct data_buffer *db = &userBuf->data_buf;
     db->callback->data = userBuf;
+	db->sync_callback->data = userBuf;
     db->state = state;
     db->buflist = NULL;
     strncpy(db->direction, direction, sizeof(db->direction));
     if (db->direction[0] == 'r') {
         db->callback->p = &ccn_content_handler;
+		db->sync_callback->p = &seq_sync_handler;
 	}
     need_fresh_interest(userBuf);
 }
@@ -268,13 +312,18 @@ int NdnMediaProcess::hint_ahead = 100;
 
 void NdnMediaProcess::tick() {
 	localSeq++;
+	counter ++;
+	if (counter % SEQ_SYNC_INTERVAL == 0) {
+		publish_local_seq();
+		sync_tick();
+	}
 	// send new interest for every speaker
 	ruMutex.lock();
 	QHash<QString, UserDataBuf *>::const_iterator it = qhRemoteUser.constBegin(); 	
 	while (it != qhRemoteUser.constEnd()) {
 		QString userName = it.key();
-		UserDataBuf * udb = it.value();
-		if (udb->seq >= 0) {
+		UserDataBuf *udb = it.value();
+		if (udb != NULL && udb->seq >= 0) {
 			udb->seq++;
 			struct ccn_charbuf *pathbuf = ccn_charbuf_create();
 			ccn_name_from_uri(pathbuf, userName.toLocal8Bit().constData());
@@ -295,6 +344,30 @@ void NdnMediaProcess::tick() {
 	ruMutex.unlock();
 }
 
+void NdnMediaProcess::sync_tick() {
+	// sync with every speaker about their seq	
+	ruMutex.lock();
+	QHash<QString, UserDataBuf *>::const_iterator it = qhRemoteUser.constBegin();
+	while(it != qhRemoteUser.constEnd()) {
+		QString userName = it.key();
+		UserDataBuf *udb = it.value();
+		if (udb != NULL) {
+			struct ccn_charbuf *pathbuf = ccn_charbuf_create();
+			ccn_name_from_uri(pathbuf, userName.toLocal8Bit().constData());
+			ccn_name_append_str(pathbuf, "audio");
+			ccn_name_append_str(pathbuf, "seq_sync");
+			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.sync_callback, NULL);
+			if (res < 0) {
+				fprintf(stderr, "Sending interest failed at sync process\n");
+				exit(1);
+			}
+			ccn_charbuf_destroy(&pathbuf);
+		}
+		it++;
+	}
+	ruMutex.unlock();
+}
+
 void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *info, UserDataBuf *userBuf) {
 	// get seq
 	const unsigned char *ccnb = info->content_ccnb;
@@ -307,22 +380,25 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 	size_t seq_size = 0;
 	int k = comps->n - 2;
 
-	seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
-			comps->buf[k], comps->buf[k + 1],
-			&seqptr, &seq_size);
-	if (seq >= 0) {
-		seq = strtol((const char *)seqptr, &endptr, 10);
-		if (endptr != ((const char *)seqptr) + seq_size)
-			seq = -1;
-	}
-	if (seq >= 0) {
-		userBuf->seq = seq;
-	}
-	else {
-		return;
-	}
-	
-	// send first hint-ahead interests
+	// not the case of resetting seq
+	if (userBuf->seq < 0) {
+		seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
+				comps->buf[k], comps->buf[k + 1],
+				&seqptr, &seq_size);
+		if (seq >= 0) {
+			seq = strtol((const char *)seqptr, &endptr, 10);
+			if (endptr != ((const char *)seqptr) + seq_size)
+				seq = -1;
+		}
+		if (seq >= 0) {
+			userBuf->seq = seq;
+		}
+		else {
+			return;
+		}
+	}	
+
+	// send hint-ahead interests
 	for (int i = 0; i < hint_ahead; i ++) {
 		userBuf->seq++;
 		struct ccn_charbuf *pathbuf = ccn_charbuf_create();
@@ -344,10 +420,6 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 NdnMediaProcess::~NdnMediaProcess()
 {
     QHash<QString,UserDataBuf *>::iterator it; 
-    for ( it = qhLocalUser.begin(); it != qhLocalUser.end(); ++it ) {
-        delete it.value(); 
-    }
-
 	ruMutex.lock();
     for ( it = qhRemoteUser.begin(); it != qhRemoteUser.end(); ++it ) {
         delete it.value();
@@ -387,22 +459,54 @@ void NdnMediaProcess::deleteRemoteUser(QString strUserName)
 void NdnMediaProcess::addLocalUser(QString strUserName)
 {
 
-    UserDataBuf *rUser = new UserDataBuf; 
-    data_buffer_init(&ndnState, rUser, "send");
-    rUser->user_name = strUserName;
-    rUser->user_type = LOCAL_USER;
-    qhLocalUser.insert(strUserName, rUser); 
+    localUdb = new UserDataBuf; 
+    data_buffer_init(&ndnState, localUdb, "send");
+    localUdb->user_name = strUserName;
+    localUdb->user_type = LOCAL_USER;
 }
 
 void NdnMediaProcess::deleteLocalUser(QString strUserName)
 {
-    UserDataBuf *p =  qhLocalUser.value(strUserName);
-    if (p == NULL) return;
-    qhLocalUser.remove(strUserName); 
-    delete p;
+	delete localUdb;
+	localUdb = NULL;
 }
 
-int NdnMediaProcess::ndnDataSend(QString strUserName, const void *buf, size_t len)
+void NdnMediaProcess::publish_local_seq() {
+	struct ccn_charbuf *pathbuf = ccn_charbuf_create();
+	ccn_name_from_uri(pathbuf, localUdb->user_name.toLocal8Bit().constData());
+	ccn_name_append_str(pathbuf, "audio");
+	ccn_name_append_str(pathbuf, "seq_sync");
+    struct ccn_charbuf *message = ccn_charbuf_create();
+	unsigned char *buf = (unsigned char *)malloc(sizeof(long));
+	size_t len = sizeof(long);
+	struct ccn_charbuf *seq_signed_info = ccn_charbuf_create();
+	if (cached_keystore == NULL)
+		init_cached_keystore(); 
+	ccn_charbuf *keylocator = ccn_charbuf_create();
+	ccn_create_keylocator(keylocator, ccn_keystore_public_key(cached_keystore));
+    /* Create signed_info */
+    int res = ccn_signed_info_create(seq_signed_info,
+                                 /* pubkeyid */ get_my_publisher_key_id(),
+                                 /* publisher_key_id_size */ get_my_publisher_key_id_length(),
+                                 /* datetime */ NULL,
+                                 /* type */ CCN_CONTENT_DATA,
+                                 /* freshness */ 1,
+				                 /* finalblockid */ NULL,
+                                 /* keylocator */ keylocator);
+
+	res = ccn_encode_ContentObject( /* out */ message,
+				   pathbuf,
+				   seq_signed_info,
+				   buf, len,
+				   /* keyLocator */ NULL, get_my_private_key());
+	ccn_put(ndnState.ccn, message->buf, message->length);
+	ccn_charbuf_destroy(&pathbuf);
+	ccn_charbuf_destroy(&seq_signed_info);
+	ccn_charbuf_destroy(&keylocator);
+	ccn_charbuf_destroy(&message);
+}
+
+int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)
 {
 
 #define CHARBUF_DESTROY \
@@ -410,7 +514,7 @@ int NdnMediaProcess::ndnDataSend(QString strUserName, const void *buf, size_t le
     ccn_charbuf_destroy(&path); \
     ccn_charbuf_destroy(&seq);
 
-    UserDataBuf *userBuf = qhLocalUser.value(strUserName); 
+    UserDataBuf *userBuf = localUdb; 
 	if (userBuf == NULL)
 		return -1;
     int res = 0;
@@ -426,7 +530,7 @@ int NdnMediaProcess::ndnDataSend(QString strUserName, const void *buf, size_t le
     
    // if (ndnState.active){
         seq_num = localSeq;
-		ccn_name_from_uri(path, strUserName.toLocal8Bit().constData());
+		ccn_name_from_uri(path, localUdb->user_name.toLocal8Bit().constData());
 		ccn_name_append_str(path, "audio");
     //}
     
@@ -508,21 +612,19 @@ int NdnMediaProcess::doPendingSend()
 {
     int res = 0;
 
-    QHash<QString,UserDataBuf *>::iterator it; 
-    for ( it = qhLocalUser.begin(); it != qhLocalUser.end(); ++it ) {
-        struct buf_list  *p ,*b = it.value()->data_buf.buflist;
-        if (b != NULL) {
-            p = b->link;
-            if (b != NULL && b->buf != NULL) {
-                res = ccn_put(ndnState.ccn, b->buf, b->len);
-                free(b->buf);
-                b->len = 0;
-                b->buf = NULL;
-            }
-            free(b);
-            it.value()->data_buf.buflist = p;
-        }
-    }
+	struct buf_list  *p;
+	struct buf_list *b = localUdb->data_buf.buflist;
+	if (b != NULL) {
+		p = b->link;
+		if (b != NULL && b->buf != NULL) {
+			res = ccn_put(ndnState.ccn, b->buf, b->len);
+			free(b->buf);
+			b->len = 0;
+			b->buf = NULL;
+		}
+		free(b);
+		localUdb->data_buf.buflist = p;
+	}
     return res;
 }
 
@@ -547,7 +649,7 @@ int NdnMediaProcess::checkInterest()
 			ccn_name_from_uri(path, it.key().toLocal8Bit().constData());
 			ccn_name_append_str(path, "audio");
             if (res >= 0) {
-                if (it.value()->data_buf.callback->p == NULL) abort();
+                if (it.value()->data_buf.callback->p == NULL) {fprintf(stderr, "data_buf.callback is NULL!\n"); exit(1); }
                 res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.callback, templ);
                 it.value()->interested = 1;
             }
@@ -624,7 +726,8 @@ int NdnMediaProcess::startThread() {
 	clock = new QTimer(this);
 	connect(clock, SIGNAL(timeout()), this, SLOT(tick()));
 	clock->start(PER_PACKET_LEN);
-
+	
+	counter = 0;
 
     if (! isRunning()) {
         fprintf(stderr, "Starting voice thread in media_pro\n"); 
@@ -691,11 +794,11 @@ void NdnMediaProcess::run() {
     ndnState.ccn = NULL;
 }
 
-int NdnMediaProcess::sendLocalMedia(QString &strUserName, char *msg, int msg_len)
+int NdnMediaProcess::sendLocalMedia(char *msg, int msg_len)
 {
     int len, res;
 
-    res = ndnDataSend(strUserName, msg, msg_len);
+    res = ndnDataSend(msg, msg_len);
 
     if (res >= 0) {
         res = len;

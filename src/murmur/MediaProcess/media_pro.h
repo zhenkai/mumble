@@ -58,6 +58,8 @@ extern "C" {
 #define INTEREST_LIFETIME 4
 #define MAXNONCE 512 
 #define PER_PACKET_LEN 20
+#define SEQ_SYNC_INTERVAL 50 
+#define SEQ_DIFF_THRES 100 
 
 struct buf_list {
     void *buf;
@@ -68,6 +70,7 @@ struct buf_list {
 class NDNState;
 struct data_buffer {
     struct ccn_closure *callback;
+	struct ccn_closure *sync_callback;
     NDNState *state;
     char direction[5];
     struct buf_list *buflist;
@@ -151,12 +154,18 @@ class NdnMediaProcess:public QThread {
 	bool isPrivate;
 	unsigned char sessionKey[512/8];
 	long localSeq;
+	QString localUsername;
+	UserDataBuf *localUdb;
+	// clock for media process 
 	QTimer *clock;
+
+	long counter;
+
     static int hint_ahead;                                                                  
 
     private:
     /* cache the packet in buffer waiting for working thread sending*/
-    int ndnDataSend(QString strUserName, const void *buf, size_t len);
+    int ndnDataSend(const void *buf, size_t len);
 
     /*get the data from the buffer, do not block if there are no data actually*/
     int ndn_wait_message(UserDataBuf *userBuf, char *msg, int msg_len);
@@ -170,10 +179,13 @@ class NdnMediaProcess:public QThread {
      * first interest for the user.
      */
     int checkInterest();
+	void sync_tick();
+	void publish_local_seq();
 
 
 	private slots:
 	void tick();
+
 
     public:
     NdnMediaProcess();
@@ -192,7 +204,7 @@ class NdnMediaProcess:public QThread {
      * the caller of this function can return. the work thread is in charge of sending 
      * the data actually.
      */
-    int sendLocalMedia(QString &strUserName, char *msg, int msg_len);
+    int sendLocalMedia(char *msg, int msg_len);
 
     /* get a media packet of some remote user, this function will get a oldest data packet from 
      * the remote user's buffer. the caller will not be blocked, because before calling this 

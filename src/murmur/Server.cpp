@@ -820,8 +820,8 @@ void Server::processMsg(ServerUser *u, const char *data, int len) {
 			SENDTO;
 
             /* senwang*/
-            QString strFullName = pGroupManager->getFullLocalName();
-            ndnMediaPro.sendLocalMedia(strFullName,buffer, len);
+            //QString strFullName = pGroupManager->getFullLocalName();
+            ndnMediaPro.sendLocalMedia(buffer, len);
 		}
 
 		if (! c->qhLinks.isEmpty()) {
