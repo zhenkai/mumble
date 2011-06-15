@@ -63,11 +63,21 @@
 #include "Settings.h"
 #include "Message.h"
 #include "smallft.h"
+#include <boost/circular_buffer.hpp>
+
+#define OUTPUT_FRAME_SIZE (SAMPLE_RATE / 100)
+#define LOG_RAW_AUDIO 1
 
 class AudioOutput;
 class ClientUser;
 
 typedef boost::shared_ptr<AudioOutput> AudioOutputPtr;
+
+struct EchoBuffer {
+	short samples[OUTPUT_FRAME_SIZE];
+};
+
+void logRawAudio(QString filename, short *rawAudio, int nsamp);
 
 class AudioOutputRegistrar {
 	private:
@@ -205,6 +215,8 @@ class AudioOutputSample : public AudioOutputUser {
 		~AudioOutputSample();
 };
 
+
+
 class AudioOutput : public QThread {
 	private:
 		Q_OBJECT
@@ -222,11 +234,17 @@ class AudioOutput : public QThread {
 		unsigned int iSampleSize;
 		QReadWriteLock qrwlOutputs;
 		QMultiHash<const ClientUser *, AudioOutputUser *> qmOutputs;
+		// keep the most recent frames
+
+		
 
 		virtual void removeBuffer(AudioOutputUser *);
 		void initializeMixer(const unsigned int *chanmasks, bool forceheadphone = false);
 		bool mix(void *output, unsigned int nsamp);
+		boost::circular_buffer<EchoBuffer> cbEchoBuffer;
+
 	public:
+		struct EchoBuffer& getOutput();
 		void wipe();
 
 		AudioOutput();

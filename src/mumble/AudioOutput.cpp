@@ -39,6 +39,25 @@
 #include "ServerHandler.h"
 #include "VoiceRecorder.h"
 
+void logRawAudio(QString filename, short *rawAudio, int nsamp) {
+	if (!LOG_RAW_AUDIO)
+		return;
+
+	QFile file(filename);
+	if (!file.open(QIODevice::Append | QIODevice::Text)) {
+		qWarning("Cannot open log file %s\n", filename.toStdString().c_str());
+		return;
+	}
+	QTextStream out(&file);
+	for (int i = 0; i < nsamp; i ++) {
+		out << rawAudio[i];
+		if (i % 79 == 0)
+			out << "\n";
+	}
+	file.close();
+}
+
+
 // Remember that we cannot use static member classes that are not pointers, as the constructor
 // for AudioOutputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
@@ -716,6 +735,8 @@ AudioOutput::AudioOutput() {
 	iMixerFreq = 0;
 	eSampleFormat = SampleFloat;
 	iSampleSize = 0;
+	//cbEchoBuffer.set_capacity(10);
+	cbEchoBuffer = boost::circular_buffer<EchoBuffer>(10);
 }
 
 AudioOutput::~AudioOutput() {
@@ -965,6 +986,12 @@ void AudioOutput::initializeMixer(const unsigned int *chanmasks, bool forceheadp
 	qWarning("AudioOutput: Initialized %d channel %d hz mixer", iChannels, iMixerFreq);
 }
 
+
+struct EchoBuffer& AudioOutput::getOutput() {
+	if (!cbEchoBuffer.empty())
+		return cbEchoBuffer.back();
+}
+
 bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 	AudioOutputUser *aop;
 	QList<AudioOutputUser *> qlMix;
@@ -1174,6 +1201,36 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 		else
 			for (unsigned int i=0;i<nsamp*iChannels;i++)
 				reinterpret_cast<short *>(outbuff)[i] = static_cast<short>(32768.f * (output[i] < -1.0f ? -1.0f : (output[i] > 1.0f ? 1.0f : output[i])));
+		
+		// put output to the circular buffer
+		STACKVAR(short, ebOutput, nsamp);
+		for(int i = 0; i < nsamp; i++) {
+			float sum = 0.0;
+			for (int j = 0; j < iChannels; j++) {
+				sum += output[nsamp * iChannels + j];
+			}
+			ebOutput[i] = static_cast<short>(sum);
+		}
+
+		logRawAudio("/var/tmp/ebOutput", ebOutput, nsamp);
+
+		for(int i = 0; i < nsamp; i += OUTPUT_FRAME_SIZE) {
+			int upto;
+			if (nsamp - i < OUTPUT_FRAME_SIZE) {
+				fprintf(stderr, "oops, nsamp (%d) is not a multiple of frame_size (%d)\nwe'll leave it for now\n", nsamp, OUTPUT_FRAME_SIZE);
+				upto = nsamp - i;
+			}
+			else {
+				upto = OUTPUT_FRAME_SIZE;
+			}
+			
+			struct EchoBuffer frame;
+			for(int j = 0; j < upto; j++) {
+				frame.samples[j] = ebOutput[i + j];
+			}
+			cbEchoBuffer.push_back(frame);
+		}
+		
 	}
 
 	qrwlOutputs.unlock();

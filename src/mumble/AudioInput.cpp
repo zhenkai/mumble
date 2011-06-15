@@ -421,6 +421,15 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 					psSpeaker = echo;
 				}
 			}
+			else {
+				delete [] psSpeaker;
+				psSpeaker = new short[OUTPUT_FRAME_SIZE];
+				AudioOutputPtr ao = g.ao;
+				struct EchoBuffer lastFrame = ao->getOutput();
+				for (int i = 0; i < OUTPUT_FRAME_SIZE; i++) {
+					psSpeaker[i] = lastFrame.samples[i];
+				}
+			}
 			encodeAudioFrame();
 		}
 	}
@@ -658,14 +667,14 @@ void AudioInput::encodeAudioFrame() {
 
 		if (iEchoChannels > 0) {
 			sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*10, 1, bEchoMulti ? iEchoChannels : 1);
-			iArg = iSampleRate;
-			speex_echo_ctl(sesEcho, SPEEX_ECHO_SET_SAMPLING_RATE, &iArg);
-			speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, sesEcho);
-
-			qWarning("AudioInput: ECHO CANCELLER ACTIVE");
 		} else {
-			sesEcho = NULL;
+			sesEcho = speex_echo_state_init(iFrameSize, iFrameSize * 10);
 		}
+		iArg = iSampleRate;
+		speex_echo_ctl(sesEcho, SPEEX_ECHO_SET_SAMPLING_RATE, &iArg);
+		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, sesEcho);
+
+		qWarning("AudioInput: ECHO CANCELLER ACTIVE");
 
 		bResetProcessor = false;
 	}
@@ -675,13 +684,14 @@ void AudioInput::encodeAudioFrame() {
 	iArg = g.s.iNoiseSuppress - iArg;
 	speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
+	// should always be true now
 	if (sesEcho && psSpeaker) {
-		/* Zhenkai */
-		//speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
-		speex_echo_playback(sesEcho, psSpeaker);
-		speex_echo_capture(sesEcho, psMic, psClean);
+		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
+		logRawAudio("/var/tmp/psMic", psMic, iFrameSize);
+		logRawAudio("/var/tmp/psSpeaker", psSpeaker, iFrameSize);
+		logRawAudio("/var/tmp/psClean", psClean, iFrameSize);
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;
