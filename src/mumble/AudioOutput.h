@@ -244,7 +244,7 @@ class AudioOutput : public QThread {
 		boost::circular_buffer<EchoBuffer> cbEchoBuffer;
 
 	public:
-		struct EchoBuffer& getOutput();
+		struct EchoBuffer getOutput();
 		void wipe();
 
 		AudioOutput();

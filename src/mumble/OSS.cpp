@@ -235,6 +235,7 @@ void OSSInput::run() {
 		qWarning("OSSInput: Failed to set speed");
 		goto out;
 	}
+
 	iMicFreq = ival;
 
 	qWarning("OSSInput: Staring audio capture from %s", device.constData());

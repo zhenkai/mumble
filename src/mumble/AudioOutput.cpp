@@ -987,7 +987,7 @@ void AudioOutput::initializeMixer(const unsigned int *chanmasks, bool forceheadp
 }
 
 
-struct EchoBuffer& AudioOutput::getOutput() {
+struct EchoBuffer AudioOutput::getOutput() {
 	if (!cbEchoBuffer.empty())
 		return cbEchoBuffer.back();
 }
