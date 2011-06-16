@@ -49,11 +49,13 @@ void logRawAudio(QString filename, short *rawAudio, int nsamp) {
 		return;
 	}
 	QTextStream out(&file);
+	out <<"Frame Start:\n";
 	for (int i = 0; i < nsamp; i ++) {
 		out << rawAudio[i];
 		if (i % 79 == 0)
 			out << "\n";
 	}
+	out << "\n";
 	file.close();
 }
 
@@ -990,6 +992,12 @@ void AudioOutput::initializeMixer(const unsigned int *chanmasks, bool forceheadp
 struct EchoBuffer AudioOutput::getOutput() {
 	if (!cbEchoBuffer.empty())
 		return cbEchoBuffer.back();
+	
+
+	struct EchoBuffer def;
+	def.frameSize = 0;
+	def.mixerFreq = 0;
+	return def;
 }
 
 bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
@@ -1203,34 +1211,22 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 				reinterpret_cast<short *>(outbuff)[i] = static_cast<short>(32768.f * (output[i] < -1.0f ? -1.0f : (output[i] > 1.0f ? 1.0f : output[i])));
 		
 		// put output to the circular buffer
-		STACKVAR(short, ebOutput, nsamp);
+		if (!iMixerFreq)
+			return 1;
+		struct EchoBuffer frame;
 		for(int i = 0; i < nsamp; i++) {
 			float sum = 0.0;
 			for (int j = 0; j < iChannels; j++) {
 				sum += output[nsamp * iChannels + j];
 			}
-			ebOutput[i] = static_cast<short>(sum);
-		}
+			frame.samples[i] = static_cast<short>(sum);
 
-		logRawAudio("/var/tmp/ebOutput", ebOutput, nsamp);
-
-		for(int i = 0; i < nsamp; i += OUTPUT_FRAME_SIZE) {
-			int upto;
-			if (nsamp - i < OUTPUT_FRAME_SIZE) {
-				fprintf(stderr, "oops, nsamp (%d) is not a multiple of frame_size (%d)\nwe'll leave it for now\n", nsamp, OUTPUT_FRAME_SIZE);
-				upto = nsamp - i;
-			}
-			else {
-				upto = OUTPUT_FRAME_SIZE;
-			}
-			
-			struct EchoBuffer frame;
-			for(int j = 0; j < upto; j++) {
-				frame.samples[j] = ebOutput[i + j];
-			}
-			cbEchoBuffer.push_back(frame);
 		}
-		
+		frame.frameSize = nsamp;
+		frame.mixerFreq = iMixerFreq;
+		cbEchoBuffer.push_back(frame);
+
+		logRawAudio("/var/tmp/ebOutput", frame.samples, nsamp);
 	}
 
 	qrwlOutputs.unlock();

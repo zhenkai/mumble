@@ -309,8 +309,10 @@ CoreAudioInput::CoreAudioInput() {
 
 	if (fmt.mFormatFlags & kAudioFormatFlagIsFloat) {
 		eMicFormat = SampleFloat;
+		qWarning("CoreAudioInput: sample mode is SampleFloat\n");
 	} else if (fmt.mFormatFlags & kAudioFormatFlagIsSignedInteger) {
 		eMicFormat = SampleShort;
+		qWarning("CoreAudioInput: sample mode is SampleShort\n");
 	}
 
 	if (fmt.mChannelsPerFrame > 1) {
@@ -318,6 +320,7 @@ CoreAudioInput::CoreAudioInput() {
 	}
 
 	iMicFreq = static_cast<int>(fmt.mSampleRate);
+	qWarning("sample rate is %d\n", iMicFreq);
 	iMicChannels = 1;
 	initializeMixer();
 

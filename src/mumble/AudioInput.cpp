@@ -423,11 +423,24 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 			}
 			else {
 				delete [] psSpeaker;
-				psSpeaker = new short[OUTPUT_FRAME_SIZE];
+
 				AudioOutputPtr ao = g.ao;
-				struct EchoBuffer lastFrame = ao->getOutput();
-				for (int i = 0; i < OUTPUT_FRAME_SIZE; i++) {
-					psSpeaker[i] = lastFrame.samples[i];
+				if (ao) {
+					struct EchoBuffer lastFrame = ao->getOutput();
+					if(lastFrame.frameSize != 0 && iFrameSize != lastFrame.frameSize) {
+						int err;
+						psSpeaker = new short[iFrameSize];
+						spx_uint32_t inlen = lastFrame.frameSize;
+						spx_uint32_t outlen = iFrameSize;
+						srsFeedback = speex_resampler_init(1, lastFrame.mixerFreq, iSampleRate, 3, &err);
+						speex_resampler_process_int(srsFeedback, 0, lastFrame.samples, &inlen, psSpeaker, &outlen);
+						FILE *fp = fopen("/var/tmp/psParam", "a");
+						fprintf(fp, "lastFrame.framesize: %d, mixerFreq: %d\n, iSampleRate: %d\n", lastFrame.frameSize, lastFrame.mixerFreq, iSampleRate);
+						fclose(fp);
+					}
+				}
+				else {
+					psSpeaker = NULL;
 				}
 			}
 			encodeAudioFrame();
@@ -684,7 +697,6 @@ void AudioInput::encodeAudioFrame() {
 	iArg = g.s.iNoiseSuppress - iArg;
 	speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
-	// should always be true now
 	if (sesEcho && psSpeaker) {
 		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
