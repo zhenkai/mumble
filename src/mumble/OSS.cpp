@@ -235,10 +235,6 @@ void OSSInput::run() {
 		qWarning("OSSInput: Failed to set speed");
 		goto out;
 	}
-	if (SAMPLE_RATE != ival) {
-		fprintf(stderr, "can not obtain SAMPLE_RATE, got %d\n", ival);
-		goto out;
-	}
 	iMicFreq = ival;
 
 	qWarning("OSSInput: Staring audio capture from %s", device.constData());

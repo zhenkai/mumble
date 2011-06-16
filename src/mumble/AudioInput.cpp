@@ -421,28 +421,6 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 					psSpeaker = echo;
 				}
 			}
-			else {
-				delete [] psSpeaker;
-
-				AudioOutputPtr ao = g.ao;
-				if (ao) {
-					struct EchoBuffer lastFrame = ao->getOutput();
-					if(lastFrame.frameSize != 0 && iFrameSize != lastFrame.frameSize) {
-						int err;
-						psSpeaker = new short[iFrameSize];
-						spx_uint32_t inlen = lastFrame.frameSize;
-						spx_uint32_t outlen = iFrameSize;
-						srsFeedback = speex_resampler_init(1, lastFrame.mixerFreq, iSampleRate, 3, &err);
-						speex_resampler_process_int(srsFeedback, 0, lastFrame.samples, &inlen, psSpeaker, &outlen);
-						FILE *fp = fopen("/var/tmp/psParam", "a");
-						fprintf(fp, "lastFrame.framesize: %d, mixerFreq: %d\n, iSampleRate: %d\n", lastFrame.frameSize, lastFrame.mixerFreq, iSampleRate);
-						fclose(fp);
-					}
-				}
-				else {
-					psSpeaker = NULL;
-				}
-			}
 			encodeAudioFrame();
 		}
 	}
@@ -680,14 +658,14 @@ void AudioInput::encodeAudioFrame() {
 
 		if (iEchoChannels > 0) {
 			sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*10, 1, bEchoMulti ? iEchoChannels : 1);
-		} else {
-			sesEcho = speex_echo_state_init(iFrameSize, iFrameSize * 10);
-		}
-		iArg = iSampleRate;
-		speex_echo_ctl(sesEcho, SPEEX_ECHO_SET_SAMPLING_RATE, &iArg);
-		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, sesEcho);
+			iArg = iSampleRate;
+			speex_echo_ctl(sesEcho, SPEEX_ECHO_SET_SAMPLING_RATE, &iArg);
+			speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, sesEcho);
 
-		qWarning("AudioInput: ECHO CANCELLER ACTIVE");
+			qWarning("AudioInput: ECHO CANCELLER ACTIVE");
+		} else {
+			sesEcho = NULL;
+		}
 
 		bResetProcessor = false;
 	}
@@ -698,12 +676,12 @@ void AudioInput::encodeAudioFrame() {
 	speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
 	if (sesEcho && psSpeaker) {
-		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
+		/* Zhenkai */
+		//speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
+		speex_echo_playback(sesEcho, psSpeaker);
+		speex_echo_capture(sesEcho, psMic, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
-		logRawAudio("/var/tmp/psMic", psMic, iFrameSize);
-		logRawAudio("/var/tmp/psSpeaker", psSpeaker, iFrameSize);
-		logRawAudio("/var/tmp/psClean", psClean, iFrameSize);
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;

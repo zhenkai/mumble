@@ -39,27 +39,6 @@
 #include "ServerHandler.h"
 #include "VoiceRecorder.h"
 
-void logRawAudio(QString filename, short *rawAudio, int nsamp) {
-	if (!LOG_RAW_AUDIO)
-		return;
-
-	QFile file(filename);
-	if (!file.open(QIODevice::Append | QIODevice::Text)) {
-		qWarning("Cannot open log file %s\n", filename.toStdString().c_str());
-		return;
-	}
-	QTextStream out(&file);
-	out <<"Frame Start:\n";
-	for (int i = 0; i < nsamp; i ++) {
-		out << rawAudio[i];
-		if (i % 79 == 0)
-			out << "\n";
-	}
-	out << "\n";
-	file.close();
-}
-
-
 // Remember that we cannot use static member classes that are not pointers, as the constructor
 // for AudioOutputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
@@ -737,8 +716,6 @@ AudioOutput::AudioOutput() {
 	iMixerFreq = 0;
 	eSampleFormat = SampleFloat;
 	iSampleSize = 0;
-	//cbEchoBuffer.set_capacity(10);
-	cbEchoBuffer = boost::circular_buffer<EchoBuffer>(10);
 }
 
 AudioOutput::~AudioOutput() {
@@ -988,18 +965,6 @@ void AudioOutput::initializeMixer(const unsigned int *chanmasks, bool forceheadp
 	qWarning("AudioOutput: Initialized %d channel %d hz mixer", iChannels, iMixerFreq);
 }
 
-
-struct EchoBuffer AudioOutput::getOutput() {
-	if (!cbEchoBuffer.empty())
-		return cbEchoBuffer.back();
-	
-
-	struct EchoBuffer def;
-	def.frameSize = 0;
-	def.mixerFreq = 0;
-	return def;
-}
-
 bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 	AudioOutputUser *aop;
 	QList<AudioOutputUser *> qlMix;
@@ -1209,24 +1174,6 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 		else
 			for (unsigned int i=0;i<nsamp*iChannels;i++)
 				reinterpret_cast<short *>(outbuff)[i] = static_cast<short>(32768.f * (output[i] < -1.0f ? -1.0f : (output[i] > 1.0f ? 1.0f : output[i])));
-		
-		// put output to the circular buffer
-		if (!iMixerFreq)
-			return 1;
-		struct EchoBuffer frame;
-		for(int i = 0; i < nsamp; i++) {
-			float sum = 0.0;
-			for (int j = 0; j < iChannels; j++) {
-				sum += output[nsamp * iChannels + j];
-			}
-			frame.samples[i] = static_cast<short>(sum);
-
-		}
-		frame.frameSize = nsamp;
-		frame.mixerFreq = iMixerFreq;
-		cbEchoBuffer.push_back(frame);
-
-		logRawAudio("/var/tmp/ebOutput", frame.samples, nsamp);
 	}
 
 	qrwlOutputs.unlock();
