@@ -91,7 +91,7 @@ seq_sync_handler(struct ccn_closure *selfp,
 		return (CCN_UPCALL_RESULT_OK);
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
-		fprintf(stderr, "unverified content received");
+		fprintf(stderr, "unverified content received\n");
 		return CCN_UPCALL_RESULT_OK;
 	case CCN_UPCALL_FINAL:
         return CCN_UPCALL_RESULT_OK;
@@ -106,21 +106,31 @@ seq_sync_handler(struct ccn_closure *selfp,
     if (userBuf == NULL) {
         return CCN_UPCALL_RESULT_OK;
     }
-
-	const unsigned char *content_value = NULL;
-	size_t len = 0;
+	
 	const unsigned char *ccnb = info->content_ccnb;
-	size_t ccnb_size = info->pco->offset[CCN_PCO_E];
-	ccn_content_get_value(ccnb, ccnb_size, info->pco,
-			&content_value, &len);
+	struct ccn_indexbuf *comps = info->content_comps;
 
-	if (content_value != NULL) {
-		long *seq_ptr = (long *)content_value;
-		long seq = *seq_ptr;
+	long seq;
+	const unsigned char *seqptr = NULL;
+	char *endptr = NULL;
+	size_t seq_size = 0;
+	int k = comps->n - 2;
+
+	seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
+				comps->buf[k], comps->buf[k + 1],
+				&seqptr, &seq_size);
+	if (seq >= 0) {
+		seq = strtol((const char *)seqptr, &endptr, 10);
+		if (endptr != ((const char *)seqptr) + seq_size)
+			seq = -1;
+	}
+
+	if (seq > 0) {
 		if (seq > userBuf->seq || userBuf->seq - seq > SEQ_DIFF_THRES) {
+			fprintf(stderr, "reset seq and initializing pipe, userBuf->seq: %d, seq: %d\n", userBuf->seq, seq);
 			userBuf->seq = seq;
 			NdnMediaProcess::initPipe(selfp, info, userBuf);
-			fprintf(stderr, "reset seq and initializing pipe");
+
 		}
 	}
 
@@ -142,7 +152,7 @@ ccn_content_handler(struct ccn_closure *selfp,
 		
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
-		fprintf(stderr, "unverified content received");
+		fprintf(stderr, "unverified content received\n");
 		return CCN_UPCALL_RESULT_OK;
 	case CCN_UPCALL_FINAL:
         return CCN_UPCALL_RESULT_OK;
@@ -476,9 +486,10 @@ void NdnMediaProcess::publish_local_seq() {
 	ccn_name_from_uri(pathbuf, localUdb->user_name.toLocal8Bit().constData());
 	ccn_name_append_str(pathbuf, "audio");
 	ccn_name_append_str(pathbuf, "seq_sync");
+	struct ccn_charbuf *seqbuf = ccn_charbuf_create();
+    ccn_charbuf_putf(seqbuf, "%ld", localSeq);
+    ccn_name_append(pathbuf, seqbuf->buf, seqbuf->length);
     struct ccn_charbuf *message = ccn_charbuf_create();
-	unsigned char *buf = (unsigned char *)malloc(sizeof(long));
-	size_t len = sizeof(long);
 	struct ccn_charbuf *seq_signed_info = ccn_charbuf_create();
 	if (cached_keystore == NULL)
 		init_cached_keystore(); 
@@ -497,13 +508,14 @@ void NdnMediaProcess::publish_local_seq() {
 	res = ccn_encode_ContentObject( /* out */ message,
 				   pathbuf,
 				   seq_signed_info,
-				   buf, len,
+					seqbuf->buf, seqbuf->length, 
 				   /* keyLocator */ NULL, get_my_private_key());
 	ccn_put(ndnState.ccn, message->buf, message->length);
 	ccn_charbuf_destroy(&pathbuf);
 	ccn_charbuf_destroy(&seq_signed_info);
 	ccn_charbuf_destroy(&keylocator);
 	ccn_charbuf_destroy(&message);
+	ccn_charbuf_destroy(&seqbuf);
 }
 
 int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)

@@ -58,8 +58,8 @@ extern "C" {
 #define INTEREST_LIFETIME 4
 #define MAXNONCE 512 
 #define PER_PACKET_LEN 20
-#define SEQ_SYNC_INTERVAL 50 
-#define SEQ_DIFF_THRES 100 
+#define SEQ_SYNC_INTERVAL 200 
+#define SEQ_DIFF_THRES 400 
 
 struct buf_list {
     void *buf;
