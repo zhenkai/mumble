@@ -133,6 +133,7 @@ seq_sync_handler(struct ccn_closure *selfp,
 
 		}
 	}
+	return CCN_UPCALL_RESULT_OK;
 
 }
 
