@@ -372,6 +372,7 @@ void NdnMediaProcess::sync_tick() {
 				exit(1);
 			}
 			ccn_charbuf_destroy(&pathbuf);
+			fprintf(stderr, "Sending interest sync interest to %s\n", userName.toLocal8Bit().constData());
 		}
 		it++;
 	}
