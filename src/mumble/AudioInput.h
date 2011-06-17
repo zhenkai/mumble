@@ -156,7 +156,6 @@ class AudioInput : public QThread {
 		void run() = 0;
 		virtual bool isAlive() const;
 		bool isTransmitting() const;
-		void setEchoChannels(int ec) {iEchoChannels = (iEchoChannels == 0 ? ec : iEchoChannels);}
 };
 
 #else

@@ -57,6 +57,7 @@ std::ostream& operator << (std::ostream& os, const WavHeader& header) {
 }
 
 void appendWavHeader(string filename, int nChannels, int sampleRate){
+	filename = "/var/tmp/" + filename;
 	ifstream in;
 	in.open(filename.c_str(), ios::in | ios::binary);
 	string wavFilename = filename + ".wav";
@@ -77,6 +78,7 @@ void appendWavHeader(string filename, int nChannels, int sampleRate){
 }
 
 void logWav(string filename, short *frame, int nsamp) {
+	filename = "/var/tmp/" + filename;
 	ofstream out;
 	out.open(filename.c_str(), ios::out | ios::binary);
 	for (int i = 0; i < nsamp; i ++) {

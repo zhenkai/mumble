@@ -462,8 +462,9 @@ void Audio::stopInput() {
 }
 
 void Audio::start(const QString &input, const QString &output) {
-	startInput(input);
+	// swtich the start order of input and output
 	startOutput(output);
+	startInput(input);
 }
 
 void Audio::stop() {

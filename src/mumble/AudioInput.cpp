@@ -156,6 +156,13 @@ AudioInput::AudioInput() {
 	psSpeaker = NULL;
 
 	iEchoChannels = iMicChannels = 0;
+	AudioOutputPtr ao = g.ao;
+	if (ao) {
+		iEchoChannels = ao->getChannels();
+	} else {
+		fprintf(stderr, "AudioOutput has not been initialized\n");
+		std::exit(1);
+	}
 	iEchoFilled = iMicFilled = 0;
 	eMicFormat = eEchoFormat = SampleFloat;
 	iMicSampleSize = iEchoSampleSize = 0;

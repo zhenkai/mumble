@@ -228,6 +228,7 @@ class AudioOutput : public QThread {
 		bool mix(void *output, unsigned int nsamp);
 	public:
 		void wipe();
+		int getChannels() { return iChannels;}
 
 		AudioOutput();
 		~AudioOutput();

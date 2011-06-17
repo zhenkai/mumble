@@ -1179,7 +1179,6 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 		AudioInputPtr ai = g.ai;
 		if (ai) {
 			ai->addInternalEcho(outbuff, nsamp);
-			ai->setEchoChannels(iChannels);
 		}
 
 	}
