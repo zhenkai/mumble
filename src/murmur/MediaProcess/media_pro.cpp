@@ -128,8 +128,8 @@ seq_sync_handler(struct ccn_closure *selfp,
 	if (seq > 0 && userBuf->seq > 0) {
 		if (seq > userBuf->seq || userBuf->seq - seq > SEQ_DIFF_THRES) {
 			fprintf(stderr, "+++++++++++++++++++++++++++++++++++++++++++++++ userBuf->seq: %d, seq: %d\n", userBuf->seq, seq);
-			//userBuf->seq = seq;
-			//NdnMediaProcess::initPipe(selfp, info, userBuf);
+			userBuf->seq = seq;
+			NdnMediaProcess::initPipe(selfp, info, userBuf);
 
 		}
 	}
