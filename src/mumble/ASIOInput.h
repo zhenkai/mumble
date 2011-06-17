@@ -92,10 +92,14 @@ class ASIOInput : public AudioInput {
 		bool initializeDriver();
 
 		QWaitCondition qwDone;
+
 	public:
+		// overrides super->addInternalEcho() because it feteches echo from sound card already
+		void addInternalEcho(const void *data, unsigned int nsamp){};
 		ASIOInput();
 		~ASIOInput();
 		void run();
+		typedef AudioInput super;
 };
 
 #endif

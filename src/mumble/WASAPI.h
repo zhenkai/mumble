@@ -59,10 +59,13 @@ class WASAPIInput : public AudioInput {
 	private:
 		Q_OBJECT
 		Q_DISABLE_COPY(WASAPIInput)
+
 	public:
+		void addInternalEcho(const void *data, unsigned int nsamp){};
 		WASAPIInput();
 		~WASAPIInput();
 		void run();
+		typedef AudioInput super;
 };
 
 class WASAPIOutput : public AudioOutput {

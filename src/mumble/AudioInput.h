@@ -139,6 +139,7 @@ class AudioInput : public QThread {
 	signals:
 		void doDeaf();
 	public:
+		virtual void addInternalEcho(const void *data, unsigned int nsamp);
 		bool bResetProcessor;
 
 		Timer tIdle;
@@ -155,6 +156,7 @@ class AudioInput : public QThread {
 		void run() = 0;
 		virtual bool isAlive() const;
 		bool isTransmitting() const;
+		void setEchoChannels(int ec) {iEchoChannels = (iEchoChannels == 0 ? ec : iEchoChannels);}
 };
 
 #else

@@ -96,10 +96,13 @@ class PulseAudioInput : public AudioInput {
 		QMutex qmMutex;
 		QWaitCondition qwcWait;
 		pa_sample_spec pssMic, pssEcho;
+
 	public:
+		void addInternalEcho(const void *data, unsigned int nsamp){};
 		PulseAudioInput();
 		~PulseAudioInput();
 		void run();
+		typedef AudioInput super;
 };
 
 class PulseAudioOutput : public AudioOutput {

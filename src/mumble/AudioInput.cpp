@@ -426,6 +426,10 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 	}
 }
 
+void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
+	addEcho(data, nsamp);
+}
+
 void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iEchoLength - iEchoFilled);
