@@ -80,7 +80,7 @@ void appendWavHeader(string filename, int nChannels, int sampleRate){
 void logWav(string filename, short *frame, int nsamp) {
 	filename = "/var/tmp/" + filename;
 	ofstream out;
-	out.open(filename.c_str(), ios::out | ios::binary);
+	out.open(filename.c_str(), ios::out | ios::binary | ios::app);
 	for (int i = 0; i < nsamp; i ++) {
 		out.write((const char *) &(frame[i]), 2);
 	}
