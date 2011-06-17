@@ -38,6 +38,7 @@
 #include "Global.h"
 #include "NetworkConfig.h"
 #include "VoiceRecorder.h"
+#include "wavlog.h"
 
 // Remember that we cannot use static member classes that are not pointers, as the constructor
 // for AudioInputRegistrar() might be called before they are initialized, as the constructor
@@ -55,6 +56,7 @@ AudioInputRegistrar::AudioInputRegistrar(const QString &n, int p) : name(n), pri
 
 AudioInputRegistrar::~AudioInputRegistrar() {
 	qmNew->remove(name);
+
 }
 
 AudioInputPtr AudioInputRegistrar::newFromChoice(QString choice) {
@@ -198,6 +200,9 @@ AudioInput::~AudioInput() {
 	if (srsEcho)
 		speex_resampler_destroy(srsEcho);
 
+	appendWavHeader("psMic", iEchoChannels, iSampleRate);
+	appendWavHeader("psSpeaker", iEchoChannels, iSampleRate);
+	appendWavHeader("psClean", iEchoChannels, iSampleRate);
 	delete [] psMic;
 	delete [] psClean;
 	delete [] psSpeaker;
@@ -680,12 +685,13 @@ void AudioInput::encodeAudioFrame() {
 	speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
 	if (sesEcho && psSpeaker) {
-		/* Zhenkai */
-		//speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
-		speex_echo_playback(sesEcho, psSpeaker);
-		speex_echo_capture(sesEcho, psMic, psClean);
+		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
+		logWav("psMic", psMic, iFrameSize);
+		logWav("psSpeaker", psSpeaker, iFrameSize);
+		logWav("psClean", psClean, iFrameSize);
+
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;
