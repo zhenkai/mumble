@@ -364,12 +364,12 @@ void NdnMediaProcess::sync_tick() {
 		if (udb != NULL) {
 			struct ccn_charbuf *pathbuf = ccn_charbuf_create();
 			ccn_name_from_uri(pathbuf, userName.toLocal8Bit().constData());
-			ccn_name_append_str(pathbuf, "audio");
 			ccn_name_append_str(pathbuf, "seq_sync");
+			ccn_name_append_str(pathbuf, "audio");
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.sync_callback, NULL);
 			if (res < 0) {
 				fprintf(stderr, "Sending interest failed at sync process\n");
-				exit(1);
+				std::exit(1);
 			}
 			ccn_charbuf_destroy(&pathbuf);
 			fprintf(stderr, "Sending interest sync interest to %s\n", userName.toLocal8Bit().constData());
@@ -485,8 +485,8 @@ void NdnMediaProcess::deleteLocalUser(QString strUserName)
 void NdnMediaProcess::publish_local_seq() {
 	struct ccn_charbuf *pathbuf = ccn_charbuf_create();
 	ccn_name_from_uri(pathbuf, localUdb->user_name.toLocal8Bit().constData());
-	ccn_name_append_str(pathbuf, "audio");
 	ccn_name_append_str(pathbuf, "seq_sync");
+	ccn_name_append_str(pathbuf, "audio");
 	struct ccn_charbuf *seqbuf = ccn_charbuf_create();
     ccn_charbuf_putf(seqbuf, "%ld", localSeq);
     ccn_name_append(pathbuf, seqbuf->buf, seqbuf->length);
