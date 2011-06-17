@@ -40,6 +40,7 @@
 #include "Meta.h"
 #include "Version.h"
 #include "SSL.h"
+#include <signal.h>
 
 #ifdef Q_OS_UNIX
 #include "UnixMurmur.h"
@@ -129,7 +130,22 @@ void IceStart();
 void IceStop();
 #endif
 
+
+// zhenkai
+static void abortHandler(int sig) {
+	char buf[1024];
+	fprintf(stderr, "Caught signal %i, trying to call debugger..\n", sig);
+	snprintf(buf, 1023, "gdb -n -batch -x debug_script -p %i", getpid());
+	system(buf);
+	if (sig != SIGABRT) {
+		signal(SIGABRT, SIG_DFL);
+		abort();
+	}
+}
+
 int main(int argc, char **argv) {
+	signal(SIGABRT, abortHandler);
+
 	// Check for SSE and MMX, but only in the windows binaries
 #ifdef Q_OS_WIN
 	int cpuinfo[4];
