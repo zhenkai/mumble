@@ -45,6 +45,16 @@
 // is called from global initialization.
 // Hence, we allocate upon first call.
 
+void print_intercept_time(char *file, char * msg) {
+	struct tm *tm;
+	struct timezone tz;
+	struct timeval tv;
+	gettimeofday(&tv, &tz);
+	tm = localtime(&tv.tv_sec);
+	FILE *fp = fopen(file);
+	fprintf(fp, "%d:%02d:%02d.%06d, ", tm->tm_hour, tm->tm_min, tm->tm_sec, (int)header->ts.tv_usec);
+}
+
 QMap<QString, AudioInputRegistrar *> *AudioInputRegistrar::qmNew;
 QString AudioInputRegistrar::current = QString();
 
@@ -379,6 +389,14 @@ void AudioInput::initializeMixer() {
 }
 
 void AudioInput::addMic(const void *data, unsigned int nsamp) {
+	FILE *fp = fopen("/var/tmp/micdump", "a");
+	fprintf(fp, "nsamp: %d, iMicLength: %d, MicChannels: %d, iEchoChannels: %d\n", nsamp, iMicLength, iMicChannels, iEchoChannels);
+	if (srsMic)
+		fprintf(fp, "srsMic: true\n");
+	else
+		fprintf(fp, "srsMic: false\n");
+
+
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iMicLength - iMicFilled);
 
@@ -427,6 +445,11 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 						echo = qlEchoFrames.takeFirst();
 					}
 				}
+				fprintf(fp, "qlEchoFrames.size: %d\n", qlEchoFrames.size());
+				if (echo) {
+					fprintf(fp, "should be taking qlEchoFrames\n");
+				} else
+					fprintf(fp, "not taking qlEchoFrames\n");
 
 				if (echo) {
 					delete [] psSpeaker;
@@ -434,8 +457,11 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 				}
 			}
 			encodeAudioFrame();
+
 		}
+
 	}
+	fclose(fp);
 }
 
 void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
@@ -443,6 +469,21 @@ void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
 }
 
 void AudioInput::addEcho(const void *data, unsigned int nsamp) {
+	FILE *dump = fopen("/var/tmp/dump", "a");
+	fprintf(dump, "nsamp: %d, iEchoLength: %d, iEchoChannels: %d\n", nsamp, iEchoLength, iEchoChannels);
+	fprintf(dump, "iEchoFrameSize: %d, iEchoFreq: %d, iSampleRate:%d\n", iEchoFrameSize, iEchoFreq, iSampleRate);
+	if (bEchoMulti) {
+		fprintf(dump, "bEchoMulti: true\n");
+	} else
+		fprintf(dump, "bEchoMulti: false\n");
+
+	if (srsEcho) {
+		fprintf(dump, "srsEcho: true\n");
+	}
+	else
+		fprintf(dump, "srsEcho: false\n");
+	fprintf(dump, "qlEchoFrames.size: %d\n", qlEchoFrames.size());
+	fclose(dump);
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iEchoLength - iEchoFilled);
 
@@ -489,6 +530,7 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 			QMutexLocker l(&qmEcho);
 			qlEchoFrames.append(outbuff);
 		}
+			
 	}
 }
 

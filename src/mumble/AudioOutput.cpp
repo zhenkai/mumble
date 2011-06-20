@@ -1178,7 +1178,10 @@ bool AudioOutput::mix(void *outbuff, unsigned int nsamp) {
 		// feed output to echo buffer
 		AudioInputPtr ai = g.ai;
 		if (ai) {
+			FILE *fp = fopen("/var/tmp/outdump", "a");
 			ai->addInternalEcho(outbuff, nsamp);
+			fprintf(fp, "nsamp: %d, iChannels: %d\n", nsamp, iChannels);
+			fclose(fp);
 		}
 
 	}
