@@ -39,20 +39,22 @@
 #include "NetworkConfig.h"
 #include "VoiceRecorder.h"
 #include "wavlog.h"
+#include <sys/time.h>
 
 // Remember that we cannot use static member classes that are not pointers, as the constructor
 // for AudioInputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
 // Hence, we allocate upon first call.
 
-void print_intercept_time(char *file, char * msg) {
+static void print_time(char *file, char * msg) {
 	struct tm *tm;
 	struct timezone tz;
 	struct timeval tv;
 	gettimeofday(&tv, &tz);
 	tm = localtime(&tv.tv_sec);
-	FILE *fp = fopen(file);
-	fprintf(fp, "%d:%02d:%02d.%06d, ", tm->tm_hour, tm->tm_min, tm->tm_sec, (int)header->ts.tv_usec);
+	FILE *fp = fopen(file, "a");
+	fprintf(fp, "%d:%02d:%02d.%06d, %s\n", tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec);
+	fclose(fp);
 }
 
 QMap<QString, AudioInputRegistrar *> *AudioInputRegistrar::qmNew;
@@ -443,8 +445,12 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 							iMinBuffered = 1000;
 							delete [] qlEchoFrames.takeFirst();
 						}
+						char buf[200];
+						sprintf(buf, "Going to takeFirst from qlist of size %d\n", qlEchoFrames.count());
+						print_time("/var/tmp/takedump", buf);
 						echo = qlEchoFrames.takeFirst();
 					}
+
 				}
 				fprintf(fp, "qlEchoFrames.size: %d\n", qlEchoFrames.size());
 				if (echo) {
@@ -530,6 +536,9 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 
 			QMutexLocker l(&qmEcho);
 			qlEchoFrames.append(outbuff);
+			char buf[200];
+			sprintf(buf, "Appended qlist of size %d\n", qlEchoFrames.count());
+			print_time("/var/tmp/appenddump", buf);
 		}
 			
 	}
