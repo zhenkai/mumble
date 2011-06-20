@@ -144,7 +144,7 @@ AudioInput::AudioInput() {
 		speex_encoder_ctl(esSpeex,SPEEX_SET_COMPLEXITY, &iArg);
 		qWarning("AudioInput: %d bits/s, %d hz, %d sample Speex-UWB", iAudioQuality, iSampleRate, iFrameSize);
 	}
-	iEchoFreq = iMicFreq = iSampleRate;
+	iMicFreq = iSampleRate;
 
 	iFrameCounter = 0;
 	iSilentFrames = 0;
@@ -169,6 +169,7 @@ AudioInput::AudioInput() {
 	AudioOutputPtr ao = g.ao;
 	if (ao) {
 		iEchoChannels = ao->getChannels();
+		iEchoFreq = ao->getMixerFreq();
 	} else {
 		fprintf(stderr, "AudioOutput has not been initialized\n");
 		std::exit(1);
@@ -217,9 +218,9 @@ AudioInput::~AudioInput() {
 	if (srsEcho)
 		speex_resampler_destroy(srsEcho);
 
-	appendWavHeader("psMic", iEchoChannels, iSampleRate);
-	appendWavHeader("psSpeaker", iEchoChannels, iSampleRate);
-	appendWavHeader("psClean", iEchoChannels, iSampleRate);
+	appendWavHeader("psMic", 1, iSampleRate);
+	appendWavHeader("psSpeaker", 1, iEchoFreq);
+	appendWavHeader("psClean", 1, iSampleRate);
 	delete [] psMic;
 	delete [] psClean;
 	delete [] psSpeaker;
