@@ -77,6 +77,7 @@ class AudioInput : public QThread {
 
 		QMutex qmEcho;
 		QList<short *> qlEchoFrames;
+		bool playback;
 		unsigned int iJitterSeq;
 		int iMinBuffered;
 
@@ -156,6 +157,9 @@ class AudioInput : public QThread {
 		void run() = 0;
 		virtual bool isAlive() const;
 		bool isTransmitting() const;
+
+		bool getPlayback() { return playback; }
+		void setPlayback(bool pb) { playback = pb; }
 };
 
 #else

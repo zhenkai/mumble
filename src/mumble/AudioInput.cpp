@@ -440,6 +440,7 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 					if (qlEchoFrames.isEmpty()) {
 						iJitterSeq = 0;
 						iMinBuffered = 1000;
+						playback = false;
 					} else {
 						iMinBuffered = qMin(iMinBuffered, qlEchoFrames.count());
 
@@ -448,11 +449,9 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 							iMinBuffered = 1000;
 							delete [] qlEchoFrames.takeFirst();
 						}
-						/*
 						char buf[200];
 						sprintf(buf, "Going to takeFirst from qlist of size %d\n", qlEchoFrames.count());
 						print_time("/var/tmp/takedump", buf);
-						*/
 						echo = qlEchoFrames.takeFirst();
 					}
 
@@ -544,6 +543,13 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 			iJitterSeq = qMin(iJitterSeq+1,10000U);
 
 			QMutexLocker l(&qmEcho);
+			if (!playback) {
+				short *echo_delay = new short[iEchoFrameSize];
+				for (int k = 0; k < iEchoFrameSize; k++)
+					echo_delay[k] = 0;
+				qlEchoFrames.append(echo_delay);
+				playback = true;
+			}
 			qlEchoFrames.append(outbuff);
 			/*
 			char buf[200];
