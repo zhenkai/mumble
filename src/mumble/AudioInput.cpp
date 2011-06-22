@@ -393,15 +393,6 @@ void AudioInput::initializeMixer() {
 }
 
 void AudioInput::addMic(const void *data, unsigned int nsamp) {
-	/*
-	FILE *fp = fopen("/var/tmp/micdump", "a");
-	fprintf(fp, "nsamp: %d, iMicLength: %d, MicChannels: %d, iEchoChannels: %d\n", nsamp, iMicLength, iMicChannels, iEchoChannels);
-	if (srsMic)
-		fprintf(fp, "srsMic: true\n");
-	else
-		fprintf(fp, "srsMic: false\n");
-		*/
-
 
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iMicLength - iMicFilled);
@@ -440,7 +431,7 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 					if (qlEchoFrames.isEmpty()) {
 						iJitterSeq = 0;
 						iMinBuffered = 1000;
-						//playback = false;
+						playback = false;
 					} else {
 						iMinBuffered = qMin(iMinBuffered, qlEchoFrames.count());
 
@@ -449,20 +440,10 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 							iMinBuffered = 1000;
 							delete [] qlEchoFrames.takeFirst();
 						}
-						char buf[200];
-						sprintf(buf, "Going to takeFirst from qlist of size %d\n", qlEchoFrames.count());
-						print_time("/var/tmp/takedump", buf);
 						echo = qlEchoFrames.takeFirst();
 					}
 
 				}
-				/*
-				fprintf(fp, "qlEchoFrames.size: %d\n", qlEchoFrames.size());
-				if (echo) {
-					fprintf(fp, "should be taking qlEchoFrames\n");
-				} else
-					fprintf(fp, "not taking qlEchoFrames\n");
-					*/
 
 				if (echo) {
 					delete [] psSpeaker;
@@ -482,23 +463,6 @@ void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
 }
 
 void AudioInput::addEcho(const void *data, unsigned int nsamp) {
-	/*FILE *dump = fopen("/var/tmp/dump", "a");
-	fprintf(dump, "nsamp: %d, iEchoLength: %d, iEchoChannels: %d\n", nsamp, iEchoLength, iEchoChannels);
-	fprintf(dump, "iEchoFrameSize: %d, iEchoFreq: %d, iSampleRate:%d\n", iEchoFrameSize, iEchoFreq, iSampleRate);
-	if (bEchoMulti) {
-		fprintf(dump, "bEchoMulti: true\n");
-	} else
-		fprintf(dump, "bEchoMulti: false\n");
-
-
-	if (srsEcho) {
-		fprintf(dump, "srsEcho: true\n");
-	}
-	else
-		fprintf(dump, "srsEcho: false\n");
-	fprintf(dump, "qlEchoFrames.size: %d\n", qlEchoFrames.size());
-	fclose(dump);
-		*/
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iEchoLength - iEchoFilled);
 
@@ -543,7 +507,6 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 			iJitterSeq = qMin(iJitterSeq+1,10000U);
 
 			QMutexLocker l(&qmEcho);
-			/*
 			if (!playback) {
 				short *echo_delay = new short[iEchoFrameSize];
 				for (int k = 0; k < iEchoFrameSize; k++)
@@ -551,13 +514,7 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 				qlEchoFrames.append(echo_delay);
 				playback = true;
 			}
-			*/
 			qlEchoFrames.append(outbuff);
-			/*
-			char buf[200];
-			sprintf(buf, "Appended qlist of size %d\n", qlEchoFrames.count());
-			print_time("/var/tmp/appenddump", buf);
-			*/
 		}
 			
 	}
@@ -767,9 +724,9 @@ void AudioInput::encodeAudioFrame() {
 		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
-		logWav("psMic", psMic, iFrameSize);
-		logWav("psSpeaker", psSpeaker, iFrameSize);
-		logWav("psClean", psClean, iFrameSize);
+		//logWav("psMic", psMic, iFrameSize);
+		//logWav("psSpeaker", psSpeaker, iFrameSize);
+		//logWav("psClean", psClean, iFrameSize);
 
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
