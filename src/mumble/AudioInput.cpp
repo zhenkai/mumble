@@ -68,7 +68,12 @@ void CircularBuffer::update(char rw, int bytes) {
 	}
 }
 
-CircularBuffer::CircularBuffer(): writePtr(0), readPtr(0), readBytes(0), writeBytes(0) {}
+CircularBuffer::CircularBuffer(){
+	writePtr =0; 
+	readPtr = 0; 
+	readBytes = 0; 
+	writeBytes = 0;
+}
 
 void CircularBuffer::writeToBuffer(char *data, size_t len) {
 	for (int i = 0; i < len; i++) {
