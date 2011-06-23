@@ -40,21 +40,81 @@
 #include "VoiceRecorder.h"
 #include "wavlog.h"
 #include <sys/time.h>
+#include <pthread.h>
 
 // Remember that we cannot use static member classes that are not pointers, as the constructor
 // for AudioInputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
 // Hence, we allocate upon first call.
 
-static void print_time(char *file, char * msg) {
-	struct tm *tm;
-	struct timezone tz;
+void CircularBuffer::update(char rw, int bytes) {
+	switch(rw) {
+	case 'r': 
+		readBytes += bytes;
+		if (readPtr + bytes < BUFFER_SIZE)
+			return;
+		readPtr = (readPtr + bytes) % BUFFER_SIZE;
+		return;
+	case 'w':
+		writeBytes += bytes;
+
+		if (writePtr + bytes < BUFFER_SIZE)
+			return;
+		writePtr = (writePtr + bytes) % BUFFER_SIZE;
+		return;
+	default:
+		fprintf(stderr, "Unknown circular buffer operation\n");
+		abort();
+	}
+}
+
+CircularBuffer::CircularBuffer(): writePtr(0), readPtr(0), readBytes(0), writeBytes(0) {}
+
+void CircularBuffer::writeToBuffer(char *data, size_t len) {
+	for (int i = 0; i < len; i++) {
+		buf[writePtr] = data[i];
+		update('w', 1);
+		if (isFull()) {
+			fprintf(stderr, "circularBuffer overflow!\n");
+			abort();
+		}
+	}
+}
+
+void CircularBuffer::log(char *msg) {
+	char print_buf[200];
 	struct timeval tv;
+	struct timezone tz;
 	gettimeofday(&tv, &tz);
-	tm = localtime(&tv.tv_sec);
-	FILE *fp = fopen(file, "a");
-	fprintf(fp, "%d:%02d:%02d.%06d, %s\n", tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec);
-	fclose(fp);
+	sprintf(print_buf, "%d.%06d: %s", tv.tv_sec, tv.tv_usec, msg);
+	writeToBuffer(print_buf, strlen(print_buf));
+}
+
+int CircularBuffer::readToFile(FILE *fp) {
+	if (writeBytes <= readBytes)
+		return 0;
+	int bytes = writeBytes - readBytes;
+	for(int i = 0; i < bytes; i++) {
+		fwrite(buf + readPtr, 1, sizeof(char), fp);
+		update('r', 1);
+	}
+}
+
+static CircularBuffer micBuf;
+static CircularBuffer speakerBuf;
+static CircularBuffer cleanBuf;
+static CircularBuffer eventBuf;
+static FILE *micFp;
+static FILE *speakerFp;
+static FILE *cleanFp;
+static FILE* eventFp;
+
+void *CircularBufferIO(void *threadid) {
+	micBuf.readToFile(micFp);
+	speakerBuf.readToFile(speakerFp);
+	cleanBuf.readToFile(cleanFp);
+	eventBuf.readToFile(eventFp);
+	usleep(20000);
 }
 
 QMap<QString, AudioInputRegistrar *> *AudioInputRegistrar::qmNew;
@@ -102,6 +162,18 @@ bool AudioInputRegistrar::canExclusive() const {
 }
 
 AudioInput::AudioInput() {
+	micFp = fopen("/var/tmp/psMic", "wb");
+	speakerFp = fopen("/var/tmp/psSpeaker", "wb");
+	cleanFp = fopen("/var/tmp/psClean", "wb");
+	eventFp = fopen("/var/tmp/eventLog", "wb");
+	pthread_t logThread;
+
+	int rc = pthread_create(&logThread, NULL, CircularBufferIO, NULL);
+	if (rc) {
+		fprintf(stderr, "Logging thread failed to start\n");
+		abort();
+	}
+
 	adjustBandwidth(g.iMaxBandwidth, iAudioQuality, iAudioFrames);
 
 	g.iAudioBandwidth = getNetworkBandwidth(iAudioQuality, iAudioFrames);
@@ -197,6 +269,10 @@ AudioInput::AudioInput() {
 }
 
 AudioInput::~AudioInput() {
+	fclose(micFp);
+	fclose(speakerFp);
+	fclose(cleanFp);
+	fclose(eventFp);
 	bRunning = false;
 	wait();
 
@@ -223,7 +299,6 @@ AudioInput::~AudioInput() {
 	appendWavHeader("psMic", 1, iSampleRate);
 	appendWavHeader("psSpeaker", 1, iSampleRate);
 	appendWavHeader("psClean", 1, iSampleRate);
-	appendWavHeader("psSource", 1, iSampleRate);
 	delete [] psMic;
 	delete [] psClean;
 	delete [] psSpeaker;
@@ -393,7 +468,7 @@ void AudioInput::initializeMixer() {
 }
 
 void AudioInput::addMic(const void *data, unsigned int nsamp) {
-
+	eventBuf.log("addMic called\n");
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iMicLength - iMicFilled);
 
@@ -433,6 +508,9 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 						iMinBuffered = 1000;
 						playback = false;
 					} else {
+						char pbuf[200];
+						sprintf(pbuf, "take first from qlEchoFrames list with size %d\n", qlEchoFrames.count());
+						eventBuf.log(pbuf);
 						iMinBuffered = qMin(iMinBuffered, qlEchoFrames.count());
 
 						if ((iJitterSeq > 100) && (iMinBuffered > 1)) {
@@ -445,17 +523,14 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 
 				}
 
-				if (echo) {
+				//if (echo) {
 					delete [] psSpeaker;
 					psSpeaker = echo;
-				}
+				//}
 			}
 			encodeAudioFrame();
-
 		}
-
 	}
-	//fclose(fp);
 }
 
 void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
@@ -463,6 +538,7 @@ void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
 }
 
 void AudioInput::addEcho(const void *data, unsigned int nsamp) {
+	eventBuf.log("addEcho called\n");
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iEchoLength - iEchoFilled);
 
@@ -515,6 +591,9 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 				playback = true;
 			}
 			qlEchoFrames.append(outbuff);
+			char pbuf[200];
+			sprintf(pbuf, "appended frame, now qlEchoFrames has size %d\n", qlEchoFrames.size());
+			eventBuf.log(pbuf);
 		}
 			
 	}
@@ -724,16 +803,14 @@ void AudioInput::encodeAudioFrame() {
 		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
-		//logWav("psMic", psMic, iFrameSize);
-		//logWav("psSpeaker", psSpeaker, iFrameSize);
-		//logWav("psClean", psClean, iFrameSize);
+		micBuf.writeToBuffer((char *)psMic, iFrameSize * sizeof(short));
+		speakerBuf.writeToBuffer((char *)psSpeaker, iFrameSize * sizeof(short));
+		cleanBuf.writeToBuffer((char *)psClean, iFrameSize * sizeof(short));
 
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;
 	}
-
-
 
 	sum=1.0f;
 	for (i=0;i<iFrameSize;i++)

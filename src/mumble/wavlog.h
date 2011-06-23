@@ -45,5 +45,24 @@ friend std::ostream& operator << (std::ostream& os, const WavHeader& header);
 };
 std::ostream& operator << (std::ostream& os, const WavHeader& header);
 void appendWavHeader(string filename, int nChannels, int sampleRate);
-void logWav(string filename, short *frame, int nsamp);
+
+#define BUFFER_SIZE 200000
+class CircularBuffer{
+private:
+	int writePtr;
+	int readPtr;
+	long readBytes;
+	long writeBytes;
+	char buf[BUFFER_SIZE];
+
+	bool isFull() {return (writeBytes - readBytes >= BUFFER_SIZE); }
+	bool isEmpty() { return (writeBytes == readBytes); }
+	void update(char rw, int bytes); 
+
+public:
+	CircularBuffer();
+	void writeToBuffer(char *data, size_t len);
+	int readToFile(FILE *fp);
+	void log(char *msg);
+};
 #endif

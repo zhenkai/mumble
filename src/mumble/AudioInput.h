@@ -162,6 +162,7 @@ class AudioInput : public QThread {
 		void setPlayback(bool pb) { playback = pb; }
 };
 
+
 #else
 class AudioInput;
 #endif
