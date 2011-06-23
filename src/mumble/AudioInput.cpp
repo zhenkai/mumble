@@ -45,10 +45,25 @@
 // for AudioInputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
 // Hence, we allocate upon first call.
-extern CircularBuffer *micBuf;
-extern CircularBuffer *speakerBuf;
-extern CircularBuffer *cleanBuf;
-extern CircularBuffer *eventBuf;
+CircularBuffer *micBuf;
+CircularBuffer *speakerBuf;
+CircularBuffer *cleanBuf;
+CircularBuffer *eventBuf;
+
+static long addEchoNum = 0;
+static long addMicNum = 0;
+static long takeNum = 0;
+static long appendNum = 0;
+
+void *CircularBufferIO(void *threadid) {
+	while(true) {
+		micBuf->readToFile();
+		speakerBuf->readToFile();
+		cleanBuf->readToFile();
+		eventBuf->readToFile();
+		usleep(20000);
+	}
+}
 
 QMap<QString, AudioInputRegistrar *> *AudioInputRegistrar::qmNew;
 QString AudioInputRegistrar::current = QString();
@@ -95,6 +110,18 @@ bool AudioInputRegistrar::canExclusive() const {
 }
 
 AudioInput::AudioInput() {
+	micBuf = new CircularBuffer("/tmp/psMic");
+	speakerBuf = new CircularBuffer("/tmp/psSpeaker");
+	cleanBuf = new CircularBuffer("/tmp/psClean");
+	eventBuf = new CircularBuffer("/tmp/eventLog");
+
+	pthread_t logThread;
+	int rc = pthread_create(&logThread, NULL, CircularBufferIO, NULL);
+	if (rc) {
+		fprintf(stderr, "Logging thread failed to start\n");
+		abort();
+	}
+
 	adjustBandwidth(g.iMaxBandwidth, iAudioQuality, iAudioFrames);
 
 	g.iAudioBandwidth = getNetworkBandwidth(iAudioQuality, iAudioFrames);
@@ -385,7 +412,9 @@ void AudioInput::initializeMixer() {
 }
 
 void AudioInput::addMic(const void *data, unsigned int nsamp) {
-	eventBuf->log("addMic called\n");
+	char addBuf[200];
+	sprintf(addBuf, "Func: addMic, times: %ld\n", ++addMicNum);
+	eventBuf->log(addBuf);
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iMicLength - iMicFilled);
 
@@ -426,7 +455,7 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 						playback = false;
 					} else {
 						char pbuf[200];
-						sprintf(pbuf, "take first from qlEchoFrames list with size %d\n", qlEchoFrames.count());
+						sprintf(pbuf, "Func: take first, list size: %d, times: %ld\n", qlEchoFrames.count(), ++takeNum);
 						eventBuf->log(pbuf);
 						iMinBuffered = qMin(iMinBuffered, qlEchoFrames.count());
 
@@ -455,7 +484,9 @@ void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
 }
 
 void AudioInput::addEcho(const void *data, unsigned int nsamp) {
-	eventBuf->log("addEcho called\n");
+	char addBuf[200];
+	sprintf(addBuf, "Func: addEcho, times: %ld\n", ++addEchoNum);
+	eventBuf->log(addBuf);
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iEchoLength - iEchoFilled);
 
@@ -509,7 +540,7 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 			}
 			qlEchoFrames.append(outbuff);
 			char pbuf[200];
-			sprintf(pbuf, "appended frame, now qlEchoFrames has size %d\n", qlEchoFrames.size());
+			sprintf(pbuf, "Func: append frame, list size: %d, times: %ld\n", qlEchoFrames.size(), ++appendNum);
 			eventBuf->log(pbuf);
 		}
 			
@@ -727,7 +758,7 @@ void AudioInput::encodeAudioFrame() {
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;
-		micBuf->writeToBuffer((char *)psMic, iFrameSize * sizeof(short));
+		eventBuf->log("echoAudioFrame called without echo\n");
 	}
 
 	sum=1.0f;

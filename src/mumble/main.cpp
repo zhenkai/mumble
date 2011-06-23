@@ -139,23 +139,6 @@ void abort_handler(int sig) {
 	exit(1);
 }
 
-
-CircularBuffer *micBuf;
-CircularBuffer *speakerBuf;
-CircularBuffer *cleanBuf;
-CircularBuffer *eventBuf;
-
-
-void *CircularBufferIO(void *threadid) {
-	while(true) {
-		micBuf->readToFile();
-		speakerBuf->readToFile();
-		cleanBuf->readToFile();
-		eventBuf->readToFile();
-		usleep(20000);
-	}
-}
-
 int main(int argc, char **argv) {
 	signal(SIGABRT, abort_handler);
 	int res = 0;
@@ -414,17 +397,6 @@ int main(int argc, char **argv) {
 	MumbleFileEngineHandler *mfeh = new MumbleFileEngineHandler();
 
 	Audio::start();
-	micBuf = new CircularBuffer("/var/tmp/psMic");
-	speakerBuf = new CircularBuffer("/var/tmp/psSpeaker");
-	cleanBuf = new CircularBuffer("/var/tmp/psClean");
-	eventBuf = new CircularBuffer("/var/tmp/eventLog");
-
-	pthread_t logThread;
-	int rc = pthread_create(&logThread, NULL, CircularBufferIO, NULL);
-	if (rc) {
-		fprintf(stderr, "Logging thread failed to start\n");
-		abort();
-	}
 
 	a.setQuitOnLastWindowClosed(false);
 

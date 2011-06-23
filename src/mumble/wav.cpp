@@ -57,7 +57,7 @@ std::ostream& operator << (std::ostream& os, const WavHeader& header) {
 }
 
 void appendWavHeader(string filename, int nChannels, int sampleRate){
-	filename = "/var/tmp/" + filename;
+	filename = "/tmp/" + filename;
 	ifstream in;
 	in.open(filename.c_str(), ios::in | ios::binary);
 	string wavFilename = filename + ".wav";
@@ -78,7 +78,7 @@ void appendWavHeader(string filename, int nChannels, int sampleRate){
 }
 
 void logWav(string filename, short *frame, int nsamp) {
-	filename = "/var/tmp/" + filename;
+	filename = "/tmp/" + filename;
 	ofstream out;
 	out.open(filename.c_str(), ios::out | ios::binary | ios::app);
 	for (int i = 0; i < nsamp; i ++) {
@@ -91,16 +91,19 @@ void CircularBuffer::update(char rw, int bytes) {
 	switch(rw) {
 	case 'r': 
 		readBytes += bytes;
-		if (readPtr + bytes < BUFFER_SIZE)
-			return;
-		readPtr = (readPtr + bytes) % BUFFER_SIZE;
+		readPtr += bytes;
+		if (readPtr >= BUFFER_SIZE) {
+			readPtr = readPtr % BUFFER_SIZE;
+		}
 		return;
+
 	case 'w':
 		writeBytes += bytes;
+		writePtr += bytes;
+		if (writePtr >= BUFFER_SIZE) {
+			writePtr = writePtr % BUFFER_SIZE;
+		}
 
-		if (writePtr + bytes < BUFFER_SIZE)
-			return;
-		writePtr = (writePtr + bytes) % BUFFER_SIZE;
 		return;
 	default:
 		fprintf(stderr, "Unknown circular buffer operation\n");
@@ -146,8 +149,21 @@ int CircularBuffer::readToFile() {
 	int bytes = writeBytes - readBytes;
 	for(int i = 0; i < bytes; i++) {
 		fwrite(buf + readPtr, 1, sizeof(char), fp);
-		update('r', 1);
+		update('r', sizeof(char));
 	}
 }
 
+/*
+int main() {
+	CircularBuffer * cb = new CircularBuffer("/tmp/test");
+	for (int i = 0; i < 1000; i++) {
+		char sbuf[100];
+		sprintf(sbuf, "hello world: %d\n", i);
+		cb->log(sbuf);
+		if (i % 100 == 99)
+			cb->readToFile();
+	}
+	return 0;
+}
+*/
 
