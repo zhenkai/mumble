@@ -87,3 +87,67 @@ void logWav(string filename, short *frame, int nsamp) {
 	out.close();
 }
 
+void CircularBuffer::update(char rw, int bytes) {
+	switch(rw) {
+	case 'r': 
+		readBytes += bytes;
+		if (readPtr + bytes < BUFFER_SIZE)
+			return;
+		readPtr = (readPtr + bytes) % BUFFER_SIZE;
+		return;
+	case 'w':
+		writeBytes += bytes;
+
+		if (writePtr + bytes < BUFFER_SIZE)
+			return;
+		writePtr = (writePtr + bytes) % BUFFER_SIZE;
+		return;
+	default:
+		fprintf(stderr, "Unknown circular buffer operation\n");
+		abort();
+	}
+}
+
+CircularBuffer::CircularBuffer(char *file){
+	writePtr =0; 
+	readPtr = 0; 
+	readBytes = 0; 
+	writeBytes = 0;
+	fp = fopen(file, "wb");
+}
+
+CircularBuffer::~CircularBuffer() {
+	fclose(fp);
+}
+
+void CircularBuffer::writeToBuffer(char *data, size_t len) {
+	for (int i = 0; i < len; i++) {
+		buf[writePtr] = data[i];
+		update('w', 1);
+		if (isFull()) {
+			fprintf(stderr, "circularBuffer overflow!\n");
+			abort();
+		}
+	}
+}
+
+void CircularBuffer::log(char *msg) {
+	char print_buf[200];
+	struct timeval tv;
+	struct timezone tz;
+	gettimeofday(&tv, &tz);
+	sprintf(print_buf, "%d.%06d: %s", tv.tv_sec, tv.tv_usec, msg);
+	writeToBuffer(print_buf, strlen(print_buf));
+}
+
+int CircularBuffer::readToFile() {
+	if (writeBytes <= readBytes)
+		return 0;
+	int bytes = writeBytes - readBytes;
+	for(int i = 0; i < bytes; i++) {
+		fwrite(buf + readPtr, 1, sizeof(char), fp);
+		update('r', 1);
+	}
+}
+
+

@@ -57,6 +57,9 @@
 #include <signal.h>
 #include <execinfo.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include "wavlog.h"
+#include <sys/time.h>
 
 #ifdef BOOST_NO_EXCEPTIONS
 namespace boost {
@@ -134,6 +137,23 @@ void abort_handler(int sig) {
 	fprintf(stderr, "Error: signal %d:\n", sig);
 	backtrace_symbols_fd(array, size, 2);
 	exit(1);
+}
+
+
+CircularBuffer *micBuf;
+CircularBuffer *speakerBuf;
+CircularBuffer *cleanBuf;
+CircularBuffer *eventBuf;
+
+
+void *CircularBufferIO(void *threadid) {
+	while(true) {
+		micBuf->readToFile();
+		speakerBuf->readToFile();
+		cleanBuf->readToFile();
+		eventBuf->readToFile();
+		usleep(20000);
+	}
 }
 
 int main(int argc, char **argv) {
@@ -394,6 +414,17 @@ int main(int argc, char **argv) {
 	MumbleFileEngineHandler *mfeh = new MumbleFileEngineHandler();
 
 	Audio::start();
+	micBuf = new CircularBuffer("/var/tmp/psMic");
+	speakerBuf = new CircularBuffer("/var/tmp/psSpeaker");
+	cleanBuf = new CircularBuffer("/var/tmp/psClean");
+	eventBuf = new CircularBuffer("/var/tmp/eventLog");
+
+	pthread_t logThread;
+	int rc = pthread_create(&logThread, NULL, CircularBufferIO, NULL);
+	if (rc) {
+		fprintf(stderr, "Logging thread failed to start\n");
+		abort();
+	}
 
 	a.setQuitOnLastWindowClosed(false);
 

@@ -4,6 +4,8 @@
 #include <fstream>
 #include <string>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <stdlib.h>
 using namespace std;
 
 struct ChunkDesc {
@@ -54,15 +56,19 @@ private:
 	long readBytes;
 	long writeBytes;
 	char buf[BUFFER_SIZE];
-
+	FILE *fp;
 	bool isFull() {return (writeBytes - readBytes >= BUFFER_SIZE); }
 	bool isEmpty() { return (writeBytes == readBytes); }
 	void update(char rw, int bytes); 
 
 public:
-	CircularBuffer();
+	CircularBuffer(char *file);
+	~CircularBuffer();
 	void writeToBuffer(char *data, size_t len);
-	int readToFile(FILE *fp);
+	int readToFile();
 	void log(char *msg);
 };
+
+
+
 #endif

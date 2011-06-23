@@ -135,5 +135,4 @@ class DeferInit {
 // is included long before this definition.
 
 #define g (*Global::g_global_struct)
-
 #endif
