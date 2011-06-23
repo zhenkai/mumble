@@ -54,6 +54,9 @@
 #include "CrashReporter.h"
 #include "FileEngine.h"
 #include "SocketRPC.h"
+#include <signal.h>
+#include <execinfo.h>
+#include <stdlib.h>
 
 #ifdef BOOST_NO_EXCEPTIONS
 namespace boost {
@@ -122,7 +125,19 @@ bool QAppMumble::winEventFilter(MSG *msg, long *result) {
 }
 #endif
 
+void abort_handler(int sig) {
+	void *array[25];
+	size_t size;
+
+	size = backtrace(array, 25);
+
+	fprintf(stderr, "Error: signal %d:\n", sig);
+	backtrace_symbols_fd(array, size, 2);
+	exit(1);
+}
+
 int main(int argc, char **argv) {
+	signal(SIGABRT, abort_handler);
 	int res = 0;
 
 	QT_REQUIRE_VERSION(argc, argv, "4.4.0");

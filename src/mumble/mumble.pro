@@ -14,6 +14,7 @@ FORMS	*= ConfigDialog.ui MainWindow.ui ConnectDialog.ui ConnectDialogEdit.ui Ban
 #TRANSLATIONS	= mumble_en.ts mumble_es.ts mumble_de.ts mumble_fr.ts mumble_pl.ts mumble_ru.ts mumble_cs.ts mumble_it.ts mumble_ja.ts mumble_pt_BR.ts mumble_zh_CN.ts mumble_zh_TW.ts mumble_da.ts mumble_he.ts mumble_sv.ts
 PRECOMPILED_HEADER = mumble_pch.hpp
 INCLUDEPATH *= ../bonjour
+QMAKE_CXXFLAGS *= -rdynamic
 
 isEmpty(QMAKE_LRELEASE) {
   QMAKE_QMAKE_BASE = $$basename(QMAKE_QMAKE)

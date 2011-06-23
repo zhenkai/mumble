@@ -42,10 +42,14 @@
 #include <sys/time.h>
 #include <pthread.h>
 
+
+
 // Remember that we cannot use static member classes that are not pointers, as the constructor
 // for AudioInputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
 // Hence, we allocate upon first call.
+
+
 
 void CircularBuffer::update(char rw, int bytes) {
 	switch(rw) {
@@ -167,6 +171,7 @@ bool AudioInputRegistrar::canExclusive() const {
 }
 
 AudioInput::AudioInput() {
+
 	micFp = fopen("/var/tmp/psMic", "wb");
 	speakerFp = fopen("/var/tmp/psSpeaker", "wb");
 	cleanFp = fopen("/var/tmp/psClean", "wb");
