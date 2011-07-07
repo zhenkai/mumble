@@ -749,7 +749,7 @@ void AudioInput::encodeAudioFrame() {
 
 	if (sesEcho && psSpeaker) {
 		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
-		//speex_preprocess_run(sppPreprocess, psClean);
+		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
 		micBuf->writeToBuffer((char *)psMic, iFrameSize * sizeof(short));
 		speakerBuf->writeToBuffer((char *)psSpeaker, iFrameSize * sizeof(short));
