@@ -1,0 +1,11 @@
+actd is a program resembles sd of MBONE. 
+
+It performs the following tasks:
+- 1. List all the scheduled or on-going conferences
+- 2. Allow user to create new conferences
+- 3. Launch corresponding audio tool when the user wants to join a conference
+
+When first launched, it asks for the name prefix that is going to be used by the media data. Make sure that this name is routable. It can later be changed by clicking the "Preference" button.
+
+If you have further problem, contact:
+zhenkai@cs.ucla.edu

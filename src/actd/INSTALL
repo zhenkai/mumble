@@ -1,0 +1,6 @@
+Make sure you have Qt installed on your system.
+
+Type the following command to compile actd:
+qmake actd.pro
+make
+
