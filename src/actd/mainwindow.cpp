@@ -96,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(sd, SIGNAL(add(Announcement *)), this, SLOT(addConferenceToList(Announcement *)));
 	
 	
-	audioProcess = new QProcess(this);
+
 
 
 }
@@ -237,58 +237,13 @@ void MainWindow::joinConference() {
 		out << qsConfig;
 		config.close();
 
-		if (audioPath == "") {
-			audioPath = QFileDialog::getOpenFileName(this, tr("Choose the audio tool"), ".", tr(""));
-			writeSettings();
-		}
-		QFile audioFile(audioPath, this);
-		if (!audioFile.exists()) {
-			audioPath = QFileDialog::getOpenFileName(this, tr("Choose the audio tool"), ".", tr(""));
-			writeSettings();
-		}
-		
+		audioProcess = new QProcess(this);
+		audioPath = "murmurd";
 		audioProcess->start(audioPath);
-		while (audioProcess->error() == QProcess::FailedToStart) {
-			int ret = QMessageBox::warning(this, tr("Failed to start audio tool."), tr("Failed to start audio tool\n Do you want to try again?"), QMessageBox::Cancel | QMessageBox::Yes, QMessageBox::Yes);
-			if (ret == QMessageBox::Cancel)
-				break;
-			audioPath = QFileDialog::getOpenFileName(this, tr("Please choose the audio tool"), ".", tr(""));
-			writeSettings();
-			audioProcess->start(audioPath);
-		}
+
 		QProcess *mumbleProcess = new QProcess(this);
-		
-#ifdef __APPLE__
-		QString mumblePath = "/Applications/Mumble.app/Contents/MacOS/mumble";
-#else
-		QString mumblePath ="mumble";
-#endif
-
-#ifdef __APPLE__
-		QFile mumbleFile(mumblePath, this);
-		if (!mumbleFile.exists()) {
-			mumblePath = QFileDialog::getOpenFileName(this, tr("Choose path for Mumble"), ".", tr(""));
-			mumbleProcess->start(mumblePath + "/Contents/MacOs/mumble");
-		}
-		else
-			mumbleProcess->start(mumblePath);
-
-#else
+		QString mumblePath = "mumble";
 		mumbleProcess->start(mumblePath);
-#endif
-
-		/*
-		//while (mumbleProcess->error() == QProcess::FailedToStart || mumbleProcess->UnknownError) {
-		if(mumbleProcess->error() == QProcess::FailedToStart || mumbleProcess->UnknownError) {
-			int ret = QMessageBox::warning(this, tr("Failed to start Mumble"),\
-			tr("Failed to find Mumble application.\n Please launch mumble manually."), QMessageBox::Cancel | QMessageBox::Yes, QMessageBox::Yes);
-			if (ret == QMessageBox::Cancel) {
-				audioProcess->kill();
-			}
-			//mumblePath = QFileDialog::getOpenFileName(this, tr("Please choose Mumble"), ".", tr(""));
-			//mumbleProcess->start(mumblePath);
-		}
-		*/
 		
 	}
 }
