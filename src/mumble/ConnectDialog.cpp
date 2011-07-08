@@ -75,6 +75,7 @@ ServerView::ServerView(QWidget *p) : QTreeWidget(p) {
 	siFavorite->setExpanded(true);
 	siFavorite->setHidden(true);
 
+#ifndef NDN_MUMBLE
 #ifdef USE_BONJOUR
 	siLAN = new ServerItem(tr("LAN"), ServerItem::LANType);
 	addTopLevelItem(siLAN);
@@ -96,12 +97,16 @@ ServerView::ServerView(QWidget *p) : QTreeWidget(p) {
 	qmContinentNames.insert(QLatin1String("sa"), tr("South America"));
 	qmContinentNames.insert(QLatin1String("eu"), tr("Europe"));
 	qmContinentNames.insert(QLatin1String("oc"), tr("Oceania"));
+
+#endif
 }
 
 ServerView::~ServerView() {
 	delete siFavorite;
+#ifndef NDN_MUMBLE
 	delete siLAN;
 	delete siPublic;
+#endif
 }
 
 QMimeData *ServerView::mimeData(const QList<QTreeWidgetItem *> mimeitems) const {
@@ -750,17 +755,23 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 
 	siAutoConnect = NULL;
 
+#ifndef NDN_MUMBLE
 	if (tPublicServers.elapsed() >= 60 * 24 * 1000000ULL) {
 		qlPublicServers.clear();
 	}
+#else
+	bPublicInit = true;
+#endif
 
 	qdbbButtonBox->button(QDialogButtonBox::Ok)->setText(tr("&Connect"));
 
+#ifndef NDN_MUMBLE
 	QPushButton *qpb = new QPushButton(tr("&Add New..."), this);
 	qpb->setDefault(false);
 	qpb->setAutoDefault(false);
 	connect(qpb, SIGNAL(clicked()), qaFavoriteAddNew, SIGNAL(triggered()));
 	qdbbButtonBox->addButton(qpb, QDialogButtonBox::ActionRole);
+
 
 	qtwServers->sortItems(1, Qt::AscendingOrder);
 	qtwServers->header()->setResizeMode(0, QHeaderView::Stretch);
@@ -791,6 +802,7 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 	qagFilters->addAction(qaShowPopulated);
 
 	connect(qagFilters, SIGNAL(triggered(QAction *)), this, SLOT(onFiltersTriggered(QAction *)));
+#endif
 
 	qmPopup = new QMenu(this);
 	qmFilters = new QMenu(tr("&Filters"), this);
@@ -798,16 +810,39 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 	qmFilters->addAction(qaShowReachable);
 	qmFilters->addAction(qaShowPopulated);
 
-	QList<QTreeWidgetItem *> ql;
-	QList<FavoriteServer> favorites = Database::getFavorites();
 
+	QList<FavoriteServer> favorites = Database::getFavorites();
+	bool localServerExist = false;
 	foreach(const FavoriteServer &fs, favorites) {
+
 		ServerItem *si = new ServerItem(fs);
 		qlItems << si;
+		if (si->qsName != "NDN Mumble Server") 
+			continue;
 		startDns(si);
 		qtwServers->siFavorite->addServerItem(si);
+		localServerExist = true;
+		qtwServers->setCurrentItem(si);
+		break;
+
 	}
 
+	if (!localServerExist) {
+#ifdef NDN_MUMBLE
+	QString name = "NDN Mumble Server";
+	QString host = "127.0.0.1";
+	unsigned short port = 64738;
+	QString qsUsername, qsPassword;
+	ServerItem *si = new ServerItem(name, host, port, qsUsername, qsPassword);
+	QHostAddress qha(si->qsHostname);
+	si->qlAddresses.append(qha);
+	qlItems << si;
+	qtwServers->siFavorite->addServerItem(si);
+	qtwServers->setCurrentItem(si);
+#endif
+	}
+
+#ifndef NDN_MUMBLE
 #ifdef USE_BONJOUR
 	// Make sure the we got the objects we need, then wire them up
 	if (g.bc->bsbBrowser && g.bc->bsrResolver) {
@@ -839,10 +874,16 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 	iPingIndex = -1;
 	qtPingTick->start(50);
 
+
+
+
 	new QShortcut(QKeySequence(QKeySequence::Copy), this, SLOT(on_qaFavoriteCopy_triggered()));
 	new QShortcut(QKeySequence(QKeySequence::Paste), this, SLOT(on_qaFavoritePaste_triggered()));
+#endif
 
-	qtwServers->setCurrentItem(NULL);
+
+
+#ifndef NDN_MUMBLE
 	bLastFound = false;
 
 	qmPingCache = Database::getPingCache();
@@ -851,6 +892,7 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 		restoreGeometry(g.s.qbaConnectDialogGeometry);
 	if (! g.s.qbaConnectDialogHeader.isEmpty())
 		qtwServers->header()->restoreState(g.s.qbaConnectDialogHeader);
+#endif
 }
 
 ConnectDialog::~ConnectDialog() {
@@ -875,11 +917,14 @@ ConnectDialog::~ConnectDialog() {
 }
 
 void ConnectDialog::accept() {
+
 	ServerItem *si = static_cast<ServerItem *>(qtwServers->currentItem());
+
 	if (! si || si->qlAddresses.isEmpty() || si->qsHostname.isEmpty()) {
 		qWarning() << "Sad panda";
 		return;
 	}
+
 
 	qsPassword = si->qsPassword;
 	qsServer = si->qsHostname;
@@ -1067,7 +1112,9 @@ void ConnectDialog::on_qtwServers_customContextMenuRequested(const QPoint &mpos)
 
 	if (si && (si->itType == ServerItem::FavoriteType)) {
 		qmPopup->addAction(qaFavoriteEdit);
+#ifndef NDN_MUMBLE
 		qmPopup->addAction(qaFavoriteRemove);
+#endif
 	} else if (si) {
 		qmPopup->addAction(qaFavoriteAdd);
 	}
@@ -1076,7 +1123,9 @@ void ConnectDialog::on_qtwServers_customContextMenuRequested(const QPoint &mpos)
 
 	if (! qmPopup->isEmpty())
 		qmPopup->addSeparator();
+#ifndef NDN_MUMBLE
 	qmPopup->addMenu(qmFilters);
+#endif
 
 	qmPopup->popup(qtwServers->viewport()->mapToGlobal(mpos), NULL);
 }

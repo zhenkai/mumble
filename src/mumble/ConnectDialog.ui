@@ -20,7 +20,10 @@
       <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="dragEnabled">
+	 <!-- NDN MUMBLE disable this
       <bool>true</bool>
+	  -->
+	  <bool>false</bool>
      </property>
      <property name="dragDropMode">
       <enum>QAbstractItemView::DragDrop</enum>
@@ -41,13 +44,15 @@
       <bool>true</bool>
      </property>
      <attribute name="headerStretchLastSection">
-      <bool>false</bool>
+	 <!-- NDN MUMBLE MADE IT TRUE -->
+      <bool>true</bool>
      </attribute>
      <column>
       <property name="text">
        <string>Servername</string>
       </property>
      </column>
+<!-- FOR NDN_MUMBLE
      <column>
       <property name="text">
        <string>Ping</string>
@@ -58,6 +63,7 @@
        <string>Users</string>
       </property>
      </column>
+	-->
     </widget>
    </item>
    <item>

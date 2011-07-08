@@ -1,7 +1,7 @@
 include(../mumble.pri)
 
 CONFIG *= no-embed-qt-translations 
-DEFINES		*= MUMBLE
+DEFINES		*= MUMBLE NDN_MUMBLE
 TEMPLATE	= app
 QT		*= network sql opengl xml svg
 TARGET		= mumble
