@@ -3,6 +3,9 @@
 #include "debugbox.h"
 #include <QIODevice>
 #include <QtXml>
+#include <signal.h>
+#include <execinfo.h>
+#include <stdlib.h>
 
 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
@@ -1202,7 +1205,19 @@ void SessionEnum::stopThread() {
 	}
 }
 
+static void abort_handler(int sig) {
+	void *array[25];
+	size_t size;
+
+	size = backtrace(array, 25);
+
+	fprintf(stderr, "Error: signal %d:\n", sig);
+	backtrace_symbols_fd(array, size, 2);
+	exit(1);
+}
+
 void SessionEnum::run() {
+	signal(SIGABRT, abort_handler);
 	int res = 0;
 	while (bRunning) {
 		if (res >= 0) {
