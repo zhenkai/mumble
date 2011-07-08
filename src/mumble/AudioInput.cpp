@@ -45,6 +45,7 @@
 // for AudioInputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
 // Hence, we allocate upon first call.
+#ifndef QT_NO_DEBUG
 CircularBuffer *micBuf;
 CircularBuffer *speakerBuf;
 CircularBuffer *cleanBuf;
@@ -64,6 +65,7 @@ void *CircularBufferIO(void *threadid) {
 		usleep(20000);
 	}
 }
+#endif
 
 QMap<QString, AudioInputRegistrar *> *AudioInputRegistrar::qmNew;
 QString AudioInputRegistrar::current = QString();
@@ -110,6 +112,7 @@ bool AudioInputRegistrar::canExclusive() const {
 }
 
 AudioInput::AudioInput() {
+#ifndef QT_NO_DEBUG
 	micBuf = new CircularBuffer("/tmp/psMic");
 	speakerBuf = new CircularBuffer("/tmp/psSpeaker");
 	cleanBuf = new CircularBuffer("/tmp/psClean");
@@ -121,6 +124,7 @@ AudioInput::AudioInput() {
 		fprintf(stderr, "Logging thread failed to start\n");
 		abort();
 	}
+#endif
 
 	adjustBandwidth(g.iMaxBandwidth, iAudioQuality, iAudioFrames);
 
@@ -412,9 +416,11 @@ void AudioInput::initializeMixer() {
 }
 
 void AudioInput::addMic(const void *data, unsigned int nsamp) {
+#ifndef QT_NO_DEBUG
 	char addBuf[200];
 	sprintf(addBuf, "Func: addMic, times: %ld\n", ++addMicNum);
 	eventBuf->log(addBuf);
+#endif
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iMicLength - iMicFilled);
 
@@ -454,9 +460,11 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 						iMinBuffered = 1000;
 						playback = false;
 					} else {
+#ifndef QT_NO_DEBUG
 						char pbuf[200];
 						sprintf(pbuf, "Func: take first, list size: %d, times: %ld\n", qlEchoFrames.count(), ++takeNum);
 						eventBuf->log(pbuf);
+#endif
 						iMinBuffered = qMin(iMinBuffered, qlEchoFrames.count());
 
 						if ((iJitterSeq > 100) && (iMinBuffered > 1)) {
@@ -484,9 +492,11 @@ void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
 }
 
 void AudioInput::addEcho(const void *data, unsigned int nsamp) {
+#ifndef QT_NO_DEBUG
 	char addBuf[200];
 	sprintf(addBuf, "Func: addEcho, times: %ld\n", ++addEchoNum);
 	eventBuf->log(addBuf);
+#endif
 	while (nsamp > 0) {
 		unsigned int left = qMin(nsamp, iEchoLength - iEchoFilled);
 
@@ -539,9 +549,11 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 				playback = true;
 			}
 			qlEchoFrames.append(outbuff);
+#ifndef QT_NO_DEBUG
 			char pbuf[200];
 			sprintf(pbuf, "Func: append frame, list size: %d, times: %ld\n", qlEchoFrames.size(), ++appendNum);
 			eventBuf->log(pbuf);
+#endif
 		}
 			
 	}
@@ -751,14 +763,18 @@ void AudioInput::encodeAudioFrame() {
 		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
+#ifndef QT_NO_DEBUG
 		micBuf->writeToBuffer((char *)psMic, iFrameSize * sizeof(short));
 		speakerBuf->writeToBuffer((char *)psSpeaker, iFrameSize * sizeof(short));
 		cleanBuf->writeToBuffer((char *)psClean, iFrameSize * sizeof(short));
+#endif
 
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;
+#ifndef QT_NO_DEBUG
 		eventBuf->log("echoAudioFrame called without echo\n");
+#endif
 	}
 
 	sum=1.0f;
