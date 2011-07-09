@@ -116,6 +116,10 @@ class AppBundle(object):
 		if os.path.exists(g15):
 			self.handle_binary_libs(g15)
 
+		actd = os.path.join(os.path.abspath(self.bundle), 'Contents', 'MacOS', 'actd')
+		if os.path.exists(actd):
+			self.handle_binary_libs(actd)
+
 		manual = os.path.join(os.path.abspath(self.bundle), 'Contents', 'Plugins', 'libmanual.dylib')
 		if os.path.exists(manual):
 			self.handle_binary_libs(manual)
@@ -210,6 +214,15 @@ class AppBundle(object):
 		print ' * Copying murmurd configuration'
 		dst = os.path.join(self.bundle, 'Contents', 'MacOS', 'murmur.ini')
 		shutil.copy('scripts/murmur.ini.osx', dst)
+	
+	def copy_actd(self):
+		''' 
+			Copy actd binary into our Mumble app bundle
+		'''
+		print ' * Copying actd binary'
+		src = os.path.join(self.bundle, '..', 'actd.app', 'Contents', 'MacOS', 'actd')
+		dst = os.path.join(self.bundle, 'Contents', 'MacOS', 'actd')
+		shutil.copy(src, dst)
 
 	def copy_g15helper(self):
 		'''
@@ -311,6 +324,11 @@ class AppBundle(object):
 			print ' * Changing version in Info.plist'
 			p = self.infoplist
 			p['CFBundleVersion'] = self.version
+			p['CFBundleExecutable'] = "actd"
+			p['CFBundleIconFile'] = 'actd.icns'
+			p['CFBundleGetInfoString'] = '''
+			An adapted version of mumble which runs over NDN as our audio conference tool
+				'''
 			plistlib.writePlist(p, self.infopath)
 
 	def add_compat_warning(self):
@@ -472,11 +490,12 @@ if __name__ == '__main__':
 	a = AppBundle('release/Mumble.app', ver)
 	a.copy_murmur()
 	a.copy_g15helper()
+	a.copy_actd()
 	a.copy_codecs()
 	a.copy_plugins()
 	a.copy_qt_plugins()
 	a.handle_libs()
-	a.copy_resources(['icons/mumble.icns', 'scripts/qt.conf'])
+	a.copy_resources(['icons/mumble.icns', 'scripts/qt.conf', 'src/actd/actd.icns'])
 	a.update_plist()
 	if not options.universal:
 		a.add_compat_warning()
@@ -497,6 +516,7 @@ if __name__ == '__main__':
 			'release/Mumble.app/Contents/Plugins/libmanual.dylib',
 			'release/Mumble.app/Contents/Codecs/libcelt0.0.7.0.dylib',
 			'release/Mumble.app/Contents/Codecs/libcelt0.0.11.0.dylib',
+			'release/Mumble.app/Contents/MacOS/actd',
 		)
 
 		codesign(binaries)
