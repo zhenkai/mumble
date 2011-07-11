@@ -21,7 +21,7 @@ class MainWindow: public QDialog
 	Q_OBJECT
 
 public:
-	MainWindow(QWidget *parent = 0);
+	MainWindow(char * argv[], QWidget *parent = 0);
 	QSize sizeHint() const;
 
 private slots:
@@ -74,6 +74,8 @@ private:
 	SessionEnum * sd;
 
 	QProcess *audioProcess;
+
+	QString binaryPath;
 
 };
 
