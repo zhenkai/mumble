@@ -280,7 +280,6 @@ class AppBundle(object):
 		shutil.copytree('release/plugins/', dst, symlinks=True)
 
 	def copy_qt_plugins(self):
-		return
 		'''
 			Copy over any needed Qt plugins.
 		'''
