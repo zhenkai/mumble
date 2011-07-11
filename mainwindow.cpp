@@ -189,7 +189,7 @@ void MainWindow::joinConference() {
 	}
 	if (audio) {
 
-		if (audioProcess->state() != QProcess::NotRunning) {
+		if (audioProcess != NULL && audioProcess->state() != QProcess::NotRunning) {
 			int ret = QMessageBox::warning(this, tr("Conference Tool Set"),
 											tr("The audio daemon is already running.\n" "Do you want to continue?"), QMessageBox::Cancel | QMessageBox::Yes, QMessageBox::Cancel);
 			if (ret == QMessageBox::Cancel)
