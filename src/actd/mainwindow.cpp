@@ -8,11 +8,13 @@
 #include "debugbox.h"
 
 
-MainWindow::MainWindow(QWidget *parent) 
+MainWindow::MainWindow(char *argv[], QWidget *parent) 
 	:QDialog(parent)
 {
-
-
+	binaryPath = argv[0];
+	QString temp = binaryPath.left(binaryPath.lastIndexOf("/"));
+	binaryPath = temp;
+	debug("binary path is " + temp);
 	pubConfList = new QTreeWidget;
 	pubConfList->setEnabled(false);
 	pubConfList->setRootIsDecorated(false);
@@ -189,6 +191,7 @@ void MainWindow::joinConference() {
 	}
 	if (audio) {
 
+/*
 		if (audioProcess != NULL && audioProcess->state() != QProcess::NotRunning) {
 			int ret = QMessageBox::warning(this, tr("Conference Tool Set"),
 											tr("The audio daemon is already running.\n" "Do you want to continue?"), QMessageBox::Cancel | QMessageBox::Yes, QMessageBox::Cancel);
@@ -202,6 +205,7 @@ void MainWindow::joinConference() {
 				audioProcess = new QProcess(this);
 			}
 		}
+		*/
 
 		QString qsConfig = "<config><prefix>" + prefix + "</prefix><confName>"\
 							+ confName + "</confName>";
@@ -238,11 +242,11 @@ void MainWindow::joinConference() {
 		config.close();
 
 		audioProcess = new QProcess(this);
-		audioPath = "murmurd";
+		audioPath = binaryPath + "/" + "murmurd";
 		audioProcess->start(audioPath);
 
 		QProcess *mumbleProcess = new QProcess(this);
-		QString mumblePath = "mumble";
+		QString mumblePath = binaryPath + "/" + "mumble";
 		mumbleProcess->start(mumblePath);
 		
 	}
