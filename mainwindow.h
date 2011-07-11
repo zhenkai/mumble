@@ -51,11 +51,13 @@ private:
 	QLabel *pubConfLabel;
 	//QLabel *myConfLabel;
 	QLabel *confDescLabel;
+	QLabel *currentPrefLabel;
 
 	QPushButton *newButton;
 	QPushButton *prefButton;
 	QPushButton *aboutButton;
 	QPushButton *quitButton;
+
 
 	QPushButton *joinButton;
 	QPushButton *editButton;

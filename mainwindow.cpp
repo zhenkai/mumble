@@ -11,6 +11,8 @@
 MainWindow::MainWindow(char *argv[], QWidget *parent) 
 	:QDialog(parent)
 {
+	readSettings();
+
 	binaryPath = argv[0];
 	QString temp = binaryPath.left(binaryPath.lastIndexOf("/"));
 	binaryPath = temp;
@@ -39,6 +41,8 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	pubConfLabel = new QLabel(tr("Public Conferences"));
 	//myConfLabel = new QLabel(tr("My Conferences"));
 	confDescLabel = new QLabel(tr("Conference Descriptions"));
+	QString warning = "Current prefix for voice data is: " + prefix ;
+	currentPrefLabel = new QLabel(warning);
 
 	newButton = new QPushButton(tr("New"));
 	prefButton = new QPushButton(tr("Preferences"));
@@ -79,6 +83,7 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	mainLayout->addWidget(pubConfList);
 	mainLayout->addWidget(confDescLabel);
 	mainLayout->addWidget(confDesc);
+	mainLayout->addWidget(currentPrefLabel);
 	mainLayout->addWidget(footButtonBox);
 	setLayout(mainLayout);
 
@@ -93,7 +98,7 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	connect(dismissButton, SIGNAL(clicked()), this, SLOT(dismissConference()));
 	connect(pubConfList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(processItem()));
 	
-	readSettings();
+
 	
 	sd = new SessionEnum(prefix);
 	connect(sd, SIGNAL(expired(QString, QString)), this, SLOT(removeConferenceFromList(QString, QString)));
@@ -173,7 +178,8 @@ void MainWindow::changePref() {
 	if (ok && !text.isEmpty()) {
 		prefix = text; 
 		writeSettings();
-
+		QString warning = "Current prefix for voice data is: " + prefix ;
+		currentPrefLabel->setText(warning);
 	}
 }
 
