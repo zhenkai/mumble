@@ -129,6 +129,9 @@ AudioWizard::AudioWizard(QWidget *p) : QWizard(p) {
 	qlQualityCustom->setVisible(qrbQualityCustom->isChecked());
 
 	qcbPositional->setChecked(g.s.bPositionalAudio);
+#ifdef NDN_MUMBLE
+	qcbPositional->setVisible(false);
+#endif
 	qcbAttenuateOthers->setChecked(g.s.bAttenuateOthers);
 
 	on_qcbInput_activated(qcbInput->currentIndex());
