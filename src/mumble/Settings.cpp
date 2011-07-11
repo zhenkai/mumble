@@ -248,10 +248,18 @@ Settings::Settings() {
 	atTransmit = VAD;
 	bTransmitPosition = false;
 	bMute = bDeaf = false;
+#ifdef NDN_MUMBLE
+	bTTS = false;
+#else
 	bTTS = true;
+#endif
 	iTTSVolume = 75;
 	iTTSThreshold = 250;
+#ifdef NDN_MUMBLE
+	iQuality = 32000;
+#else
 	iQuality = 40000;
+#endif
 	fVolume = 1.0f;
 	fOtherVolume = 0.5f;
 	bAttenuateOthersOnTalk = false;
@@ -321,7 +329,11 @@ Settings::Settings() {
 	iPortAudioInput = -1; // default device
 	iPortAudioOutput = -1; // default device
 
+#ifdef NDN_MUMBLE
+	bPositionalAudio = false;
+#else
 	bPositionalAudio = true;
+#endif
 	bPositionalHeadphone = false;
 	fAudioMinDistance = 1.0f;
 	fAudioMaxDistance = 15.0f;

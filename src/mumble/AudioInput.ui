@@ -549,8 +549,13 @@
         <property name="minimum">
          <number>8000</number>
         </property>
+		<!-- NDN MUMBLE CHANGED THIS
         <property name="maximum">
          <number>96000</number>
+        </property>
+		-->
+        <property name="maximum">
+         <number>32000</number>
         </property>
         <property name="singleStep">
          <number>1000</number>

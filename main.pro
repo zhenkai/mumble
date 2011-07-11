@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
-CONFIG *= ordered debug_and_release no-11x no-plugins no-g15 no-overlay
+CONFIG *= ordered debug_and_release no-11x no-plugins no-g15 no-overlay 
 
 !CONFIG(no-client) {
   unix:!CONFIG(bundled-speex):system(pkg-config --atleast-version=1.2 speexdsp) {
