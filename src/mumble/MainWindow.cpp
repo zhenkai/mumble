@@ -1803,7 +1803,11 @@ void MainWindow::updateMenuPermissions() {
 	qaChannelUnlinkAll->setEnabled(p & (ChanACL::Write | ChanACL::LinkChannel));
 
 	qaChannelSendMessage->setEnabled(p & (ChanACL::Write | ChanACL::TextMessage));
+#ifdef NDN_MUMBLE
+	qteChat->setEnabled(false);
+#else
 	qteChat->setEnabled(p & (ChanACL::Write | ChanACL::TextMessage));
+#endif
 }
 
 void MainWindow::talkingChanged() {
@@ -2523,6 +2527,11 @@ void MainWindow::qtvUserCurrentChanged(const QModelIndex &, const QModelIndex &)
 
 	if (g.uiSession == 0) {
 		qteChat->setDefaultText(tr("<center>Not connected</center>"), true);
+#ifdef NDN_MUMBLE
+	} else {
+		qteChat->setDefaultText(tr("Connected"));
+	}
+#else
 	} else if (p == NULL || p->uiSession == g.uiSession) {
 		// Channel tree target
 		if (c == NULL) // If no channel selected fallback to current one
@@ -2533,6 +2542,7 @@ void MainWindow::qtvUserCurrentChanged(const QModelIndex &, const QModelIndex &)
 		// User target
 		qteChat->setDefaultText(tr("<center>Type message to user '%1' here</center>").arg(p->qsName));
 	}
+#endif
 
 	updateMenuPermissions();
 }
