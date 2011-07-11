@@ -54,6 +54,8 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 
 	listPrivate = new QCheckBox(tr("Also List Private Conferences"));
 	connect(listPrivate, SIGNAL(stateChanged(int)), this, SLOT(listPrivateConferences()));
+	// TODO: should enable this in near future
+	listPrivate->setEnabled(false);
 	
 	QHBoxLayout *topLayout = new QHBoxLayout;
 	topLayout->addWidget(newButton);
