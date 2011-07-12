@@ -1,8 +1,8 @@
-mumble (1.2.3-87-gf7d8711-1~ppa1~maverick1) maverick; urgency=low
+mumble (1.2.3) maverick; urgency=low
 
-  * PPA Upload of 1.2.3-87-gf7d8711 for Ubuntu maverick
+  * PPA Upload of 1.2.3 for Ubuntu maverick
 
- -- Thorvald Natvig <thorvald@debian.org>  Sat, 02 Apr 2011 15:46:47 -0700
+ -- Zhenkai Zhu <zhenkai@cs.ucla.edu>  Sat, 02 Apr 2011 15:46:47 -0700
 
 mumble (1.2.3-2) unstable; urgency=low
 

@@ -7,8 +7,10 @@
 
 MAKEFILE = $(firstword $(MAKEFILE_LIST))
 SOURCE_DIR = $(dir $(MAKEFILE))..
-VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\)-.*/\1/p')
-MUMBLE_DEB_VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\).*/\1/p')
+VERSION = "1.2.3"
+MUMBLE_DEB_VERSION = "1.2.3"
+#VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\)-.*/\1/p')
+#MUMBLE_DEB_VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\).*/\1/p')
 
 export DH_OPTIONS
 
@@ -67,7 +69,7 @@ install-indep:
 	dh_installdirs -i
 	dh_install -i
 	# Install and rename web scripts
-	install -m 0755 -D ./scripts/weblist.pl $(CURDIR)/debian/mumble-server-web/usr/share/mumble-server-web/www/weblist.cgi
+	#install -m 0755 -D ./scripts/weblist.pl $(CURDIR)/debian/mumble-server-web/usr/share/mumble-server-web/www/weblist.cgi
 
 install-arch:
 	dh_testdir
@@ -82,7 +84,7 @@ install-arch:
 	install -m 0644 -D ./scripts/murmur.conf $(CURDIR)/debian/mumble-server/etc/dbus-1/system.d/mumble-server.conf
 	install -m 0644 -D ./scripts/murmur.ini.system $(CURDIR)/debian/mumble-server/etc/mumble-server.ini
 	# Also install an menu icon for mumble-11x.
-	install -m 0644 -D ./icons/mumble.xpm $(CURDIR)/debian/mumble-11x/usr/share/pixmaps/mumble11x.xpm
+	#install -m 0644 -D ./icons/mumble.xpm $(CURDIR)/debian/mumble-11x/usr/share/pixmaps/mumble11x.xpm
 ifeq ($(DEB_BUILD_ARCH), amd64)
 	install -m 0755 -d $(CURDIR)/debian/mumble/usr/lib32/mumble
 	cp -dp ./release-32/libmumble.so* $(CURDIR)/debian/mumble/usr/lib32/mumble/
@@ -102,7 +104,7 @@ binary-common:
 	dh_link
 	dh_gconf
 	dh_icons
-	dh_strip --dbg-package=mumble-dbg
+	#dh_strip --dbg-package=mumble-dbg
 	dh_compress
 	dh_fixperms
 	dh_perl $(CURDIR)/debian/mumble-server-web/usr/lib/cgi-bin/mumble-server
