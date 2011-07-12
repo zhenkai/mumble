@@ -250,11 +250,19 @@ void MainWindow::joinConference() {
 		config.close();
 
 		audioProcess = new QProcess(this);
+#ifdef __APPLE__
 		audioPath = binaryPath + "/" + "murmurd";
+#else
+		audioPath = "murmurd";
+#endif
 		audioProcess->start(audioPath);
 
 		QProcess *mumbleProcess = new QProcess(this);
+#ifdef __APPLE__
 		QString mumblePath = binaryPath + "/" + "mumble";
+#else
+		QString mumblePath = "mumble";
+#endif
 		mumbleProcess->start(mumblePath);
 		
 	}
