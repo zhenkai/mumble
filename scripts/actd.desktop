@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Actd
+GenericName=Voice Chat
+Comment=Conference management tool over NDN
+Exec=actd
+Icon=actd
+Terminal=false
+Type=Application
+StartupNotify=false
+Categories=Network;Chat;Qt;
+Version=1.0

@@ -1,2 +1,6 @@
 release/actd usr/bin/
+src/actd/actd.xpm usr/share/pixmaps/
+src/actd/actd.svg usr/share/icons/hicolor/scalable/apps/
+scripts/actd.desktop usr/share/applications/
+scripts/actd.protocol usr/share/services/
 

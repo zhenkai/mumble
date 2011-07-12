@@ -1,0 +1,8 @@
+[Protocol]
+exec=actd
+protocol=actd
+input=none
+output=none
+Icon=actd
+helper=true
+Description=A low-latency, high quality voice chat program for gaming
