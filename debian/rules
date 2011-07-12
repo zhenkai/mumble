@@ -1,0 +1,126 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+#QUILT include /usr/share/quilt/quilt.make
+
+MAKEFILE = $(firstword $(MAKEFILE_LIST))
+SOURCE_DIR = $(dir $(MAKEFILE))..
+VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\)-.*/\1/p')
+MUMBLE_DEB_VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\).*/\1/p')
+
+export DH_OPTIONS
+
+configure: configure-stamp
+configure-stamp: #QUILT patch
+	echo $(DEB_BUILD_ARCH)
+	dh_testdir
+	qmake-qt4 -recursive main.pro \
+	CONFIG*=release \
+	CONFIG*=symbols \
+	CONFIG*=no-embed-qt-translations \
+	CONFIG*=packaged \
+	DEFINES*=NO_UPDATE_CHECK \
+	DEFINES*=PLUGIN_PATH=/usr/lib/mumble \
+	DEFINES*=MUMBLE_VERSION=$(MUMBLE_DEB_VERSION) \
+	DEFINES*=HAVE_LIMITS_H \
+	DEFINES*=HAVE_ENDIAN_H
+	touch configure-stamp
+
+build: build-arch build-indep
+
+build-arch: build-arch-stamp
+
+build-arch-stamp: configure-stamp
+	$(MAKE) release
+ifeq ($(DEB_BUILD_ARCH), amd64)
+	(cd overlay_gl && touch overlay.c && $(MAKE) clean && $(MAKE) release DESTDIR_ADD=-32 CFLAGS_ADD=-m32 LFLAGS_ADD=-m32 && $(MAKE) clean)
+endif
+	touch $@
+
+build-indep: build-indep-stamp
+
+build-indep-stamp:
+	slice2html -I/usr/share/Ice-3.4.1/slice -I/usr/share/Ice-3.3.1/slice -I/usr/share/Ice/slice src/murmur/Murmur.ice --output-dir Ice
+	touch $@
+
+clean: #QUILT unpatch
+	dh_testdir
+	dh_testroot
+	rm -f build-arch-stamp build-indep-stamp configure-stamp
+	[ ! -f Makefile ] || $(MAKE) distclean
+	# Remove files from previous builds.
+	[ ! -d gendoc ] || rm -rf Ice
+	rm -rf release debug
+	[ ! -d release-32 ] || rm -rf release-32
+	rm -f $(CURDIR)/debian/mumble-server.logrotate $(CURDIR)/mumble-server.init
+	debconf-updatepo
+	dh_clean
+
+install: install-indep install-arch
+
+install-indep:
+	dh_testdir
+	dh_testroot
+	dh_clean -k -i
+	dh_installdirs -i
+	dh_install -i
+	# Install and rename web scripts
+	install -m 0755 -D ./scripts/weblist.pl $(CURDIR)/debian/mumble-server-web/usr/share/mumble-server-web/www/weblist.cgi
+
+install-arch:
+	dh_testdir
+	dh_testroot
+	dh_clean -k -s
+	dh_installdirs -s
+	dh_install -s
+	# Add Debian files.
+	install -m 0755 ./scripts/murmur.init $(CURDIR)/debian/mumble-server.init
+	install -m 0755 ./scripts/murmur.logrotate $(CURDIR)/debian/mumble-server.logrotate
+	# install mumble files that need to be renamed.
+	install -m 0644 -D ./scripts/murmur.conf $(CURDIR)/debian/mumble-server/etc/dbus-1/system.d/mumble-server.conf
+	install -m 0644 -D ./scripts/murmur.ini.system $(CURDIR)/debian/mumble-server/etc/mumble-server.ini
+	# Also install an menu icon for mumble-11x.
+	install -m 0644 -D ./icons/mumble.xpm $(CURDIR)/debian/mumble-11x/usr/share/pixmaps/mumble11x.xpm
+ifeq ($(DEB_BUILD_ARCH), amd64)
+	install -m 0755 -d $(CURDIR)/debian/mumble/usr/lib32/mumble
+	cp -dp ./release-32/libmumble.so* $(CURDIR)/debian/mumble/usr/lib32/mumble/
+endif
+
+binary-common:
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs CHANGES
+	dh_installdocs
+	dh_installmenu
+	dh_installinit -- defaults 95
+	dh_installman
+	dh_installlogrotate
+	dh_installdebconf
+	dh_installexamples
+	dh_link
+	dh_gconf
+	dh_icons
+	dh_strip --dbg-package=mumble-dbg
+	dh_compress
+	dh_fixperms
+	dh_perl $(CURDIR)/debian/mumble-server-web/usr/lib/cgi-bin/mumble-server
+	dh_installdeb
+	dh_shlibdeps -Xlib32/mumble/
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary-indep: build-indep install-indep
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+
+binary-arch: build-arch install-arch
+	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
+
+binary:	binary-indep binary-arch
+
+get-orig-source:
+	wget -O $(SOURCE_DIR)/mumble_$(VERSION).orig.tar.gz http://mumble.info/snapshot/mumble-$(VERSION).tar.gz
+
+.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch configure

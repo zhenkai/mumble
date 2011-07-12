@@ -1,0 +1,16 @@
+#! /bin/bash
+#
+# Hook for automatic backports.
+#
+# Target dist: Ubuntu Intrepid Ibex
+
+sed -i -e 's#^\(Depends:.*\)exim4\(.*\)$#\1postfix\2#' debian/control
+sed -i -e 's#^Build-Depends:.*$#Build-Depends: debhelper, po-debconf, quilt, libboost-dev, libqt4-dev, libssl-dev, libzeroc-ice33-dev | libzeroc-ice32-dev | libzeroc-ice-dev , ice33-translators | ice32-translators | ice-translators, libcap2-dev, protobuf-compiler, libprotobuf-dev, libavahi-compat-libdnssd-dev #' debian/control
+
+sed -i -e 's#CONFIG.=no-bundled-celt#CONFIG*=no-client#' debian/rules
+sed -i -e 's#CONFIG.=symbols##' debian/rules
+
+perl -pi -e 'BEGIN{undef $/;} s/\nifeq \(.+?\nendif/\n/smg' debian/rules
+
+perl -pi -e 'BEGIN{undef $/;} s/Package: mumble\nArchitecture: any/Package: mumble\nArchitecture: none/smg' debian/control
+perl -pi -e 'BEGIN{undef $/;} s/Package: mumble-dbg.+?Architecture: any/Package: mumble-dbg\nArchitecture: none/smg' debian/control
