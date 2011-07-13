@@ -253,7 +253,7 @@ void MainWindow::joinConference() {
 #ifdef __APPLE__
 		audioPath = binaryPath + "/" + "murmurd";
 #else
-		audioPath = "murmurd";
+		audioPath = "ndn-murmurd";
 #endif
 		audioProcess->start(audioPath);
 
@@ -261,7 +261,7 @@ void MainWindow::joinConference() {
 #ifdef __APPLE__
 		QString mumblePath = binaryPath + "/" + "mumble";
 #else
-		QString mumblePath = "mumble";
+		QString mumblePath = "ndn-mumble";
 #endif
 		mumbleProcess->start(mumblePath);
 		
