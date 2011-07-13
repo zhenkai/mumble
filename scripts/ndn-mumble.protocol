@@ -1,0 +1,8 @@
+[Protocol]
+exec=ndn-mumble %u
+protocol=ndn-mumble
+input=none
+output=none
+Icon=mumble
+helper=true
+Description=A low-latency, high quality voice chat program running over NDN

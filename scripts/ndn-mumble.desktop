@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=Mumble
+Name=NDN-Mumble
 GenericName=Voice Chat
-Comment=A low-latency, high quality voice chat program for gaming
-Exec=mumble
+Comment=A low-latency, high quality voice chat program running over NDN
+Exec=ndn-mumble
 Icon=mumble
 Terminal=false
 Type=Application

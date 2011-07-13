@@ -1,4 +1,4 @@
-Template: mumble-server/password
+Template: ndn-mumble-server/password
 Type: password
 _Description: Password to set on SuperUser account:
  Murmur has a special account called "SuperUser" which bypasses all
@@ -9,15 +9,15 @@ _Description: Password to set on SuperUser account:
  .
  If you leave this blank, the password will not be changed.
 
-Template: mumble-server/start_daemon
+Template: ndn-mumble-server/start_daemon
 Type: boolean
 Default: true
-_Description: Autostart mumble-server on server boot?
+_Description: Autostart ndn-mumble-server on server boot?
  Mumble-server (murmurd) can start automatically when the server is booted.
 
-Template: mumble-server/use_capabilities
+Template: ndn-mumble-server/use_capabilities
 Type: boolean
 Default: false
-_Description: Allow mumble-server to use higher priority?
+_Description: Allow ndn-mumble-server to use higher priority?
  Mumble-server (murmurd) can use higher process and network priority to
  ensure low latency audio forwarding even on highly loaded servers.

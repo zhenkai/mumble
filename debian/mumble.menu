@@ -1,4 +1,0 @@
-?package(mumble):needs="X11" section="Applications/Network/Communication"\
- title="Mumble"\
- description="Mumble voice chat client."\
- command="/usr/bin/mumble" icon="/usr/share/pixmaps/mumble.xpm"

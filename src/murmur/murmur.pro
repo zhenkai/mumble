@@ -9,7 +9,7 @@ CONFIG(static) {
 CONFIG	-= gui
 QT *= network sql xml
 QT -= gui
-TARGET = murmur
+TARGET = ndn-murmurd
 DBFILE  = murmur.db
 LANGUAGE	= C++
 FORMS =
@@ -52,7 +52,7 @@ unix {
 
   HEADERS *= UnixMurmur.h
   SOURCES *= UnixMurmur.cpp
-  TARGET = murmurd
+  TARGET = ndn-murmurd
 }
 
 macx {

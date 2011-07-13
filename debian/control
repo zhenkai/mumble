@@ -1,4 +1,4 @@
-Source: mumble
+Source: ndn-mumble
 Section: sound
 Priority: optional
 Homepage: http://github.com/zhenkai/mumble
@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 7.0.8), po-debconf, libboost1.46-dev | libboost-dev
 Standards-Version: 3.9.1
 Vcs-Git: git://github.com/zhenkai/mumble.git
 
-Package: mumble
+Package: ndn-mumble
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libcelt0 (>= 0.7.0) | libcelt0-0 (>= 0.7.1~), libqt4-sql-sqlite, lsb-release
 Recommends: speech-dispatcher
@@ -21,7 +21,7 @@ Description: Low latency VoIP client
  provided by the package "mumble-server".
 
 
-Package: mumble-server
+Package: ndn-mumble-server
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, dbus, libqt4-sql-sqlite
 Description: Low latency VoIP server
@@ -35,6 +35,6 @@ Description: Low latency VoIP server
 Package: actd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description:
+Description: Conference Center
  Actd is the control center for conferencing.
 

@@ -1,3 +1,0 @@
-debian/MurmurPHP.ini etc/php5/conf.d
-debian/mumble-server-web.conf etc/apache2/conf.d
-scripts/weblist.php usr/share/mumble-server-web/www

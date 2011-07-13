@@ -7,10 +7,8 @@
 
 MAKEFILE = $(firstword $(MAKEFILE_LIST))
 SOURCE_DIR = $(dir $(MAKEFILE))..
-VERSION = "1.2.3"
-MUMBLE_DEB_VERSION = "1.2.3"
-#VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\)-.*/\1/p')
-#MUMBLE_DEB_VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\).*/\1/p')
+VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\)-.*/\1/p')
+MUMBLE_DEB_VERSION := $(shell dpkg-parsechangelog -l$(dir $(MAKEFILE))changelog | sed -ne 's/^Version: \(.*\).*/\1/p')
 
 export DH_OPTIONS
 
@@ -56,7 +54,7 @@ clean: #QUILT unpatch
 	[ ! -d gendoc ] || rm -rf Ice
 	rm -rf release debug
 	[ ! -d release-32 ] || rm -rf release-32
-	rm -f $(CURDIR)/debian/mumble-server.logrotate $(CURDIR)/mumble-server.init
+	rm -f $(CURDIR)/debian/ndn-mumble-server.logrotate $(CURDIR)/ndn-mumble-server.init
 	debconf-updatepo
 	dh_clean
 
@@ -78,15 +76,15 @@ install-arch:
 	dh_installdirs -s
 	dh_install -s
 	# Add Debian files.
-	install -m 0755 ./scripts/murmur.init $(CURDIR)/debian/mumble-server.init
-	install -m 0755 ./scripts/murmur.logrotate $(CURDIR)/debian/mumble-server.logrotate
+	install -m 0755 ./scripts/murmur.init $(CURDIR)/debian/ndn-mumble-server.init
+	install -m 0755 ./scripts/murmur.logrotate $(CURDIR)/debian/ndn-mumble-server.logrotate
 	# install mumble files that need to be renamed.
-	install -m 0644 -D ./scripts/murmur.conf $(CURDIR)/debian/mumble-server/etc/dbus-1/system.d/mumble-server.conf
-	install -m 0644 -D ./scripts/murmur.ini.system $(CURDIR)/debian/mumble-server/etc/mumble-server.ini
+	install -m 0644 -D ./scripts/murmur.conf $(CURDIR)/debian/ndn-mumble-server/etc/dbus-1/system.d/ndn-mumble-server.conf
+	install -m 0644 -D ./scripts/murmur.ini.system $(CURDIR)/debian/ndn-mumble-server/etc/ndn-mumble-server.ini
 	# Also install an menu icon for mumble-11x.
 	#install -m 0644 -D ./icons/mumble.xpm $(CURDIR)/debian/mumble-11x/usr/share/pixmaps/mumble11x.xpm
 ifeq ($(DEB_BUILD_ARCH), amd64)
-	install -m 0755 -d $(CURDIR)/debian/mumble/usr/lib32/mumble
+	install -m 0755 -d $(CURDIR)/debian/ndn-mumble/usr/lib32/ndn-mumble
 	cp -dp ./release-32/libmumble.so* $(CURDIR)/debian/mumble/usr/lib32/mumble/
 endif
 
@@ -107,9 +105,9 @@ binary-common:
 	#dh_strip --dbg-package=mumble-dbg
 	dh_compress
 	dh_fixperms
-	dh_perl $(CURDIR)/debian/mumble-server-web/usr/lib/cgi-bin/mumble-server
+	#dh_perl $(CURDIR)/debian/mumble-server-web/usr/lib/cgi-bin/mumble-server
 	dh_installdeb
-	dh_shlibdeps -Xlib32/mumble/
+	dh_shlibdeps -Xlib32/ndn-mumble/
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
