@@ -55,7 +55,7 @@ clean: #QUILT unpatch
 	rm -rf release debug
 	[ ! -d release-32 ] || rm -rf release-32
 	rm -f $(CURDIR)/debian/ndn-mumble-server.logrotate $(CURDIR)/ndn-mumble-server.init
-	debconf-updatepo
+	#debconf-updatepo
 	dh_clean
 
 install: install-indep install-arch

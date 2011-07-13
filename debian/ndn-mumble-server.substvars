@@ -1,2 +1,0 @@
-misc:Depends=debconf (>= 0.5) | debconf-2.0
-shlibs:Depends=libavahi-client3 (>= 0.6.16), libavahi-common3 (>= 0.6.16), libavahi-compat-libdnssd1 (>= 0.6.16), libc6 (>= 2.3.6-6~), libc6 (>= 2.4), libcap2 (>= 2.10), libgcc1 (>= 1:4.1.1), libiceutil33, libprotobuf6, libqt4-dbus (>= 4:4.5.3), libqt4-network (>= 4:4.5.3), libqt4-sql (>= 4:4.5.3), libqt4-xml (>= 4:4.5.3), libqtcore4 (>= 4:4.7.0~beta1), libssl0.9.8 (>= 0.9.8m-1), libstdc++6 (>= 4.1.1), libzeroc-ice33
