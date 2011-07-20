@@ -425,9 +425,11 @@ int main(int argc, char **argv) {
 				g.s.kpCertificate = kp;
 		}
 		if (! CertWizard::validateCert(g.s.kpCertificate)) {
+#ifndef NDN_MUMBLE
 			CertWizard *cw = new CertWizard(g.mw);
 			cw->exec();
 			delete cw;
+#endif
 
 			if (! CertWizard::validateCert(g.s.kpCertificate)) {
 				g.s.kpCertificate = CertWizard::generateNewCert();
