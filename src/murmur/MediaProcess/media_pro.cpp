@@ -751,7 +751,7 @@ int NdnMediaProcess::startThread() {
     }
      
     ndnState.ccn = h; 
-	pfds[0].fd = open(CCN_DEFAULT_LOCAL_SOCKNAME, O_RDWR);
+	pfds[0].fd = ccn_get_connection_fd(ndnState.ccn);
 	pfds[1].events = POLLIN | POLLOUT | POLLWRBAND;
 	clock = new QTimer(this);
 	connect(clock, SIGNAL(timeout()), this, SLOT(tick()));
