@@ -722,7 +722,11 @@ void MainWindow::msgCodecVersion(const MumbleProto::CodecVersion &msg) {
 
 	if (! g.qmCodecs.contains(willuse)) {
 		if (! warned) {
+#ifndef NDN_MUMBLE
 			g.l->log(Log::CriticalError, tr("Unable to find matching CELT codecs with other clients. You will not be able to talk to all users."));
+#else
+			g.l->log(Log::CriticalError, tr("NDN_Mumble only use Speex codecs. You will not be able to talk to normal Mumble users who usually use CELT codecs."));
+#endif
 			warned = true;
 		}
 	} else {
