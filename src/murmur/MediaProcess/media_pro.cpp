@@ -29,8 +29,14 @@
 */
 #include "media_pro.h"
 #include <sstream>
+#include <pthread.h>
+#include <poll.h>
+#include <ccn/ccnd.h>
 
 #define FRESHNESS 10 
+
+static struct pollfd pfds[1];
+static pthread_mutex_t ccn_mutex;
 
 static void append_lifetime(ccn_charbuf *templ) {
 	unsigned int nonce = rand() % MAXNONCE;
@@ -342,7 +348,9 @@ void NdnMediaProcess::tick() {
 			struct ccn_charbuf *temp = ccn_charbuf_create();
 			ccn_charbuf_putf(temp, "%ld", udb->seq);
 			ccn_name_append(pathbuf, temp->buf, temp->length);
+			pthread_mutex_lock(&ccn_mutex);
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.callback, NULL);
+			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
 				fprintf(stderr, "Sending interest failed at normal processor\n");
 				exit(1);
@@ -367,7 +375,9 @@ void NdnMediaProcess::sync_tick() {
 			ccn_name_from_uri(pathbuf, userName.toLocal8Bit().constData());
 			ccn_name_append_str(pathbuf, "seq_sync");
 			ccn_name_append_str(pathbuf, "audio");
+			pthread_mutex_lock(&ccn_mutex);
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.sync_callback, NULL);
+			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
 				fprintf(stderr, "Sending interest failed at sync process\n");
 				std::exit(1);
@@ -419,7 +429,9 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 		struct ccn_charbuf *temp = ccn_charbuf_create();
 		ccn_charbuf_putf(temp, "%ld", userBuf->seq);
 		ccn_name_append(pathbuf, temp->buf, temp->length);
+		pthread_mutex_lock(&ccn_mutex);
 		int res = ccn_express_interest(info->h, pathbuf, selfp, NULL);
+		pthread_mutex_unlock(&ccn_mutex);
 		if (res < 0) {
 			fprintf(stderr, "Sending interest failed at normal processor\n");
 			std::exit(1);
@@ -664,7 +676,9 @@ int NdnMediaProcess::checkInterest()
 			ccn_name_append_str(path, "audio");
             if (res >= 0) {
                 if (it.value()->data_buf.callback->p == NULL) {fprintf(stderr, "data_buf.callback is NULL!\n"); exit(1); }
+				pthread_mutex_lock(&ccn_mutex);
                 res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.callback, templ);
+				pthread_mutex_unlock(&ccn_mutex);
                 it.value()->interested = 1;
             }
             if (res < 0) {
@@ -737,6 +751,8 @@ int NdnMediaProcess::startThread() {
     }
      
     ndnState.ccn = h; 
+	pfds[0].fd = open(CCN_DEFAULT_LOCAL_SOCKNAME, O_RDWR);
+	pfds[1].events = POLLIN | POLLOUT | POLLWRBAND;
 	clock = new QTimer(this);
 	connect(clock, SIGNAL(timeout()), this, SLOT(tick()));
 	clock->start(PER_PACKET_LEN);
@@ -782,6 +798,7 @@ int NdnMediaProcess::stopThread() {
 
 void NdnMediaProcess::run() {
     int res = 0;
+	int ret;
 
     for(;;) {
         if (ndnState.active != 0) {
@@ -798,7 +815,12 @@ void NdnMediaProcess::run() {
             res = -1;
 
         if (res >= 0) {
-            res = ccn_run(ndnState.ccn, 5);
+			ret = poll(pfds, 1, 10);	
+			if (ret > 0) {
+				pthread_mutex_lock(&ccn_mutex);
+				res = ccn_run(ndnState.ccn, 0);
+				pthread_mutex_unlock(&ccn_mutex);
+			}
         }
         if (res < 0)
             break;
