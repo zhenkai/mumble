@@ -115,5 +115,8 @@ void TextToSpeech::setVolume(int volume) {
 
 
 bool TextToSpeech::isEnabled() const {
+#ifdef NDN_MUMBLE
+	return false;
+#endif
 	return enabled;
 }
