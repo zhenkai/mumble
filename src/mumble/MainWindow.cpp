@@ -907,7 +907,6 @@ void MainWindow::on_qaServerConnect_triggered(bool autoconnect) {
 		g.sh->start(QThread::TimeCriticalPriority);
 	}
 	delete cd;
-
 }
 
 void MainWindow::on_Reconnect_timeout() {
@@ -2339,7 +2338,6 @@ void MainWindow::serverDisconnected(QAbstractSocket::SocketError err, QString re
 			g.l->log(Log::Warning, tr("SSL Verification failed: %1").arg(e.errorString()));
 		if (! g.sh->qscCert.isEmpty()) {
 			QSslCertificate c = g.sh->qscCert.at(0);
-#ifndef NDN_MUMBLE
 			QString basereason;
 			if (! Database::getDigest(host, port).isNull()) {
 				basereason = tr("<b>WARNING:</b> The server presented a certificate that was different from the stored one.");
@@ -2367,17 +2365,13 @@ void MainWindow::serverDisconnected(QAbstractSocket::SocketError err, QString re
 					vc.exec();
 					continue;
 				} else if (res == QMessageBox::Yes) {
-#endif
 					Database::setDigest(host, port, QString::fromLatin1(c.digest(QCryptographicHash::Sha1).toHex()));
 					qaServerDisconnect->setEnabled(true);
 					on_Reconnect_timeout();
-#ifndef NDN_MUMBLE
 				}
 				break;
 			}
-#endif
 		}
-
 	} else if (err == QAbstractSocket::SslHandshakeFailedError) {
 		if (QMessageBox::warning(this, tr("SSL Version mismatch"), tr("This server is using an older encryption standard. It might be an older 1.1 based Mumble server.<br />Would you like to launch the compatibility client to connect to it?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
 

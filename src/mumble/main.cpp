@@ -414,7 +414,7 @@ int main(int argc, char **argv) {
 	}
 
 	g.s.uiUpdateCounter = 1;
-#ifndef NDN_MUMBLE 
+
 	if (! CertWizard::validateCert(g.s.kpCertificate)) {
 		QDir qd(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation));
 		QFile qf(qd.absoluteFilePath(QLatin1String("MumbleAutomaticCertificateBackup.p12")));
@@ -442,7 +442,6 @@ int main(int argc, char **argv) {
 	if (QDateTime::currentDateTime().daysTo(g.s.kpCertificate.first.first().expiryDate()) < 14)
 		g.l->log(Log::Warning, CertWizard::tr("<b>Certificate Expiry:</b> Your certificate is about to expire. You need to renew it, or you will no longer be able to connect to servers you are registered on."));
 
-
 #ifdef QT_NO_DEBUG
 #ifdef RELEASE_BUILD
 	if (g.s.bUpdateCheck)
@@ -459,8 +458,6 @@ int main(int argc, char **argv) {
 		g.p->checkUpdates();
 		g.o->checkUpdates();
 	}
-
-#endif // end NDN_MUMBLE
 
 	if (url.isValid()) {
 		OpenURLEvent *oue = new OpenURLEvent(url);
