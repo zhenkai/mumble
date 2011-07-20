@@ -89,6 +89,9 @@ ServerView::ServerView(QWidget *p) : QTreeWidget(p) {
 	addTopLevelItem(siPublic);
 
 	siPublic->setExpanded(false);
+#ifdef NDN_MUMBLE
+	siPublic->setHidden(true);
+#endif
 
 	qmContinentNames.insert(QLatin1String("af"), tr("Africa"));
 	qmContinentNames.insert(QLatin1String("as"), tr("Asia"));
