@@ -253,7 +253,7 @@ void MainWindow::joinConference() {
 		QProcess *mumbleProcess = new QProcess(this);
 #ifdef QT_NO_DEBUG
 #ifdef __APPLE__
-		audioPath = binaryPath + "/" + "ndn_murmurd";
+		audioPath = binaryPath + "/" + "ndn-murmurd";
 		QString mumblePath = binaryPath + "/" + "mumble";
 #else
 		audioPath = "ndn-murmurd";
@@ -261,7 +261,7 @@ void MainWindow::joinConference() {
 #endif
 #else // QT_NO_DEBUG
 #ifdef __APPLE__
-		audioPath = binaryPath + "/../../../" + "ndn_murmurd";
+		audioPath = binaryPath + "/../../../" + "ndn-murmurd";
 		QString mumblePath = binaryPath + "/../../../Mumble.app/Contents/MacOS/" + "mumble";
 #else
 		audioPath = binaryPath + "/ndn-murmurd";
