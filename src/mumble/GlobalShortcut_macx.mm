@@ -48,6 +48,9 @@ GlobalShortcutMacInit::GlobalShortcutMacInit() : QObject(NULL) {
 }
 
 void GlobalShortcutMacInit::initialize() {
+#ifdef NDN_MUMBLE
+	return;
+#endif
 	if (!accessibilityApiEnabled())
 		accessibilityDialog();
 }
