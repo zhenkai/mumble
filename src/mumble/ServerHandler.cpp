@@ -139,7 +139,6 @@ void ServerHandler::customEvent(QEvent *evt) {
 }
 
 void ServerHandler::udpReady() {
-	fprintf(stderr, "ServerHandler:: udpReady()\n");
 	while (qusUdp->hasPendingDatagrams()) {
 		char encrypted[2048];
 		char buffer[2048];
@@ -195,7 +194,6 @@ void ServerHandler::udpReady() {
 }
 
 void ServerHandler::handleVoicePacket(unsigned int msgFlags, PacketDataStream &pds, MessageHandler::UDPMessageType type) {
-	fprintf(stderr, "handling voice message\n");
 	unsigned int uiSession;
 	pds >> uiSession;
 	ClientUser *p = ClientUser::get(uiSession);
@@ -368,7 +366,6 @@ void ServerHandler::sendPing() {
 }
 
 void ServerHandler::message(unsigned int msgType, const QByteArray &qbaMsg) {
-	fprintf(stderr, "ServerHandler:: message\n");
 	const char *ptr = qbaMsg.constData();
 	if (msgType == MessageHandler::UDPTunnel) {
 		if (qbaMsg.length() < 1)

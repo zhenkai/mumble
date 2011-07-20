@@ -256,7 +256,7 @@ Settings::Settings() {
 	iTTSVolume = 75;
 	iTTSThreshold = 250;
 #ifdef NDN_MUMBLE
-	iQuality = 32000;
+	iQuality = 31900;
 #else
 	iQuality = 40000;
 #endif

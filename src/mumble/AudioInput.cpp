@@ -560,11 +560,7 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 }
 
 bool AudioInput::preferCELT(int bitrate, int frames) {
-#ifdef NDN_MUMBLE
-	return false;
-#else
 	return ((bitrate >= 32000) || (frames == 1));
-#endif
 }
 
 void AudioInput::adjustBandwidth(int bitspersec, int &bitrate, int &frames) {
