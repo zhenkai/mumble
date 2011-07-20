@@ -108,7 +108,7 @@ class AppBundle(object):
 
 		self.handle_binary_libs()
 
-		murmurd = os.path.join(os.path.abspath(self.bundle), 'Contents', 'MacOS', 'murmurd')
+		murmurd = os.path.join(os.path.abspath(self.bundle), 'Contents', 'MacOS', 'ndn-murmurd')
 		if os.path.exists(murmurd):
 			self.handle_binary_libs(murmurd)
 
@@ -204,11 +204,11 @@ class AppBundle(object):
 
 	def copy_murmur(self):
 		'''
-			Copy the murmurd binary into our Mumble app bundle
+			Copy the ndn-murmurd binary into our Mumble app bundle
 		'''
-		print ' * Copying murmurd binary'
-		src = os.path.join(self.bundle, '..', 'murmurd')
-		dst = os.path.join(self.bundle, 'Contents', 'MacOS', 'murmurd')
+		print ' * Copying ndn-murmurd binary'
+		src = os.path.join(self.bundle, '..', 'ndn-murmurd')
+		dst = os.path.join(self.bundle, 'Contents', 'MacOS', 'ndn-murmurd')
 		shutil.copy(src, dst)
 
 		print ' * Copying murmurd configuration'
@@ -509,7 +509,7 @@ if __name__ == '__main__':
 		binaries = (
 			# 1.2.x
 			'release/Mumble.app',
-			'release/Mumble.app/Contents/MacOS/murmurd',
+			'release/Mumble.app/Contents/MacOS/ndn-murmurd',
 			'release/Mumble.app/Contents/MacOS/mumble-g15-helper',
 			'release/Mumble.app/Contents/Plugins/liblink.dylib',
 			'release/Mumble.app/Contents/Plugins/libmanual.dylib',
