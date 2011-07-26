@@ -271,7 +271,6 @@ void MainWindow::joinConference() {
 
 		audioProcess->start(audioPath);
 		mumbleProcess->start(mumblePath);
-		
 	}
 }
 
