@@ -456,7 +456,7 @@ if __name__ == '__main__':
 			title = 'Mumble %s (Universal) ' %ver
 		else:
 			fn = 'release/Mumble-%s.dmg' % ver
-			title = 'Mumble %s ' % ver
+			title = 'Mumble-%s' % ver
 	# Snapshot
 	elif options.snapshot or options.git:
 		if not options.git:
