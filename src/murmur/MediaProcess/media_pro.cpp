@@ -354,6 +354,7 @@ void NdnMediaProcess::tick() {
 				if (c > 10000000) {
 					fprintf(stderr, "cannot obtain lock! %s:%d\n", __FILE__, __LINE__);
 					std::exit(1);
+				}
 			}
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
@@ -387,6 +388,7 @@ void NdnMediaProcess::sync_tick() {
 				if (c > 10000000) {
 					fprintf(stderr, "cannot obtain lock! %s:%d\n", __FILE__, __LINE__);
 					std::exit(1);
+				}
 			}
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.sync_callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
@@ -447,6 +449,7 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 				if (c > 10000000) {
 					fprintf(stderr, "cannot obtain lock! %s:%d\n", __FILE__, __LINE__);
 					std::exit(1);
+				}
 			}
 		int res = ccn_express_interest(info->h, pathbuf, selfp, NULL);
 		pthread_mutex_unlock(&ccn_mutex);
@@ -548,6 +551,7 @@ void NdnMediaProcess::publish_local_seq() {
 				if (c > 10000000) {
 					fprintf(stderr, "cannot obtain lock! %s:%d\n", __FILE__, __LINE__);
 					std::exit(1);
+				}
 			}
 	ccn_put(ndnState.ccn, message->buf, message->length);
 	pthread_mutex_unlock(&ccn_mutex);
@@ -675,6 +679,7 @@ int NdnMediaProcess::doPendingSend()
 				if (c > 10000000) {
 					fprintf(stderr, "cannot obtain lock! %s:%d\n", __FILE__, __LINE__);
 					std::exit(1);
+				}
 			}
 			res = ccn_put(ndnState.ccn, b->buf, b->len);
 			pthread_mutex_unlock(&ccn_mutex);
@@ -716,6 +721,7 @@ int NdnMediaProcess::checkInterest()
 				if (c > 10000000) {
 					fprintf(stderr, "cannot obtain lock! %s:%d\n", __FILE__, __LINE__);
 					std::exit(1);
+				}
 			}
                 res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.callback, templ);
 				pthread_mutex_unlock(&ccn_mutex);
@@ -861,8 +867,10 @@ void NdnMediaProcess::run() {
 				int c = 0;
 				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
 					c++;
-					if (c> 10000000)
+					if (c> 10000000) {
+						fprintf(stderr, "cannot obtain lock at ccn_run\n");
 						std::exit(1);
+					}
 				}
 				res = ccn_run(ndnState.ccn, 0);
 				pthread_mutex_unlock(&ccn_mutex);
