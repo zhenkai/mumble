@@ -348,11 +348,7 @@ void NdnMediaProcess::tick() {
 			struct ccn_charbuf *temp = ccn_charbuf_create();
 			ccn_charbuf_putf(temp, "%ld", udb->seq);
 			ccn_name_append(pathbuf, temp->buf, temp->length);
-			int lock_ret = pthread_mutex_trylock(&ccn_mutex);
-			if (lock_ret != 0) {
-				fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
-				std::exit(1);
-			}
+			while (pthread_mutex_trylock(&ccn_mutex) != 0);
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
@@ -379,11 +375,7 @@ void NdnMediaProcess::sync_tick() {
 			ccn_name_from_uri(pathbuf, userName.toLocal8Bit().constData());
 			ccn_name_append_str(pathbuf, "seq_sync");
 			ccn_name_append_str(pathbuf, "audio");
-			int lock_ret = pthread_mutex_trylock(&ccn_mutex);
-			if (lock_ret != 0) {
-				fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
-				std::exit(1);
-			}
+			while(pthread_mutex_trylock(&ccn_mutex) != 0);
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.sync_callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
@@ -437,11 +429,7 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 		struct ccn_charbuf *temp = ccn_charbuf_create();
 		ccn_charbuf_putf(temp, "%ld", userBuf->seq);
 		ccn_name_append(pathbuf, temp->buf, temp->length);
-		int lock_ret = pthread_mutex_trylock(&ccn_mutex);
-		if (lock_ret != 0) {
-			fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
-			std::exit(1);
-		}
+		while(pthread_mutex_trylock(&ccn_mutex) != 0);
 		int res = ccn_express_interest(info->h, pathbuf, selfp, NULL);
 		pthread_mutex_unlock(&ccn_mutex);
 		if (res < 0) {
@@ -536,14 +524,9 @@ void NdnMediaProcess::publish_local_seq() {
 				   seq_signed_info,
 					seqbuf->buf, seqbuf->length, 
 				   /* keyLocator */ NULL, get_my_private_key());
-	/*int lock_ret = pthread_mutex_trylock(&ccn_mutex);
-	if (lock_ret != 0) {
-		fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
-		std::exit(1);
-	}
-	*/
+	while(pthread_mutex_trylock(&ccn_mutex) != 0);
 	ccn_put(ndnState.ccn, message->buf, message->length);
-	//pthread_mutex_unlock(&ccn_mutex);
+	pthread_mutex_unlock(&ccn_mutex);
 	ccn_charbuf_destroy(&pathbuf);
 	ccn_charbuf_destroy(&seq_signed_info);
 	ccn_charbuf_destroy(&keylocator);
@@ -662,14 +645,9 @@ int NdnMediaProcess::doPendingSend()
 	if (b != NULL) {
 		p = b->link;
 		if (b != NULL && b->buf != NULL) {
-			/*int lock_ret = pthread_mutex_trylock(&ccn_mutex);
-			if (lock_ret != 0) {
-				fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
-				std::exit(1);
-			}
-			*/
+			while(pthread_mutex_trylock(&ccn_mutex) != 0);
 			res = ccn_put(ndnState.ccn, b->buf, b->len);
-			//pthread_mutex_unlock(&ccn_mutex);
+			pthread_mutex_unlock(&ccn_mutex);
 			free(b->buf);
 			b->len = 0;
 			b->buf = NULL;
@@ -702,11 +680,7 @@ int NdnMediaProcess::checkInterest()
 			ccn_name_append_str(path, "audio");
             if (res >= 0) {
                 if (it.value()->data_buf.callback->p == NULL) {fprintf(stderr, "data_buf.callback is NULL!\n"); exit(1); }
-				int lock_ret = pthread_mutex_trylock(&ccn_mutex);
-				if (lock_ret != 0) {
-					fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
-					std::exit(1);
-				}
+				while(pthread_mutex_trylock(&ccn_mutex) != 0);
                 res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.callback, templ);
 				pthread_mutex_unlock(&ccn_mutex);
                 it.value()->interested = 1;
@@ -848,11 +822,7 @@ void NdnMediaProcess::run() {
         if (res >= 0) {
 			ret = poll(pfds, 1, 10);	
 			if (ret > 0) {
-				int lock_ret = pthread_mutex_trylock(&ccn_mutex);
-				if (lock_ret != 0) {
-					fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
-					std::exit(1);
-				}
+				while(pthread_mutex_trylock(&ccn_mutex) != 0);
 				res = ccn_run(ndnState.ccn, 0);
 				pthread_mutex_unlock(&ccn_mutex);
 			}
