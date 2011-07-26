@@ -536,13 +536,14 @@ void NdnMediaProcess::publish_local_seq() {
 				   seq_signed_info,
 					seqbuf->buf, seqbuf->length, 
 				   /* keyLocator */ NULL, get_my_private_key());
-	int lock_ret = pthread_mutex_trylock(&ccn_mutex);
+	/*int lock_ret = pthread_mutex_trylock(&ccn_mutex);
 	if (lock_ret != 0) {
 		fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
 		std::exit(1);
 	}
+	*/
 	ccn_put(ndnState.ccn, message->buf, message->length);
-	pthread_mutex_unlock(&ccn_mutex);
+	//pthread_mutex_unlock(&ccn_mutex);
 	ccn_charbuf_destroy(&pathbuf);
 	ccn_charbuf_destroy(&seq_signed_info);
 	ccn_charbuf_destroy(&keylocator);
@@ -661,13 +662,14 @@ int NdnMediaProcess::doPendingSend()
 	if (b != NULL) {
 		p = b->link;
 		if (b != NULL && b->buf != NULL) {
-			int lock_ret = pthread_mutex_trylock(&ccn_mutex);
+			/*int lock_ret = pthread_mutex_trylock(&ccn_mutex);
 			if (lock_ret != 0) {
 				fprintf(stderr, "Can not obtain lock at %s: %d\n", __FILE__, __LINE__);
 				std::exit(1);
 			}
+			*/
 			res = ccn_put(ndnState.ccn, b->buf, b->len);
-			pthread_mutex_unlock(&ccn_mutex);
+			//pthread_mutex_unlock(&ccn_mutex);
 			free(b->buf);
 			b->len = 0;
 			b->buf = NULL;
