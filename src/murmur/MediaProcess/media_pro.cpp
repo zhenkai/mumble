@@ -36,7 +36,7 @@
 #define FRESHNESS 10 
 
 static struct pollfd pfds[1];
-static pthread_mutex_t ccn_mutex;
+static pthread_mutex_t ccn_mutex; 
 
 static void append_lifetime(ccn_charbuf *templ) {
 	unsigned int nonce = rand() % MAXNONCE;
@@ -524,7 +524,9 @@ void NdnMediaProcess::publish_local_seq() {
 				   seq_signed_info,
 					seqbuf->buf, seqbuf->length, 
 				   /* keyLocator */ NULL, get_my_private_key());
+	pthread_mutex_lock(&ccn_mutex);
 	ccn_put(ndnState.ccn, message->buf, message->length);
+	pthread_mutex_unlock(&ccn_mutex);
 	ccn_charbuf_destroy(&pathbuf);
 	ccn_charbuf_destroy(&seq_signed_info);
 	ccn_charbuf_destroy(&keylocator);
@@ -643,7 +645,9 @@ int NdnMediaProcess::doPendingSend()
 	if (b != NULL) {
 		p = b->link;
 		if (b != NULL && b->buf != NULL) {
+			pthread_mutex_lock(&ccn_mutex);
 			res = ccn_put(ndnState.ccn, b->buf, b->len);
+			pthread_mutex_unlock(&ccn_mutex);
 			free(b->buf);
 			b->len = 0;
 			b->buf = NULL;
@@ -750,6 +754,7 @@ int NdnMediaProcess::startThread() {
         return (-1);
     }
      
+	pthread_mutex_init(&ccn_mutex, NULL);
     ndnState.ccn = h; 
 	pfds[0].fd = ccn_get_connection_fd(ndnState.ccn);
 	pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
