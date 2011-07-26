@@ -112,7 +112,7 @@ bool AudioInputRegistrar::canExclusive() const {
 }
 
 AudioInput::AudioInput() {
-#ifndef CIRCULAR_BUFFER 
+#ifdef CIRCULAR_BUFFER 
 	micBuf = new CircularBuffer("/tmp/psMic");
 	speakerBuf = new CircularBuffer("/tmp/psSpeaker");
 	cleanBuf = new CircularBuffer("/tmp/psClean");
@@ -772,7 +772,7 @@ void AudioInput::encodeAudioFrame() {
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;
-#ifndef CIRCULAR_BUFFER
+#ifdef CIRCULAR_BUFFER
 		eventBuf->log("echoAudioFrame called without echo\n");
 #endif
 	}
