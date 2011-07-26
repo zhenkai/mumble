@@ -45,7 +45,7 @@
 // for AudioInputRegistrar() might be called before they are initialized, as the constructor
 // is called from global initialization.
 // Hence, we allocate upon first call.
-#ifndef QT_NO_DEBUG
+#ifdef CIRCULAR_BUFFER
 CircularBuffer *micBuf;
 CircularBuffer *speakerBuf;
 CircularBuffer *cleanBuf;
@@ -112,7 +112,7 @@ bool AudioInputRegistrar::canExclusive() const {
 }
 
 AudioInput::AudioInput() {
-#ifndef QT_NO_DEBUG
+#ifndef CIRCULAR_BUFFER 
 	micBuf = new CircularBuffer("/tmp/psMic");
 	speakerBuf = new CircularBuffer("/tmp/psSpeaker");
 	cleanBuf = new CircularBuffer("/tmp/psClean");
@@ -416,7 +416,7 @@ void AudioInput::initializeMixer() {
 }
 
 void AudioInput::addMic(const void *data, unsigned int nsamp) {
-#ifndef QT_NO_DEBUG
+#ifdef CIRCULAR_BUFFER
 	char addBuf[200];
 	sprintf(addBuf, "Func: addMic, times: %ld\n", ++addMicNum);
 	eventBuf->log(addBuf);
@@ -460,7 +460,7 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 						iMinBuffered = 1000;
 						playback = false;
 					} else {
-#ifndef QT_NO_DEBUG
+#ifdef CIRCULAR_BUFFER
 						char pbuf[200];
 						sprintf(pbuf, "Func: take first, list size: %d, times: %ld\n", qlEchoFrames.count(), ++takeNum);
 						eventBuf->log(pbuf);
@@ -492,7 +492,7 @@ void AudioInput::addInternalEcho(const void *data, unsigned int nsamp) {
 }
 
 void AudioInput::addEcho(const void *data, unsigned int nsamp) {
-#ifndef QT_NO_DEBUG
+#ifdef CIRCULAR_BUFFER 
 	char addBuf[200];
 	sprintf(addBuf, "Func: addEcho, times: %ld\n", ++addEchoNum);
 	eventBuf->log(addBuf);
@@ -549,7 +549,7 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 				playback = true;
 			}
 			qlEchoFrames.append(outbuff);
-#ifndef QT_NO_DEBUG
+#ifdef CIRCULAR_BUFFER
 			char pbuf[200];
 			sprintf(pbuf, "Func: append frame, list size: %d, times: %ld\n", qlEchoFrames.size(), ++appendNum);
 			eventBuf->log(pbuf);
@@ -763,7 +763,7 @@ void AudioInput::encodeAudioFrame() {
 		speex_echo_cancellation(sesEcho, psMic, psSpeaker, psClean);
 		speex_preprocess_run(sppPreprocess, psClean);
 		psSource = psClean;
-#ifndef QT_NO_DEBUG
+#ifdef CIRCULAR_BUFFER 
 		micBuf->writeToBuffer((char *)psMic, iFrameSize * sizeof(short));
 		speakerBuf->writeToBuffer((char *)psSpeaker, iFrameSize * sizeof(short));
 		cleanBuf->writeToBuffer((char *)psClean, iFrameSize * sizeof(short));
@@ -772,7 +772,7 @@ void AudioInput::encodeAudioFrame() {
 	} else {
 		speex_preprocess_run(sppPreprocess, psMic);
 		psSource = psMic;
-#ifndef QT_NO_DEBUG
+#ifndef CIRCULAR_BUFFER
 		eventBuf->log("echoAudioFrame called without echo\n");
 #endif
 	}
