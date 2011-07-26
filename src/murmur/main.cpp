@@ -135,12 +135,14 @@ void IceStop();
 static void abortHandler(int sig) {
 	char buf[1024];
 	fprintf(stderr, "Caught signal %i, trying to call debugger..\n", sig);
-	snprintf(buf, 1023, "gdb -n -batch -x debug_script -p %i", getpid());
+	system("echo \"set width 0\n set height 0\n echo Thread Info:\n info threads\n echo All Threads:\n thread apply all backtrace\n\" >/tmp/murmur_debug.script");
+	snprintf(buf, 1023, "gdb -n -batch -x /tmp/murmur_debug.script -p %d | tee -a /tmp/murmur_debug.report", getpid());
 	system(buf);
 	if (sig != SIGABRT) {
 		signal(SIGABRT, SIG_DFL);
 		abort();
 	}
+	abort();
 }
 
 int main(int argc, char **argv) {
