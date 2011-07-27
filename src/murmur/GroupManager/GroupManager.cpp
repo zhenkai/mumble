@@ -59,7 +59,7 @@
 
 #endif
 
-static pthread_mutex_t ccn_mutex;
+static pthread_mutex_t gm_mutex;
 static pollfd pfds[1];
 
 struct ccn_bloom {
@@ -246,7 +246,7 @@ void GroupManager::StartThread() {
 	if (! isRunning()) {
 		debug("Starting Userlist Handling thread");
 		bRunning = true;
-		pthread_mutex_init(&ccn_mutex, NULL);
+		pthread_mutex_init(&gm_mutex, NULL);
 		pfds[0].fd = ccn_get_connection_fd(ccn);
 		pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
 		start(QThread::HighestPriority);
@@ -272,15 +272,15 @@ void GroupManager::run() {
 			int ret = poll(pfds, 1, 10);	
 			if (ret > 0) {
 				int c = 0;
-				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+				while(pthread_mutex_trylock(&gm_mutex) != 0) {
 					c++;
 					if (c> 10000000) {
-						fprintf(stderr, "cannot obtain lock at ccn_run\n");
+						fprintf(stderr, "cannot obtain lock at %s: %d\n", __FILE__, __LINE__);
 						std::exit(1);
 					}
 				}
 				res = ccn_run(ccn, 0);
-				pthread_mutex_unlock(&ccn_mutex);
+				pthread_mutex_unlock(&gm_mutex);
 			}
         }
     }
@@ -615,17 +615,17 @@ void GroupManager::enumerate(bool needLock) {
 	// no need to lock if we already have the lock
 	if (needLock) {
 		int c = 0;
-		while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+		while(pthread_mutex_trylock(&gm_mutex) != 0) {
 			c++;
 			if (c> 10000000) {
-				fprintf(stderr, "cannot obtain lock at ccn_run\n");
+				fprintf(stderr, "cannot obtain lock at %s:%d\n", __FILE__, __LINE__);
 				std::exit(1);
 			}
 		}
 	}
     ccn_express_interest(ccn, interest_path, join_closure, templ);
 	if (needLock) {
-		pthread_mutex_unlock(&ccn_mutex);
+		pthread_mutex_unlock(&gm_mutex);
 	}
     ccn_charbuf_destroy(&templ);
     ccn_charbuf_destroy(&interest_path);
@@ -645,15 +645,15 @@ void GroupManager::sendLeaveInterest() {
 	ccn_name_append_str(interest_path, userName.toLocal8Bit().constData());
 	static ccn_charbuf *templ = NULL;
 	int c = 0;
-	while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+	while(pthread_mutex_trylock(&gm_mutex) != 0) {
 		c++;
 		if (c> 10000000) {
-			fprintf(stderr, "cannot obtain lock at ccn_run\n");
+			fprintf(stderr, "cannot obtain lock at %s: %d\n", __FILE__, __LINE__);
 			std::exit(1);
 		}
 	}
     ccn_express_interest(ccn, interest_path, leave_closure, NULL);
-	pthread_mutex_unlock(&ccn_mutex);
+	pthread_mutex_unlock(&gm_mutex);
     ccn_charbuf_destroy(&interest_path);
 	templ = NULL;
 }
