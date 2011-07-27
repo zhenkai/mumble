@@ -110,7 +110,7 @@ class GroupManager: public QThread {
         void remoteUserLeave(int);
 
     public slots:
-        void enumerate();
+        void enumerate(bool needLock = true);
 		void checkAlive();
 
     public:

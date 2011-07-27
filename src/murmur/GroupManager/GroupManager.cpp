@@ -35,6 +35,8 @@
 #include "Server.h"
 #include <QSettings>
 #include "debugbox.h"
+#include <poll.h>
+#include <pthread.h>
 
 #define  BROADCAST_PREFIX ("/ndn/broadcast/conference")
 
@@ -57,6 +59,8 @@
 
 #endif
 
+static pthread_mutex_t ccn_mutex;
+static pollfd pfds[1];
 
 struct ccn_bloom {
    int n;
@@ -242,6 +246,9 @@ void GroupManager::StartThread() {
 	if (! isRunning()) {
 		debug("Starting Userlist Handling thread");
 		bRunning = true;
+		pthread_mutex_init(&ccn_mutex, NULL);
+		pfds[0].fd = ccn_get_connection_fd(ccn);
+		pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
 		start(QThread::HighestPriority);
 #ifdef Q_OS_LINUX
 		// QThread::HighestPriority == Same as everything else...
@@ -262,7 +269,19 @@ void GroupManager::run() {
     int res = 0;
     while (bRunning) {
         if (res >= 0) {
-            res = ccn_run(ccn, 20);
+			int ret = poll(pfds, 1, 10);	
+			if (ret > 0) {
+				int c = 0;
+				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+					c++;
+					if (c> 10000000) {
+						fprintf(stderr, "cannot obtain lock at ccn_run\n");
+						std::exit(1);
+					}
+				}
+				res = ccn_run(ccn, 0);
+				pthread_mutex_unlock(&ccn_mutex);
+			}
         }
     }
 }
@@ -274,7 +293,8 @@ void GroupManager::setLocalUser(ServerUser *u) {
     pNdnMediaPro->addLocalUser(temp);
 
     enumTimer = new QTimer(this);
-    connect(enumTimer, SIGNAL(timeout()), this, SLOT(enumerate()));  
+	// needLock, defalut true
+    connect(enumTimer, SIGNAL(timeout()), this, SLOT(enumerate(bool)));  
 	enumTimer->start(4000);
 
 	aliveTimer = new QTimer(this);
@@ -282,6 +302,7 @@ void GroupManager::setLocalUser(ServerUser *u) {
 	aliveTimer->start(25000);
 
     StartThread();
+	//need lock
 	enumerate();
 	pNdnMediaPro->startThread();
 
@@ -543,7 +564,7 @@ int GroupManager::ccn_open() {
     return 0;
 }
 
-void GroupManager::enumerate() {
+void GroupManager::enumerate(bool needLock) {
     ccn_charbuf *interest_path = NULL;
     ccn_charbuf *templ = NULL;
     interest_path = ccn_charbuf_create();
@@ -591,7 +612,21 @@ void GroupManager::enumerate() {
 	QString y = QString(x.toBase64());
 	//fprintf(stderr, "templ is %s\n", y.toStdString().c_str());
 
+	// no need to lock if we already have the lock
+	if (needLock) {
+		int c = 0;
+		while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+			c++;
+			if (c> 10000000) {
+				fprintf(stderr, "cannot obtain lock at ccn_run\n");
+				std::exit(1);
+			}
+		}
+	}
     ccn_express_interest(ccn, interest_path, join_closure, templ);
+	if (needLock) {
+		pthread_mutex_unlock(&ccn_mutex);
+	}
     ccn_charbuf_destroy(&templ);
     ccn_charbuf_destroy(&interest_path);
     if (exclusive_filter != NULL) ccn_bloom_destroy(&exclusive_filter);
@@ -609,7 +644,16 @@ void GroupManager::sendLeaveInterest() {
 	ccn_name_append_str(interest_path, "leave");
 	ccn_name_append_str(interest_path, userName.toLocal8Bit().constData());
 	static ccn_charbuf *templ = NULL;
+	int c = 0;
+	while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+		c++;
+		if (c> 10000000) {
+			fprintf(stderr, "cannot obtain lock at ccn_run\n");
+			std::exit(1);
+		}
+	}
     ccn_express_interest(ccn, interest_path, leave_closure, NULL);
+	pthread_mutex_unlock(&ccn_mutex);
     ccn_charbuf_destroy(&interest_path);
 	templ = NULL;
 }
@@ -687,6 +731,7 @@ void GroupManager::incomingInterest(ccn_upcall_info *info) {
 	ccn_encode_ContentObject(content, name, signed_info,
 			data, dlen, 
 			NULL, get_my_private_key());
+	// already have the lock, no need to trylock
 	ccn_put(info->h, content->buf, content->length);
 	ccn_charbuf_destroy(&signed_info);
 	ccn_charbuf_destroy(&name);
@@ -714,7 +759,8 @@ void GroupManager::incomingContent(ccn_upcall_info *info) {
 		valuep = NULL;
 	}
 
-	enumerate();
+	// already have the lock, needLock = false
+	enumerate(false);
 }
 
 static enum ccn_upcall_res handle_leave(ccn_closure *selfp,
