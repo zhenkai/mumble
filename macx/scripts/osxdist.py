@@ -193,7 +193,12 @@ class AppBundle(object):
 						lib = iceprefix + '/lib/' + basename
 					print lib
 					print self.framework_path + '/' + basename
-					shutil.copy(lib, self.framework_path  + '/' + basename)
+					try:
+						shutil.copy(lib, self.framework_path  + '/' + basename)
+					except IOError:
+						print "IOError!" + self.framework_path + '/' + basename + "does not exist\n"
+						continue
+						
 					abs = self.framework_path + '/' + rel
 					os.chmod(abs, 0755)
 					os.system('install_name_tool -id @executable_path/../Frameworks/%s %s' % (rel, abs))
