@@ -265,7 +265,7 @@ void MainWindow::joinConference() {
 		QString mumblePath = binaryPath + "/../../../Mumble.app/Contents/MacOS/" + "mumble";
 #else
 		audioPath = binaryPath + "/ndn-murmurd";
-		mumblePath = binaryPath + "/ndn-mumble";
+		QString mumblePath = binaryPath + "/ndn-mumble";
 #endif
 #endif // QT_NO_DEBUG
 
