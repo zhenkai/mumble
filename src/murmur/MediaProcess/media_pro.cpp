@@ -37,6 +37,7 @@
 
 static struct pollfd pfds[1];
 static pthread_mutex_t ccn_mutex; 
+static pthread_mutexattr_t ccn_attr;
 
 static void append_lifetime(ccn_charbuf *templ) {
 	unsigned int nonce = rand() % MAXNONCE;
@@ -788,8 +789,10 @@ int NdnMediaProcess::startThread() {
         ccn_destroy(&h);
         return (-1);
     }
-     
-	pthread_mutex_init(&ccn_mutex, NULL);
+	pthread_mutexattr_init(&ccn_attr);
+	pthread_mutexattr_settype(&ccn_attr, PTHREAD_MUTEX_RECURSIVE);     
+	pthread_mutex_init(&ccn_mutex, &ccn_attr);
+
     ndnState.ccn = h; 
 	pfds[0].fd = ccn_get_connection_fd(ndnState.ccn);
 	pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
