@@ -297,8 +297,7 @@ void GroupManager::setLocalUser(ServerUser *u) {
     pNdnMediaPro->addLocalUser(temp);
 
     enumTimer = new QTimer(this);
-	// needLock, defalut true
-    connect(enumTimer, SIGNAL(timeout()), this, SLOT(enumerate(bool)));  
+    connect(enumTimer, SIGNAL(timeout()), this, SLOT(enumerate()));  
 	enumTimer->start(4000);
 
 	aliveTimer = new QTimer(this);
@@ -568,7 +567,7 @@ int GroupManager::ccn_open() {
     return 0;
 }
 
-void GroupManager::enumerate(bool needLock) {
+void GroupManager::enumerate() {
     ccn_charbuf *interest_path = NULL;
     ccn_charbuf *templ = NULL;
     interest_path = ccn_charbuf_create();
@@ -617,20 +616,16 @@ void GroupManager::enumerate(bool needLock) {
 	//fprintf(stderr, "templ is %s\n", y.toStdString().c_str());
 
 	// no need to lock if we already have the lock
-	if (needLock) {
-		int c = 0;
-		while(pthread_mutex_trylock(&gm_mutex) != 0) {
-			c++;
-			if (c> 10000000) {
-				fprintf(stderr, "cannot obtain lock at %s:%d\n", __FILE__, __LINE__);
-				std::exit(1);
-			}
+	int c = 0;
+	while(pthread_mutex_trylock(&gm_mutex) != 0) {
+		c++;
+		if (c> 10000000) {
+			fprintf(stderr, "cannot obtain lock at %s:%d\n", __FILE__, __LINE__);
+			std::exit(1);
 		}
 	}
     ccn_express_interest(ccn, interest_path, join_closure, templ);
-	if (needLock) {
-		pthread_mutex_unlock(&gm_mutex);
-	}
+	pthread_mutex_unlock(&gm_mutex);
     ccn_charbuf_destroy(&templ);
     ccn_charbuf_destroy(&interest_path);
     if (exclusive_filter != NULL) ccn_bloom_destroy(&exclusive_filter);
@@ -763,8 +758,8 @@ void GroupManager::incomingContent(ccn_upcall_info *info) {
 		valuep = NULL;
 	}
 
-	// already have the lock, needLock = false
-	enumerate(false);
+	// already have the lock
+	enumerate();
 }
 
 static enum ccn_upcall_res handle_leave(ccn_closure *selfp,
