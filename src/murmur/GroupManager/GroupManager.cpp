@@ -60,6 +60,7 @@
 #endif
 
 static pthread_mutex_t gm_mutex;
+static pthread_mutexattr_t attr;
 static pollfd pfds[1];
 
 struct ccn_bloom {
@@ -150,6 +151,9 @@ static void append_bloom_filter(ccn_charbuf *templ, ccn_bloom *b) {
 
 GroupManager::GroupManager(NdnMediaProcess *pNdnMediaPro) {
 
+	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&gm_mutex, &attr);
     pGroupManager = this;
 
     this->pNdnMediaPro = pNdnMediaPro;
@@ -246,7 +250,7 @@ void GroupManager::StartThread() {
 	if (! isRunning()) {
 		debug("Starting Userlist Handling thread");
 		bRunning = true;
-		pthread_mutex_init(&gm_mutex, NULL);
+
 		pfds[0].fd = ccn_get_connection_fd(ccn);
 		pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
 		start(QThread::HighestPriority);
