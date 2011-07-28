@@ -1,9 +1,0 @@
-set width 0
-set height 0
-echo \nCurrent Thread Backtrace:\n
-thread
-backtrace
-echo \n-----\n\nThread Info:\n
-info threads
-echo \n-----\n\nAll Threads:\n
-thread apply all backtrace
