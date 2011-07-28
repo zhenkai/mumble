@@ -59,7 +59,7 @@ extern "C" {
 #define MAXNONCE 512 
 #define PER_PACKET_LEN 20
 #define SEQ_SYNC_INTERVAL 200 
-#define SEQ_DIFF_THRES 400 
+#define SEQ_DIFF_THRES 150 
 
 struct buf_list {
     void *buf;
@@ -191,6 +191,7 @@ class NdnMediaProcess:public QThread {
     NdnMediaProcess();
     ~NdnMediaProcess();
 	static void initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *info, UserDataBuf *userBuf);
+	static void resumePipe(struct ccn_closure *selfp, struct ccn_upcall_info *info, UserDataBuf *userBuf);
 	void setPrivate() { isPrivate = true; }
 	void setSK(QByteArray sk);
     void run();

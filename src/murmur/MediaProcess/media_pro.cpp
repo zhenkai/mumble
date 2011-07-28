@@ -136,7 +136,7 @@ seq_sync_handler(struct ccn_closure *selfp,
 		if (seq > userBuf->seq || userBuf->seq - seq > SEQ_DIFF_THRES) {
 			fprintf(stderr, "+++++++++++++++++++++++++++++++++++++++++++++++ userBuf->seq: %d, seq: %d\n", userBuf->seq, seq);
 			userBuf->seq = seq;
-			NdnMediaProcess::initPipe(selfp, info, userBuf);
+			NdnMediaProcess::resumePipe(selfp, info, userBuf);
 
 		}
 	}
@@ -404,6 +404,37 @@ void NdnMediaProcess::sync_tick() {
 		it++;
 	}
 	ruMutex->unlock();
+}
+
+void NdnMediaProcess::resumePipe(struct ccn_closure *selfp, struct ccn_upcall_info *info, UserDataBuf *userBuf) {
+	// Name format in info:
+	// /ucla.edu/cs/zhenkai/seq_sync/audio/seq
+	const unsigned char *ccnb = info->content_ccnb;
+	size_t ccnb_size = info->pco->offset[CCN_PCO_E];
+	struct ccn_indexbuf *comps = info->content_comps;
+	int k = comps->n - 4;
+
+	// send hint-ahead interests
+	for (int i = 0; i < hint_ahead; i ++) {
+		userBuf->seq++;
+		struct ccn_charbuf *pathbuf = ccn_charbuf_create();
+		ccn_name_init(pathbuf);
+		ccn_name_append_components(pathbuf, ccnb, comps->buf[0], comps->buf[k]);
+		ccn_name_append_str(pathbuf, "audio");
+		struct ccn_charbuf *temp = ccn_charbuf_create();
+		ccn_charbuf_putf(temp, "%ld", userBuf->seq);
+		ccn_name_append(pathbuf, temp->buf, temp->length);
+		
+		// no need to trylock as we already have the lock
+		int res = ccn_express_interest(info->h, pathbuf, selfp, NULL);
+		if (res < 0) {
+			fprintf(stderr, "Sending interest failed at normal processor\n");
+			std::exit(1);
+		}
+		ccn_charbuf_destroy(&pathbuf);
+		ccn_charbuf_destroy(&temp);
+	}
+
 }
 
 void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *info, UserDataBuf *userBuf) {
