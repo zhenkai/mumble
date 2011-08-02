@@ -36,6 +36,9 @@ private slots:
 	void addConferenceToList(Announcement *announce);
 	void removeConferenceFromList(QString, QString);
 	void listPrivateConferences();
+	void mumbleStartup();
+	void mumbleCleanup(int exitCode, QProcess::ExitStatus status);
+	void murmurStartup();
 
 private:
 	void readSettings();
@@ -72,10 +75,12 @@ private:
 
 	QString prefix;
 	QString audioPath;
+	QString mumblePath;
 	
 	SessionEnum * sd;
 
 	QProcess *audioProcess;
+	QProcess *mumbleProcess;
 
 	QString binaryPath;
 

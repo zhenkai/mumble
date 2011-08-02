@@ -104,10 +104,6 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	connect(sd, SIGNAL(expired(QString, QString)), this, SLOT(removeConferenceFromList(QString, QString)));
 	connect(sd, SIGNAL(add(Announcement *)), this, SLOT(addConferenceToList(Announcement *)));
 	
-	
-
-
-
 }
 
 QSize MainWindow::sizeHint() const
@@ -250,29 +246,50 @@ void MainWindow::joinConference() {
 		config.close();
 
 		audioProcess = new QProcess(this);
-		QProcess *mumbleProcess = new QProcess(this);
+		mumbleProcess = new QProcess(this);
+		connect(mumbleProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(mumbleCleanup(int, QProcess::ExitStatus)));
+		connect(mumbleProcess, SIGNAL(started()), this, SLOT(mumbleStartup()));
+		connect(audioProcess, SIGNAL(started()), this, SLOT(murmurStartup()));
 #ifdef QT_NO_DEBUG
 #ifdef __APPLE__
 		audioPath = binaryPath + "/" + "ndn-murmurd";
-		QString mumblePath = binaryPath + "/" + "mumble";
+		mumblePath = binaryPath + "/" + "Mumble";
 #else
 		audioPath = "ndn-murmurd";
-		QString mumblePath = "ndn-mumble";
+		mumblePath = "ndn-mumble";
 #endif
 #else // QT_NO_DEBUG
 #ifdef __APPLE__
 		audioPath = binaryPath + "/../../../" + "ndn-murmurd";
-		QString mumblePath = binaryPath + "/../../../Mumble.app/Contents/MacOS/" + "mumble";
+		mumblePath = binaryPath + "/../../../Mumble.app/Contents/MacOS/" + "Mumble";
 #else
 		audioPath = binaryPath + "/ndn-murmurd";
-		QString mumblePath = binaryPath + "/ndn-mumble";
+		mumblePath = binaryPath + "/ndn-mumble";
 #endif
 #endif // QT_NO_DEBUG
 
+		
 		audioProcess->start(audioPath);
 		mumbleProcess->start(mumblePath);
 	}
 }
+
+void MainWindow::mumbleStartup() {
+	QMessageBox::information(this, tr("Lauched Tools"), mumblePath );
+}
+
+void MainWindow::mumbleCleanup(int exitCode, QProcess::ExitStatus status) {
+	if(audioProcess->state() != QProcess::NotRunning) {
+		audioProcess->kill();
+	}
+	delete mumbleProcess;
+	delete audioProcess;
+}
+
+void MainWindow::murmurStartup() {
+	QMessageBox::information(this, tr("Lauched Tools"), audioPath );
+}
+
 
 void MainWindow::editConference() {
 }
