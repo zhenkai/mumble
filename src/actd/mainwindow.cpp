@@ -237,17 +237,12 @@ void MainWindow::joinConference() {
 		}
 		QString fileName = actDir.absolutePath() + "/" + ".config";
 		QFile config(fileName);
-		if (config.exists()) {
-			config.remove();
-		}
+
 
 		config.open(QIODevice::WriteOnly | QIODevice::Truncate);
 		QTextStream out (&config);
 
 		out << qsConfig;
-		// flush, maybe not needed, but sometimes release version of murmurd on iMac
-		// uses old conference name
-		config.flush();
 		config.close();
 
 		audioProcess = new QProcess(this);
