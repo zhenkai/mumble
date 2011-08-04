@@ -46,19 +46,21 @@ void *ccn_event_run(void *handle) {
 	int res = 0;
 	int ret;
 	struct ccn *h = (struct ccn *)handle;
-	if (res >= 0) {
-		ret = poll(pfds, 1, 40);	
-		if (ret > 0) {
-			int c = 0;
-			while(pthread_mutex_trylock(&ccn_mutex) != 0) {
-				c++;
-				if (c> 10000000) {
-					fprintf(stderr, "cannot obtain lock at ccn_run\n");
-					std::exit(1);
+	while(true) {
+		if (res >= 0) {
+			ret = poll(pfds, 1, 40);	
+			if (ret > 0) {
+				int c = 0;
+				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+					c++;
+					if (c> 10000000) {
+						fprintf(stderr, "cannot obtain lock at ccn_run\n");
+						std::exit(1);
+					}
 				}
+				res = ccn_run(h, 0);
+				pthread_mutex_unlock(&ccn_mutex);
 			}
-			res = ccn_run(h, 0);
-			pthread_mutex_unlock(&ccn_mutex);
 		}
 	}
 }
