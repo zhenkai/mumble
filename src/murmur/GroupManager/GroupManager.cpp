@@ -324,9 +324,7 @@ int GroupManager::addRemoteUser(QString qPrefix, QString username) {
     RemoteUser *u = new RemoteUser(qPrefix, username);
     u->uiSession = qqRSesIds.dequeue();
     u->cChannel = localUser->cChannel;
-	ruMutex->lock(); debug(QString("%1:%2 locks").arg(__FILE__).arg(__LINE__));
     qhRemoteUsers.insert(username, u);
-	ruMutex->unlock(); debug(QString("%1:%2 unlocks").arg(__FILE__).arg(__LINE__)); 
     // fire a signal to notify other modules that a new user joins the call
     emit remoteUserJoin(u);
     return 0;
@@ -336,7 +334,6 @@ int GroupManager::addRemoteUser(QString qPrefix, QString username) {
 bool GroupManager::remoteUserExist(QString qPrefix, QString remoteUser) {
 
 	bool bExist = true;
-	ruMutex->lock(); debug(QString("%1:%2 locks").arg(__FILE__).arg(__LINE__));
 	QHash<QString, RemoteUser *>::const_iterator it = qhRemoteUsers.find(remoteUser);
 	
 	if (it == qhRemoteUsers.constEnd()) {
@@ -350,14 +347,12 @@ bool GroupManager::remoteUserExist(QString qPrefix, QString remoteUser) {
 		else
 			u->refreshReceived();
 	}
-	ruMutex->unlock(); debug(QString("%1:%2 unlocks").arg(__FILE__).arg(__LINE__));
     return bExist;
 }
 
 void GroupManager::deleteRemoteUser(QString remoteUser) {
     debug(QString("deleteRemoteUser(%1)").arg(remoteUser));
     RemoteUser *u = NULL;
-	ruMutex->lock(); debug(QString("%1:%2 locks").arg(__FILE__).arg(__LINE__));
     u = qhRemoteUsers[remoteUser];
     if (u == NULL) {
         return; 
@@ -371,7 +366,6 @@ void GroupManager::deleteRemoteUser(QString remoteUser) {
     qqRSesIds.enqueue(u->uiSession);
     emit remoteUserLeave(u->uiSession);
     delete u;
-	ruMutex->unlock(); debug(QString("%1:%2 unlocks").arg(__FILE__).arg(__LINE__));
 }
 
 void GroupManager::userLeft(RemoteUser *ru) {
@@ -383,7 +377,6 @@ void GroupManager::userLeft(RemoteUser *ru) {
 }
 
 void GroupManager::checkAlive() {
-	ruMutex->lock(); debug(QString("%1:%2 locks").arg(__FILE__).arg(__LINE__));
 	QHash<QString, RemoteUser *>::iterator i = qhRemoteUsers.begin();
 	debug("check alive timer triggered");
 	while (i != qhRemoteUsers.end()) {
@@ -402,7 +395,6 @@ void GroupManager::checkAlive() {
 		}
 
 	}
-	ruMutex->unlock(); debug(QString("%1:%2 unlocks").arg(__FILE__).arg(__LINE__));
 }
 
 
@@ -586,7 +578,6 @@ void GroupManager::enumerate() {
 
 	// TODO: get rid of the bloom filter
     // update exclusive filter according to recently known remote users
-	ruMutex->lock(); debug(QString("%1:%2 locks").arg(__FILE__).arg(__LINE__));
     QHash<QString, RemoteUser *>::const_iterator it = (pGroupManager->qhRemoteUsers).constBegin();
     while (it != (pGroupManager->qhRemoteUsers).constEnd())
     {
@@ -597,7 +588,6 @@ void GroupManager::enumerate() {
 		}
 		++it;
     }
-	ruMutex->unlock(); debug(QString("%1:%2 unlocks").arg(__FILE__).arg(__LINE__));
 
 	// exclude self
 	if (pGroupManager->userName.isEmpty())
@@ -663,13 +653,11 @@ void GroupManager::handleLeave(ccn_upcall_info *info) {
 	 // get leaver
 	 QString user = leaver;
 	 //pGroupManager->deleteRemoteUser(user);
-	 ruMutex->lock(); debug(QString("%1:%2 locks").arg(__FILE__).arg(__LINE__));
 	 RemoteUser *rmUser = qhRemoteUsers[user];
 	 if (rmUser == NULL)
 		 return;
 	 rmUser->setLeft();
 	 userLeft(rmUser);
-	 ruMutex->unlock(); debug(QString("%1:%2 unlocks").arg(__FILE__).arg(__LINE__));
 	 debug(QString("remote user %1 left\n").arg(user));
 	 if (leaver != NULL) {
 		 free((void *)leaver);
