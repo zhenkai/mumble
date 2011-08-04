@@ -6,11 +6,16 @@
 #include <signal.h>
 #include <execinfo.h>
 #include <stdlib.h>
+#include <poll.h>
 
 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 #define EST_USERS 20
 #define FRESHNESS 30
+
+static struct pollfd pfds[1];
+static pthread_mutex_t actd_mutex; 
+static pthread_mutexattr_t ccn_attr;
 
 const unsigned char SEED[] = "1412";
 
@@ -20,6 +25,21 @@ struct ccn_bloom {
     int n;
     struct ccn_bloom_wire *wire;
 };
+
+static void mutex_trylock() {
+	int c = 0;
+	while(pthread_mutex_trylock(&actd_mutex) != 0) {
+		c++;
+		if (c> 10000) {
+			fprintf(stderr, "cannot obtain lock %s: %d \n", __FILE__, __LINE__);
+			abort();
+		}
+	}
+}
+
+static void mutex_unlock() {
+	pthread_mutex_unlock(&actd_mutex);
+}
 
 static char *ccn_name_comp_to_str(const unsigned char *ccnb,
 								  const struct ccn_indexbuf *comps,
@@ -68,7 +88,9 @@ static char *ccn_name_comp_to_str(const unsigned char *ccnb,
 void SessionEnum::setListPrivate(bool b) {
 	listPrivate = b;
 	if (listPrivate) {
+		mutex_trylock();
 		enumeratePriConf();
+		mutex_unlock();
 	}
 	if (!listPrivate && priConferences.size() > 0) {
 		for (int i = 0; i < priConferences.size(); i ++) {
@@ -399,6 +421,7 @@ void SessionEnum::handleEnumInterest(struct ccn_upcall_info *info) {
 		if (res)
 			critical("failed to create content");
 
+		// already have the lock
 		ccn_put(info->h, content->buf, content->length);
 		ccn_charbuf_destroy(&name);
 		ccn_charbuf_destroy(&content);
@@ -539,6 +562,8 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 		int res = ccn_encode_ContentObject(content, name, signed_info, secret, qbaOut.size(), NULL, ccn_keystore_private_key(keystore));
 		if (res)
 			critical("failed to create content");
+
+		// already have the lock
 		ccn_put(info->h, content->buf, content->length);
 		ccn_charbuf_destroy(&name);
 		ccn_charbuf_destroy(&content);
@@ -743,6 +768,7 @@ bool SessionEnum::isConferenceRefresh(unsigned char *hash, bool pub) {
 			FetchedAnnouncement *fa = pubConferences.at(i);
 			if (fa->equalDigest(hash)) {
 				fa->refreshReceived();
+				// already have lock
 				enumeratePubConf();
 				return true;
 			}
@@ -752,6 +778,7 @@ bool SessionEnum::isConferenceRefresh(unsigned char *hash, bool pub) {
 			FetchedAnnouncement *fa = priConferences.at(i);
 			if (fa->equalDigest(hash)) {
 				fa->refreshReceived();
+				// already have lock
 				enumeratePriConf();
 				return true;
 			}
@@ -769,12 +796,14 @@ void SessionEnum::addToConferences(Announcement *a, bool pub) {
 	if (pub) {
 		pubConferences.append(fa);
 		emit add(fa);
+		// already have lock
 		enumeratePubConf();
 	}
 	else {
 		priConferences.append(fa);
 		if (listPrivate) {
 			emit add(fa);
+			// already have lock
 			enumeratePriConf();
 		}
 	}
@@ -1059,8 +1088,11 @@ void SessionEnum::sendDismissSignal(Announcement *a) {
 	ccn_name_append_str(interest, a->getConfName().toStdString().c_str());
 	ccn_name_append_str(interest, a->getOrganizer().toStdString().c_str());
 
+	
+	mutex_trylock();
 	// fetch_announce handler should never be triggered in this case
 	res = ccn_express_interest(ccn, interest, fetch_announce, NULL);
+	mutex_unlock();
 	if (res < 0) {
 		critical("express dismiss interest failed!");
 	}
@@ -1069,10 +1101,12 @@ void SessionEnum::sendDismissSignal(Announcement *a) {
 }
 
 void SessionEnum::enumerate() {
+	mutex_trylock();
 	enumeratePubConf();
 	if (listPrivate) {
 		enumeratePriConf();
 	}
+	mutex_unlock();
 }
 
 void SessionEnum::enumeratePubConf() {
@@ -1193,6 +1227,11 @@ void SessionEnum::enumeratePriConf() {
 void SessionEnum::startThread() {
 	if (! isRunning()) {
 		bRunning = true;
+		pthread_mutexattr_init(&ccn_attr);
+		pthread_mutexattr_settype(&ccn_attr, PTHREAD_MUTEX_RECURSIVE);
+		pthread_mutex_init(&actd_mutex, &ccn_attr);
+		pfds[0].fd = ccn_get_connection_fd(ccn);
+		pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
 		start(QThread::HighestPriority);
 
 	}
@@ -1205,23 +1244,22 @@ void SessionEnum::stopThread() {
 	}
 }
 
-static void abort_handler(int sig) {
-	void *array[25];
-	size_t size;
-
-	size = backtrace(array, 25);
-
-	fprintf(stderr, "Error: signal %d:\n", sig);
-	backtrace_symbols_fd(array, size, 2);
-	exit(1);
-}
 
 void SessionEnum::run() {
-	signal(SIGABRT, abort_handler);
 	int res = 0;
+	int ret;
 	while (bRunning) {
 		if (res >= 0) {
-			res = ccn_run(ccn, 5);
+			ret = poll(pfds, 1, 100);
+			if (ret > 0) {
+				mutex_trylock();
+				res = ccn_run(ccn, 0);
+				if (res < 0) {
+					fprintf(stderr, "Error from ccn_run: %d\n", res);
+					abort();
+				}
+				mutex_unlock();
+			}
 		}
 	}
 }
