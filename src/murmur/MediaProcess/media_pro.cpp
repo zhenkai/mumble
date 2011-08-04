@@ -68,6 +68,7 @@ UserDataBuf::UserDataBuf() {
 	/*allocate memory for ccn_closure, we don't need to free it, for the ccn stuff will do that*/
 	data_buf.callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
 	seq = -1;
+	consecutiveTimeouts = 0;
 }
 
 UserDataBuf::~UserDataBuf() { 
@@ -98,6 +99,17 @@ ccn_content_handler(struct ccn_closure *selfp,
 		// if it's short Interest without seq, reexpress
 		if (userBuf != NULL && userBuf->seq < 0)
 			return (CCN_UPCALL_RESULT_REEXPRESS);
+		else
+			userBuf->consecutiveTimeouts++;
+
+		// too many consecutive timeouts
+		// the other end maybe crashed or stopped speaking
+		if (userBuf->consecutiveTimeouts > NdnMediaProcess::hint_ahead && userBuf->seq > 0) {
+			// reset seq for this party
+			userBuf->seq = -1;
+			// send probe interest
+			need_fresh_interest(userBuf);
+		}
 
 		return (CCN_UPCALL_RESULT_OK);
 		
@@ -113,6 +125,9 @@ ccn_content_handler(struct ccn_closure *selfp,
 		return CCN_UPCALL_RESULT_OK;
 
 	}
+
+	// got some data, reset consecutiveTimeouts
+	userBuf->consecutiveTimeouts = 0;
 
     if (userBuf == NULL || userBuf->iNeedDestroy) {
         if (userBuf != NULL) delete userBuf;
@@ -714,7 +729,7 @@ void NdnMediaProcess::run() {
             res = -1;
 
         if (res >= 0) {
-			ret = poll(pfds, 1, 10);	
+			ret = poll(pfds, 1, 40);	
 			if (ret > 0) {
 				int c = 0;
 				while(pthread_mutex_trylock(&ccn_mutex) != 0) {

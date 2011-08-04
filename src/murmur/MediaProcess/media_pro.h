@@ -102,6 +102,7 @@ class UserDataBuf:public QObject{
     /* flag to indicate this buf has detached with a user */
     int iNeedDestroy;
 	long seq;
+	int consecutiveTimeouts;
 };
 
 class NDNState:public QObject{
@@ -144,6 +145,7 @@ class NdnMediaProcess:public QThread {
     public: 
     /* the data structure for maintaining ccn API related stuff*/
     NDNState ndnState; 
+    static int hint_ahead;                                                                  
     
     private:
     /* the remote user map */
@@ -161,7 +163,7 @@ class NdnMediaProcess:public QThread {
 
 	long counter;
 
-    static int hint_ahead;                                                                  
+
 
     private:
     /* cache the packet in buffer waiting for working thread sending*/
