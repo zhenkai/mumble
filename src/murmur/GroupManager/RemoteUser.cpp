@@ -29,8 +29,8 @@
 */
 #include "murmur_pch.h"
 #include "RemoteUser.h"
-#define REFRESH_INTERVAL 15
-#define REMOVE_INTERVAL 50
+#define REFRESH_INTERVAL 10
+#define REMOVE_INTERVAL 21
 
 RemoteUser::RemoteUser(QString prefix, QString name) : remoteUserPrefix(prefix) {
     qsName = name;
