@@ -33,11 +33,37 @@
 #include <poll.h>
 #include <ccn/ccnd.h>
 
-#define FRESHNESS 10 
+#define FRESHNESS 4 
 
 static struct pollfd pfds[1];
 static pthread_mutex_t ccn_mutex; 
 static pthread_mutexattr_t ccn_attr;
+pthread_t ccn_thread;
+
+void *ccn_event_run(void *ccn_handle);
+
+void *ccn_event_run(void *handle) {
+	int res = 0;
+	int ret;
+	struct ccn *h = (struct ccn *)handle;
+	while(true) {
+		if (res >= 0) {
+			ret = poll(pfds, 1, 40);	
+			if (ret > 0) {
+				int c = 0;
+				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+					c++;
+					if (c> 10000000) {
+						fprintf(stderr, "cannot obtain lock at ccn_run\n");
+						std::exit(1);
+					}
+				}
+				res = ccn_run(h, 0);
+				pthread_mutex_unlock(&ccn_mutex);
+			}
+		}
+	}
+}
 
 static void append_lifetime(ccn_charbuf *templ) {
 	unsigned int nonce = rand() % MAXNONCE;
@@ -68,6 +94,7 @@ UserDataBuf::UserDataBuf() {
 	/*allocate memory for ccn_closure, we don't need to free it, for the ccn stuff will do that*/
 	data_buf.callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
 	seq = -1;
+	consecutiveTimeouts = 0;
 }
 
 UserDataBuf::~UserDataBuf() { 
@@ -98,6 +125,17 @@ ccn_content_handler(struct ccn_closure *selfp,
 		// if it's short Interest without seq, reexpress
 		if (userBuf != NULL && userBuf->seq < 0)
 			return (CCN_UPCALL_RESULT_REEXPRESS);
+		else
+			userBuf->consecutiveTimeouts++;
+
+		// too many consecutive timeouts
+		// the other end maybe crashed or stopped speaking
+		if (userBuf->consecutiveTimeouts > NdnMediaProcess::hint_ahead && userBuf->seq > 0) {
+			// reset seq for this party
+			userBuf->seq = -1;
+			// send probe interest
+			need_fresh_interest(userBuf);
+		}
 
 		return (CCN_UPCALL_RESULT_OK);
 		
@@ -113,6 +151,9 @@ ccn_content_handler(struct ccn_closure *selfp,
 		return CCN_UPCALL_RESULT_OK;
 
 	}
+
+	// got some data, reset consecutiveTimeouts
+	userBuf->consecutiveTimeouts = 0;
 
     if (userBuf == NULL || userBuf->iNeedDestroy) {
         if (userBuf != NULL) delete userBuf;
@@ -266,6 +307,9 @@ NdnMediaProcess::NdnMediaProcess()
 	localSeq = 0;
 	isPrivate = false;
 	ruMutex = new QMutex(QMutex::Recursive);
+#ifndef __APPLE__
+	logger = fopen("/var/tmp/actd.log", "w");
+#endif
 }
 
 int NdnMediaProcess::hint_ahead = 10;
@@ -367,6 +411,9 @@ NdnMediaProcess::~NdnMediaProcess()
         delete it.value();
     }
 	ruMutex->unlock();
+#ifndef __APPLE__
+	fclose(logger);
+#endif
 }
 
 void NdnMediaProcess::setSK(QByteArray sk) {
@@ -656,8 +703,6 @@ int NdnMediaProcess::startThread() {
 	connect(clock, SIGNAL(timeout()), this, SLOT(tick()));
 	clock->start(PER_PACKET_LEN);
 	
-	counter = 0;
-
     if (! isRunning()) {
         fprintf(stderr, "Starting voice thread in media_pro\n"); 
         ndnState.active = true;
@@ -697,8 +742,11 @@ int NdnMediaProcess::stopThread() {
 
 void NdnMediaProcess::run() {
     int res = 0;
-	int ret;
+	
+	// now a separate thread for ccn_run
+	pthread_create(&ccn_thread, NULL, ccn_event_run, (void *)(ndnState.ccn));
 
+	// also a separate thread to ccn_put content and sending probe interest
     for(;;) {
         if (ndnState.active != 0) {
             
@@ -713,21 +761,7 @@ void NdnMediaProcess::run() {
         else /* other module has stopped this thread */
             res = -1;
 
-        if (res >= 0) {
-			ret = poll(pfds, 1, 10);	
-			if (ret > 0) {
-				int c = 0;
-				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
-					c++;
-					if (c> 10000000) {
-						fprintf(stderr, "cannot obtain lock at ccn_run\n");
-						std::exit(1);
-					}
-				}
-				res = ccn_run(ndnState.ccn, 0);
-				pthread_mutex_unlock(&ccn_mutex);
-			}
-        }
+
         if (res < 0)
             break;
     }
@@ -749,6 +783,16 @@ int NdnMediaProcess::sendLocalMedia(char *msg, int msg_len)
         errno = EAGAIN;
         res = -1;
     }
+#ifndef __APPLE__
+	static long counter = 0;
+	counter++;
+	if (counter % 25 == 0) {
+		time_t tim = time(NULL);
+		char *s = ctime(&tim);
+		s[strlen(s) - 1] = 0; // remove \n
+		fprintf(logger, "receiving packets at %s\n", s);
+	}
+#endif
     return(res);
 }
 
