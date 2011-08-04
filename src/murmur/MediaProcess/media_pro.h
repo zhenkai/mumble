@@ -57,7 +57,7 @@ extern "C" {
 
 #define INTEREST_LIFETIME 4
 #define MAXNONCE 512 
-#define PER_PACKET_LEN 20
+#define PER_PACKET_LEN 40
 #define SEQ_SYNC_INTERVAL 200 
 #define SEQ_DIFF_THRES 150 
 

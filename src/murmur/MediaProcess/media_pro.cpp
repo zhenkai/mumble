@@ -327,7 +327,7 @@ NdnMediaProcess::NdnMediaProcess()
 	ruMutex = new QMutex(QMutex::Recursive);
 }
 
-int NdnMediaProcess::hint_ahead = 100;
+int NdnMediaProcess::hint_ahead = 10;
 
 void NdnMediaProcess::tick() {
 	localSeq++;
