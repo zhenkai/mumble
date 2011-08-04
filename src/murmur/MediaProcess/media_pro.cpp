@@ -128,8 +128,14 @@ ccn_content_handler(struct ccn_closure *selfp,
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
-		if (userBuf != NULL && userBuf->seq < 0)
-			return (CCN_UPCALL_RESULT_REEXPRESS);
+		if (userBuf != NULL && userBuf->seq < 0) {
+			// get the last comp
+			int k = info->interest_comps->n - 1;
+			if (ccn_name_comp_strcmp(info->interest_ccnb, info->interest_comps, k, "audio") == 0)
+				return (CCN_UPCALL_RESULT_REEXPRESS);
+			else
+				return (CCN_UPCALL_RESULT_OK);
+		}
 		else
 			userBuf->consecutiveTimeouts++;
 
