@@ -305,6 +305,9 @@ NdnMediaProcess::NdnMediaProcess()
 	localSeq = 0;
 	isPrivate = false;
 	ruMutex = new QMutex(QMutex::Recursive);
+#ifndef __APPLE__
+	logger = fopen("/var/tmp/actd.log", "w");
+#endif
 }
 
 int NdnMediaProcess::hint_ahead = 10;
@@ -406,6 +409,9 @@ NdnMediaProcess::~NdnMediaProcess()
         delete it.value();
     }
 	ruMutex->unlock();
+#ifndef __APPLE__
+	fclose(logger);
+#endif
 }
 
 void NdnMediaProcess::setSK(QByteArray sk) {
@@ -695,8 +701,6 @@ int NdnMediaProcess::startThread() {
 	connect(clock, SIGNAL(timeout()), this, SLOT(tick()));
 	clock->start(PER_PACKET_LEN);
 	
-	counter = 0;
-
     if (! isRunning()) {
         fprintf(stderr, "Starting voice thread in media_pro\n"); 
         ndnState.active = true;
@@ -777,6 +781,16 @@ int NdnMediaProcess::sendLocalMedia(char *msg, int msg_len)
         errno = EAGAIN;
         res = -1;
     }
+#ifndef __APPLE__
+	static long counter = 0;
+	counter++;
+	if (counter % 25 == 0) {
+		time_t tim = time(NULL);
+		char *s = ctime(&tim);
+		s[strlen(s) - 1] = 0; // remove \n
+		fprintf(logger, "receiving packets at %s\n", s);
+	}
+#endif
     return(res);
 }
 

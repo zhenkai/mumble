@@ -161,8 +161,9 @@ class NdnMediaProcess:public QThread {
 	// clock for media process 
 	QTimer *clock;
 
-	long counter;
-
+#ifndef __APPLE__
+	FILE *logger;
+#endif
 
 
     private:
