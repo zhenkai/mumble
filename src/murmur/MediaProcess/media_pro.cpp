@@ -33,7 +33,7 @@
 #include <poll.h>
 #include <ccn/ccnd.h>
 
-#define FRESHNESS 10 
+#define FRESHNESS 4 
 
 static struct pollfd pfds[1];
 static pthread_mutex_t ccn_mutex; 
