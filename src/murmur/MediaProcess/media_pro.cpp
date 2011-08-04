@@ -120,6 +120,11 @@ ccn_content_handler(struct ccn_closure *selfp,
 		    struct ccn_upcall_info *info)
 {
     UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
+    if (userBuf == NULL || userBuf->iNeedDestroy) {
+        if (userBuf != NULL) delete userBuf;
+        selfp->data = NULL;
+        return CCN_UPCALL_RESULT_OK;
+    }
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
@@ -154,12 +159,6 @@ ccn_content_handler(struct ccn_closure *selfp,
 
 	// got some data, reset consecutiveTimeouts
 	userBuf->consecutiveTimeouts = 0;
-
-    if (userBuf == NULL || userBuf->iNeedDestroy) {
-        if (userBuf != NULL) delete userBuf;
-        selfp->data = NULL;
-        return CCN_UPCALL_RESULT_OK;
-    }
 
 	if (userBuf->seq < 0) {
 		NdnMediaProcess::initPipe(selfp, info, userBuf);
