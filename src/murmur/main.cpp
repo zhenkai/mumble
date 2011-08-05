@@ -50,7 +50,7 @@ QFile *qfLog = NULL;
 
 static bool bVerbose = false;
 #ifdef QT_NO_DEBUG
-static bool detach = true;
+static bool detach = false;
 #else
 static bool detach = false;
 #endif
