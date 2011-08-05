@@ -35,7 +35,7 @@
 
 #define FRESHNESS 4 
 #define NORMAL_CALLBACK 1
-#define PIPE_CALLBACK 0
+#define PIPE_CALLBACK 2
 
 static struct pollfd pfds[1];
 static pthread_mutex_t ccn_mutex; 
@@ -130,7 +130,6 @@ ccn_content_handler(struct ccn_closure *selfp,
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
-		fprintf(stderr, "+++++++Time out, callback type is %d\n", selfp->intdata);
 		if (selfp->intdata == NORMAL_CALLBACK) {
 			return (CCN_UPCALL_RESULT_REEXPRESS);
 		}
@@ -167,7 +166,7 @@ ccn_content_handler(struct ccn_closure *selfp,
 
 	if (userBuf->seq < 0) {
 		NdnMediaProcess::initPipe(selfp, info, userBuf);
-		fprintf(stderr, "initializing pipe");
+		fprintf(stderr, "initializing pipe\n");
 	}
 
     struct data_buffer *buffer = &userBuf->data_buf;
@@ -345,6 +344,8 @@ void NdnMediaProcess::tick() {
 					std::exit(1);
 				}
 			}
+			udb->data_buf.pipe_callback->intdata = PIPE_CALLBACK;
+			udb->data_buf.pipe_callback->data = udb;
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.pipe_callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
@@ -402,6 +403,8 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 		
 		// no need to trylock as we already have the lock
 		// this should use  pipe callback, selfp is normal callback
+		userBuf->data_buf.pipe_callback->intdata = PIPE_CALLBACK;
+		userBuf->data_buf.pipe_callback->data = userBuf;
 		int res = ccn_express_interest(info->h, pathbuf, userBuf->data_buf.pipe_callback, NULL);
 		if (res < 0) {
 			fprintf(stderr, "Sending interest failed at normal processor\n");
@@ -621,6 +624,8 @@ int NdnMediaProcess::checkInterest()
 			ccn_name_append_str(path, "audio");
             if (res >= 0) {
                 if (it.value()->data_buf.callback->p == NULL) {fprintf(stderr, "data_buf.callback is NULL!\n"); exit(1); }
+				it.value()->data_buf.callback->intdata = NORMAL_CALLBACK;
+				it.value()->data_buf.callback->data = it.value();
 				int c = 0;
 				while (pthread_mutex_trylock(&ccn_mutex) != 0) {
 					c++;
