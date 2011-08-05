@@ -131,6 +131,7 @@ ccn_content_handler(struct ccn_closure *selfp,
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
+		fprintf(stderr, "+++++++Time out, callback type is %d\n", selfp->intdata);
 		if (selfp->intdata == NORMAL_CALLBACK) {
 			return (CCN_UPCALL_RESULT_REEXPRESS);
 		}
