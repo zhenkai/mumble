@@ -34,6 +34,8 @@
 #include <ccn/ccnd.h>
 
 #define FRESHNESS 4 
+#define NORMAL_CALLBACK 0
+#define PIPE_CALLBACK 1
 
 static struct pollfd pfds[1];
 static pthread_mutex_t ccn_mutex; 
@@ -93,6 +95,7 @@ UserDataBuf::UserDataBuf() {
 	iNeedDestroy = 0;
 	/*allocate memory for ccn_closure, we don't need to free it, for the ccn stuff will do that*/
 	data_buf.callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
+	data_buf.pipe_callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
 	seq = -1;
 	consecutiveTimeouts = 0;
 }
@@ -128,14 +131,10 @@ ccn_content_handler(struct ccn_closure *selfp,
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
-		if (userBuf != NULL && userBuf->seq < 0) {
-			// get the last comp
-			int k = info->interest_comps->n - 1;
-			if (ccn_name_comp_strcmp(info->interest_ccnb, info->interest_comps, k, "audio") == 0)
-				return (CCN_UPCALL_RESULT_REEXPRESS);
-			else
-				return (CCN_UPCALL_RESULT_OK);
+		if (selfp->intdata == NORMAL_CALLBACK) {
+			return (CCN_UPCALL_RESULT_REEXPRESS);
 		}
+		// this is pipeline interest, no reexpress
 		else
 			userBuf->consecutiveTimeouts++;
 
@@ -206,11 +205,15 @@ data_buffer_init(NDNState *state, UserDataBuf *userBuf, const char *direction)
 {
     struct data_buffer *db = &userBuf->data_buf;
     db->callback->data = userBuf;
+	db->callback->intdata = NORMAL_CALLBACK;
+	db->pipe_callback->data = userBuf;
+	db->callback->intdata = PIPE_CALLBACK;
     db->state = state;
     db->buflist = NULL;
     strncpy(db->direction, direction, sizeof(db->direction));
     if (db->direction[0] == 'r') {
         db->callback->p = &ccn_content_handler;
+		db->pipe_callback->p = &ccn_content_handler;
 	}
     need_fresh_interest(userBuf);
 }
@@ -342,7 +345,7 @@ void NdnMediaProcess::tick() {
 					std::exit(1);
 				}
 			}
-			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.callback, NULL);
+			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.pipe_callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
 				fprintf(stderr, "Sending interest failed at normal processor\n");
@@ -398,7 +401,8 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 		ccn_name_append(pathbuf, temp->buf, temp->length);
 		
 		// no need to trylock as we already have the lock
-		int res = ccn_express_interest(info->h, pathbuf, selfp, NULL);
+		// this should use  pipe callback, selfp is normal callback
+		int res = ccn_express_interest(info->h, pathbuf, userBuf->data_buf.pipe_callback, NULL);
 		if (res < 0) {
 			fprintf(stderr, "Sending interest failed at normal processor\n");
 			std::exit(1);

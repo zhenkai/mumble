@@ -70,7 +70,7 @@ struct buf_list {
 class NDNState;
 struct data_buffer {
     struct ccn_closure *callback;
-	struct ccn_closure *sync_callback;
+	struct ccn_closure *pipe_callback;
     NDNState *state;
     char direction[5];
     struct buf_list *buflist;
