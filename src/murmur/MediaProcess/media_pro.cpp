@@ -34,8 +34,8 @@
 #include <ccn/ccnd.h>
 
 #define FRESHNESS 4 
-#define NORMAL_CALLBACK 0
-#define PIPE_CALLBACK 1
+#define NORMAL_CALLBACK 1
+#define PIPE_CALLBACK 0
 
 static struct pollfd pfds[1];
 static pthread_mutex_t ccn_mutex; 
@@ -93,9 +93,8 @@ static ccn_charbuf *make_default_templ() {
 UserDataBuf::UserDataBuf() {
 	interested = 0;    
 	iNeedDestroy = 0;
-	/*allocate memory for ccn_closure, we don't need to free it, for the ccn stuff will do that*/
-	data_buf.callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
-	data_buf.pipe_callback = (struct ccn_closure *)malloc(sizeof(struct ccn_closure));
+	data_buf.callback = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
+	data_buf.pipe_callback = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
 	seq = -1;
 	consecutiveTimeouts = 0;
 }
