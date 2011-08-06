@@ -33,7 +33,7 @@
 #include <poll.h>
 #include <ccn/ccnd.h>
 
-#define FRESHNESS 4 
+#define FRESHNESS 2 
 #define NORMAL_CALLBACK 1
 #define PIPE_CALLBACK 2
 
@@ -123,11 +123,7 @@ ccn_content_handler(struct ccn_closure *selfp,
 		    struct ccn_upcall_info *info)
 {
     UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
-    if (userBuf == NULL || userBuf->iNeedDestroy) {
-        if (userBuf != NULL) delete userBuf;
-        selfp->data = NULL;
-        return CCN_UPCALL_RESULT_OK;
-    }
+
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
@@ -144,6 +140,12 @@ ccn_content_handler(struct ccn_closure *selfp,
 		return CCN_UPCALL_RESULT_OK;
 
 	}
+
+    if (userBuf == NULL || userBuf->iNeedDestroy) {
+        if (userBuf != NULL) delete userBuf;
+        selfp->data = NULL;
+        return CCN_UPCALL_RESULT_OK;
+    }
 
 	// got some data, reset consecutiveTimeouts
 	userBuf->consecutiveTimeouts = 0;
@@ -415,7 +417,8 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 			return;
 		}
 	}	
-
+	
+	fprintf(stderr, "fetched content with seq %d\n", seq);
 	// send hint-ahead interests
 	for (int i = 0; i < hint_ahead; i ++) {
 		userBuf->seq++;
