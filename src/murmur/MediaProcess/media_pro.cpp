@@ -43,6 +43,7 @@ static pthread_mutexattr_t ccn_attr;
 pthread_t ccn_thread;
 
 void *ccn_event_run(void *ccn_handle);
+void content_received(struct ccn_upcall_info *info, struct ccn_closure *selfp);
 
 void *ccn_event_run(void *handle) {
 	int res = 0;
@@ -130,24 +131,7 @@ ccn_content_handler(struct ccn_closure *selfp,
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
-		if (selfp->intdata == NORMAL_CALLBACK) {
-			return (CCN_UPCALL_RESULT_REEXPRESS);
-		}
-		// this is pipeline interest, no reexpress
-		else
-			userBuf->consecutiveTimeouts++;
-
-		// too many consecutive timeouts
-		// the other end maybe crashed or stopped speaking
-		if (userBuf->consecutiveTimeouts > NdnMediaProcess::hint_ahead && userBuf->seq > 0) {
-			// reset seq for this party
-			userBuf->seq = -1;
-			// send probe interest
-			need_fresh_interest(userBuf);
-		}
-
-		return (CCN_UPCALL_RESULT_OK);
-		
+		return (CCN_UPCALL_RESULT_REEXPRESS);
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
 		fprintf(stderr, "unverified content received\n");
@@ -164,11 +148,58 @@ ccn_content_handler(struct ccn_closure *selfp,
 	// got some data, reset consecutiveTimeouts
 	userBuf->consecutiveTimeouts = 0;
 
-	if (userBuf->seq < 0) {
-		NdnMediaProcess::initPipe(selfp, info, userBuf);
-		fprintf(stderr, "initializing pipe\n");
-	}
+	content_received(info, selfp);
 
+	NdnMediaProcess::initPipe(selfp, info, userBuf);
+
+    return CCN_UPCALL_RESULT_OK;
+}
+
+enum ccn_upcall_res
+ccn_pipe_handler(struct ccn_closure *selfp,
+		    enum ccn_upcall_kind kind,
+		    struct ccn_upcall_info *info)
+{
+    UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
+    if (userBuf == NULL || userBuf->iNeedDestroy) {
+        if (userBuf != NULL) delete userBuf;
+        selfp->data = NULL;
+        return CCN_UPCALL_RESULT_OK;
+    }
+	switch (kind) {
+	case CCN_UPCALL_INTEREST_TIMED_OUT: {
+		userBuf->consecutiveTimeouts++;
+		// too many consecutive timeouts
+		// the other end maybe crashed or stopped speaking
+		if (userBuf->consecutiveTimeouts > NdnMediaProcess::hint_ahead && userBuf->seq > 0) {
+			// reset seq for this party
+			userBuf->seq = -1;
+			// send probe interest
+			need_fresh_interest(userBuf);
+		}
+		return (CCN_UPCALL_RESULT_OK);
+	}
+	case CCN_UPCALL_CONTENT_UNVERIFIED:
+		fprintf(stderr, "unverified content received\n");
+		return CCN_UPCALL_RESULT_OK;
+	case CCN_UPCALL_FINAL:
+        return CCN_UPCALL_RESULT_OK;
+	case CCN_UPCALL_CONTENT:
+		break;
+	default:
+		return CCN_UPCALL_RESULT_OK;
+
+	}
+	// got some data, reset consecutiveTimeouts
+	userBuf->consecutiveTimeouts = 0;
+
+	content_received(info, selfp);
+
+    return CCN_UPCALL_RESULT_OK;
+}
+
+void content_received(struct ccn_upcall_info *info, struct ccn_closure *selfp) {
+    UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
     struct data_buffer *buffer = &userBuf->data_buf;
     const unsigned char *content_value;
     NDNState *state = buffer->state;
@@ -195,8 +226,6 @@ ccn_content_handler(struct ccn_closure *selfp,
 	}
 	/*emit the signal for get the data out of the buffer*/
 	state->emitSignal(userBuf->user_name);
-
-    return CCN_UPCALL_RESULT_OK;
 }
 
 void 
@@ -204,15 +233,13 @@ data_buffer_init(NDNState *state, UserDataBuf *userBuf, const char *direction)
 {
     struct data_buffer *db = &userBuf->data_buf;
     db->callback->data = userBuf;
-	db->callback->intdata = NORMAL_CALLBACK;
 	db->pipe_callback->data = userBuf;
-	db->callback->intdata = PIPE_CALLBACK;
     db->state = state;
     db->buflist = NULL;
     strncpy(db->direction, direction, sizeof(db->direction));
     if (db->direction[0] == 'r') {
         db->callback->p = &ccn_content_handler;
-		db->pipe_callback->p = &ccn_content_handler;
+		db->pipe_callback->p = &ccn_pipe_handler;
 	}
     need_fresh_interest(userBuf);
 }
@@ -344,8 +371,6 @@ void NdnMediaProcess::tick() {
 					std::exit(1);
 				}
 			}
-			udb->data_buf.pipe_callback->intdata = PIPE_CALLBACK;
-			udb->data_buf.pipe_callback->data = udb;
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.pipe_callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
@@ -362,6 +387,7 @@ void NdnMediaProcess::tick() {
 
 
 void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *info, UserDataBuf *userBuf) {
+	fprintf(stderr, "initializing pipe\n");
 	// get seq
 	const unsigned char *ccnb = info->content_ccnb;
 	size_t ccnb_size = info->pco->offset[CCN_PCO_E];
@@ -373,7 +399,6 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 	size_t seq_size = 0;
 	int k = comps->n - 2;
 
-	// not the case of resetting seq
 	if (userBuf->seq < 0) {
 		seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
 				comps->buf[k], comps->buf[k + 1],
@@ -403,8 +428,6 @@ void NdnMediaProcess::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info
 		
 		// no need to trylock as we already have the lock
 		// this should use  pipe callback, selfp is normal callback
-		userBuf->data_buf.pipe_callback->intdata = PIPE_CALLBACK;
-		userBuf->data_buf.pipe_callback->data = userBuf;
 		int res = ccn_express_interest(info->h, pathbuf, userBuf->data_buf.pipe_callback, NULL);
 		if (res < 0) {
 			fprintf(stderr, "Sending interest failed at normal processor\n");
@@ -624,8 +647,6 @@ int NdnMediaProcess::checkInterest()
 			ccn_name_append_str(path, "audio");
             if (res >= 0) {
                 if (it.value()->data_buf.callback->p == NULL) {fprintf(stderr, "data_buf.callback is NULL!\n"); exit(1); }
-				it.value()->data_buf.callback->intdata = NORMAL_CALLBACK;
-				it.value()->data_buf.callback->data = it.value();
 				int c = 0;
 				while (pthread_mutex_trylock(&ccn_mutex) != 0) {
 					c++;
@@ -637,6 +658,7 @@ int NdnMediaProcess::checkInterest()
                 res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.callback, templ);
 				pthread_mutex_unlock(&ccn_mutex);
                 it.value()->interested = 1;
+				fprintf(stderr, "short interest sent\n");
             }
             if (res < 0) {
 				fprintf(stderr, "sending the first interest failed\n");
