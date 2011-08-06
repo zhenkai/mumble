@@ -1231,7 +1231,7 @@ void SessionEnum::startThread() {
 		pthread_mutexattr_settype(&ccn_attr, PTHREAD_MUTEX_RECURSIVE);
 		pthread_mutex_init(&actd_mutex, &ccn_attr);
 		pfds[0].fd = ccn_get_connection_fd(ccn);
-		pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
+		pfds[0].events = POLLIN; 
 		start(QThread::HighestPriority);
 
 	}
@@ -1249,9 +1249,10 @@ void SessionEnum::run() {
 	int res = 0;
 	int ret;
 	while (bRunning) {
+		res = ccn_run(ccn, 0);
 		if (res >= 0) {
 			ret = poll(pfds, 1, 100);
-			if (ret > 0) {
+			if (ret >= 0) {
 				mutex_trylock();
 				res = ccn_run(ccn, 0);
 				if (res < 0) {
