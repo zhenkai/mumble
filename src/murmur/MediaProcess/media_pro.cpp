@@ -50,9 +50,10 @@ void *ccn_event_run(void *handle) {
 	int ret;
 	struct ccn *h = (struct ccn *)handle;
 	while(true) {
+		res = ccn_run(h, 0);
 		if (res >= 0) {
 			ret = poll(pfds, 1, 40);	
-			if (ret > 0) {
+			if (ret >= 0) {
 				int c = 0;
 				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
 					c++;
@@ -737,7 +738,7 @@ int NdnMediaProcess::startThread() {
 
     ndnState.ccn = h; 
 	pfds[0].fd = ccn_get_connection_fd(ndnState.ccn);
-	pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
+	pfds[0].events = POLLIN;
 	clock = new QTimer(this);
 	connect(clock, SIGNAL(timeout()), this, SLOT(tick()));
 	clock->start(PER_PACKET_LEN);

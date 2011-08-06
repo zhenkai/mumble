@@ -253,7 +253,7 @@ void GroupManager::StartThread() {
 		bRunning = true;
 
 		pfds[0].fd = ccn_get_connection_fd(ccn);
-		pfds[0].events = POLLIN | POLLOUT | POLLWRBAND;
+		pfds[0].events = POLLIN;
 		start(QThread::HighestPriority);
 #ifdef Q_OS_LINUX
 		// QThread::HighestPriority == Same as everything else...
@@ -272,10 +272,11 @@ void GroupManager::StartThread() {
 
 void GroupManager::run() {
     int res = 0;
+	res = ccn_run(ccn, 0);
     while (bRunning) {
         if (res >= 0) {
-			int ret = poll(pfds, 1, 10);	
-			if (ret > 0) {
+			int ret = poll(pfds, 1, 100);	
+			if (ret >= 0) {
 				int c = 0;
 				while(pthread_mutex_trylock(&gm_mutex) != 0) {
 					c++;
