@@ -1,0 +1,814 @@
+commit 5beaff36111bc44ed15fd9fe98ac9e9548580a90
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Fri Aug 5 18:41:23 2011 -0700
+
+    correct poll
+    needs to call ccn_run before poll so that the interest filter could be set up; otherwise ccnd will not try to send us intereset and poll will always return zero.
+
+commit 35e567dcae5007ffe54cdf7a49c3886a768ee949
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Fri Aug 5 17:57:14 2011 -0700
+
+    voice content freshness = 2
+    if freshness = 4, the short interests would possibly be satisfied by the cached content, and trigger an unnecessiry init pipe and also makes tick() work uncessarily
+
+commit affe0707274f8ec48b814a146c2ada077aa3717a
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Fri Aug 5 17:40:25 2011 -0700
+
+    two callback functions for init and pipe ints
+
+commit e33fde47c77ff1a1ad6aa18f3149ebfdf964a141
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Aug 5 11:35:08 2011 -0700
+
+    disable daemonization of ndn-murmurd
+
+commit d8388f9f46ece9559c113971aa3b23185d405e9d
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Aug 5 10:39:41 2011 -0700
+
+    fallback to short interests when timeout works
+
+commit c24dea8e04511240536033418a2b56d7727706ec
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Aug 5 10:19:58 2011 -0700
+
+    calloc
+
+commit d604f7a920f78644f1353256248276e633c2fb84
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Aug 5 10:06:11 2011 -0700
+
+    intdata
+
+commit 729a7023c9168559f432fe5ddb16b6d738c68914
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 17:22:44 2011 -0700
+
+    separate closure for short and pipe interests
+
+commit 33f4087d6aeecf1aa93da0b57695a0c06bd08544
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 16:55:12 2011 -0700
+
+    only reexpress probe interest
+
+commit 041995119fd29a0dfcbabedc35dd0206b57731fb
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 16:21:45 2011 -0700
+
+    check userBuf not null
+
+commit 48f6c73929c3e017d237c6aba3e26c26ee78b5d7
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 16:13:49 2011 -0700
+
+    delete lock unlock prints in GM
+
+commit 87f09fa33c7f9fa5b4db644db8fe1d57d3672409
+Merge: 4406dff 97d768f
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Aug 4 15:54:14 2011 -0700
+
+    Merge branch 'open-loop' of github.com:zhenkai/mumble into open-loop
+
+commit 4406dff772bcf093e6a93044dacf7f67c342a87e
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Aug 4 15:54:06 2011 -0700
+
+    what
+
+commit 97d768f0832bb44a04c6f23c8dae05816b9105e0
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 15:27:27 2011 -0700
+
+    put ccn_run in while loop
+
+commit 02bf75d6b4b7784150ac5837a016ffe8227588d7
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 15:21:46 2011 -0700
+
+    actd mutex protected
+
+commit 484aaa91ac1304985224017893e4a071c0bc4130
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 13:04:59 2011 -0700
+
+    debug log of content generation in Linux
+
+commit 04421e922d2f9f58475c813882af5b82ff8813ff
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 11:45:12 2011 -0700
+
+    data freshness = 4
+
+commit cdb0dc7499ac014541809cbf762da352dab231fb
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 11:34:44 2011 -0700
+
+    seperate thread for ccn_run
+
+commit 56d4d5e4102f2bd25650d08c55b9ca86b6ee707a
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 10:50:03 2011 -0700
+
+    send probe interest when consecutive timeouts
+
+commit bad2b6a889f7c3649f8819b7e2efec13da46e579
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 10:11:11 2011 -0700
+
+    disable seq sync
+
+commit 29ffcb21c931b2c581a0eafdd0fff713905a473a
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 09:55:29 2011 -0700
+
+    reduce refresh and removal interval
+
+commit 9618b06c9b38ab13c7712d07280e037f22684ffc
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 09:49:50 2011 -0700
+
+    hint_ahead = 10; per packet = 40ms
+
+commit 19a4384e497ec7c3f48a90d71a0a6ed2c6166a03
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Aug 4 09:47:56 2011 -0700
+
+    doesn't hurt Revert "no need Revert "maybe unnecessary actions about QFile (rm & flush)""
+    
+    This reverts commit 0df312ab0e4f53bf4bd9d2e4f48c66da6a9dcdbb.
+
+commit 0df312ab0e4f53bf4bd9d2e4f48c66da6a9dcdbb
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Aug 3 15:45:30 2011 -0700
+
+    no need Revert "maybe unnecessary actions about QFile (rm & flush)"
+    
+    This reverts commit 26a46ff660274e00133aedf0134d04db889c1b12.
+
+commit 26a46ff660274e00133aedf0134d04db889c1b12
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Aug 3 15:35:10 2011 -0700
+
+    maybe unnecessary actions about QFile (rm & flush)
+
+commit cb8634fc6842b700c6e46778e09a7eb609bf1ecc
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Aug 2 14:04:23 2011 -0700
+
+    kill murmur if mumble exists; indicate launching of murmur and mumble in QMessageBox
+
+commit 956d5288cc6999b112e816f5620265fb874a264d
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Jul 28 14:10:56 2011 -0700
+
+    remove debug_script
+
+commit 4e7007725f1363d45850af099c599154c7dab61e
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Jul 28 13:21:27 2011 -0700
+
+    fix bug in resuming Pipe
+
+commit a79a52bbab04e0bfdfc869ce412e2b0bb9c48823
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jul 27 15:00:36 2011 -0700
+
+    ruMutex for MediaPro recursive
+
+commit 57ba73c304cc8318b739959851863bc14648b957
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Wed Jul 27 11:52:14 2011 -0700
+
+    make ccn_mutex recursive
+
+commit 8b872f69d4660f552c903c3e548cf228318ef932
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Jul 27 11:39:48 2011 -0700
+
+    add debug for ruMutex
+
+commit 028ebc5e13e1ba5fefde28c75f306962fce4b967
+Merge: ca54979 18d2a5b
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jul 27 11:17:48 2011 -0700
+
+    Merge branch 'mutex' of github.com:zhenkai/mumble into mutex
+
+commit ca54979dcf9a5724e7ea8e95034f4e92fabfd43f
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jul 27 11:17:10 2011 -0700
+
+    make ruMutex recursive
+
+commit 18d2a5b6ebbe90f943c6bfaca732b73f9780678d
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Wed Jul 27 09:47:19 2011 -0700
+
+    small bug for Linux debug fixed
+
+commit 712d4c2b62edfd45160d18424405ca6e54795b3d
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 26 22:34:19 2011 -0700
+
+    remove needLock variable.
+
+commit cd4e2c54aa7464a8b10c5f35ecd25fc2cb03d1ff
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 26 18:20:49 2011 -0700
+
+    mutex for GM changed to recursive
+
+commit 42f46a2e14ce9dd6da548aab8bfa35aa05e68bcb
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 26 18:05:47 2011 -0700
+
+    change mutex name for GM
+
+commit 8756737ad32e5409966bfbca08b4aae43d0b1e77
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jul 26 17:43:11 2011 -0700
+
+    mutex for GroupManager
+
+commit 1701f5489d9914bf6c55dfb2f089040fbec82644
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 26 17:42:14 2011 -0700
+
+    modify osxdist.py
+
+commit c2f6037c7ffa00797fa36eb7738ad2f7117de295
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jul 26 14:44:29 2011 -0700
+
+    save backtraces when SIGABRT caught
+
+commit b90a93968af936e0222976354cf9fdac5c5268aa
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jul 26 10:52:08 2011 -0700
+
+    fix typo
+
+commit 62ecf911712ee1671d3d764af02d6cd35f3663da
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jul 26 10:47:47 2011 -0700
+
+    default to disable wav logging in debug mode
+
+commit 76a4845beb22d8fad5d015c0f9da313db44a4a99
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jul 26 10:28:05 2011 -0700
+
+    prevent recursive lock
+
+commit 922b5715fe720fdfd3fe609b954cf93394c6c81a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jul 25 18:30:17 2011 -0700
+
+    typo fixdd
+
+commit e2a6d75f0bc43f3645be4b816fd389ee0737fc15
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jul 25 18:28:32 2011 -0700
+
+    break if can not lock
+
+commit e8aa63d92576c897e6c49673895b617dc595f4d5
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jul 25 18:18:08 2011 -0700
+
+    wait to lock
+
+commit a31a3e462b4f304076ab3f525ff82346a715c19f
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jul 25 18:12:01 2011 -0700
+
+    remove lock for ccn_put
+
+commit 6c3233ec72fc0059831edbb8b103989ef86c4fde
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jul 25 18:00:26 2011 -0700
+
+    trylock to detect deadlock
+
+commit 2fd64f9539805c014f57e546458df6db4962c2af
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jul 25 17:42:37 2011 -0700
+
+    init mutex
+
+commit 25a83981387c683357678b2f36c3261ebf219a87
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 25 17:10:40 2011 -0700
+
+    direct call of act on dmg works
+
+commit 8adf53dc4c0f4645a0021f04964978ae0a5e1d72
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jul 25 09:59:53 2011 -0700
+
+    pfds of poll set up correctly
+
+commit 212ac48c2e9a9d7a8b1a61fe725980da45cb55a9
+Merge: 6102723 7cd1b32
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Sun Jul 24 22:33:59 2011 -0700
+
+    Merge branch 'all-in-one' of github.com:zhenkai/mumble into all-in-one
+
+commit 610272326dc953a00c31f15b13c9f8c0f89c210c
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Sun Jul 24 22:33:07 2011 -0700
+
+    deb packaging of murmur corrected
+
+commit 7cd1b322f964658982f8a80cce2b8b65738e8bcf
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jul 20 13:48:33 2011 -0700
+
+    get ccn fd for the use in poll
+
+commit bc946b0f551b0e1c5c49436f018e268ea929bd08
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jul 20 13:47:40 2011 -0700
+
+    Revert "Revert "poll for ccnd sock; lock for ccnd handle""
+    
+    This reverts commit 8e42747d31a52f08e662a0cf905d7e083454b7ff.
+
+commit a61eb9177b249357301e18d8310a4e0029e0ff8b
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jul 20 13:47:16 2011 -0700
+
+    fix packaging script for Mac OS X
+
+commit 8e42747d31a52f08e662a0cf905d7e083454b7ff
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Jul 20 10:26:56 2011 -0700
+
+    Revert "poll for ccnd sock; lock for ccnd handle"
+    
+    This reverts commit 7588b6208a7cb33e6a0c2fec1ff17171e692c667.
+
+commit 7588b6208a7cb33e6a0c2fec1ff17171e692c667
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 23:25:56 2011 -0700
+
+    poll for ccnd sock; lock for ccnd handle
+
+commit 8fc77694c7d57f72d6017dbe13b225c2a3cbe6fd
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 22:16:15 2011 -0700
+
+    no warning about missing CELT codecs
+
+commit 169d02ccf635bd28819f62dbe3108440f53a85b3
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 22:11:01 2011 -0700
+
+    no prompt for creating cert
+
+commit 2eb567aafe94107245d7dcf1c44ff8654232290b
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 21:57:01 2011 -0700
+
+    disable Global Shortcut of Mac OS X
+
+commit 762f24e4d694a8d0a052345669a7767cd6688267
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 21:52:20 2011 -0700
+
+    hide "Public Internet"
+
+commit ee14e2a7e561dab2e802b3b94b2e9b5ffda2dacc
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 21:38:15 2011 -0700
+
+    quality max 31900
+
+commit f94b12cbe46dd14f6a5d400cadf1d999c40f12d7
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 21:35:22 2011 -0700
+
+    enable NDN_MUMBLE
+
+commit cb0750f0d312254978a1b2f7f1f94969c84826e2
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 17:49:49 2011 -0700
+
+    disable TTS
+
+commit 0f4f4ad1dac78bd718c04b66ded14f49e4ae09ce
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 17:45:31 2011 -0700
+
+    correct path in actd
+
+commit 9ca8a53359365504795d1479f2a3ea2548e22ca5
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 17:41:54 2011 -0700
+
+    remove debugging prints in mumble; change Settings and AudioInput
+
+commit ba026c9e0b53e777df2965994b521eff7ea0ae0e
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 17:23:58 2011 -0700
+
+    Revert "skip cert, server select in Mumble"
+    
+    This reverts commit 38331484b8ee28ac27fae627d88ecfe2602130fb.
+
+commit 6a2fc9a01e70db6fc57b2b10f279edceed48e58e
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 19 17:17:49 2011 -0700
+
+    change name of murmurd in Mac OSX; debugging in server and client
+
+commit 37197b4b87064972a1ce7e254d24619ce62b6282
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jul 14 15:37:25 2011 -0700
+
+    mac
+
+commit 89a7dd973d5bc8eb784ef11e7a466144e8a44401
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jul 14 15:32:41 2011 -0700
+
+    murmurd on mac
+
+commit bdcb1b810f613672835ca4506cca32db78586201
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jul 14 15:22:36 2011 -0700
+
+    launch for debug
+
+commit d32613ca7c106673716e37e6195c3e6f4a51c46e
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 12 17:57:19 2011 -0700
+
+    delete language files in debian dir
+
+commit ddbda1744062f2285a9abca888e2e3ff75ecbb66
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 12 17:46:46 2011 -0700
+
+    different name for mumble and murmurd in linux
+
+commit ad92ad7384d7a1ab185293cd6f9d353c76ac5031
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 12 16:44:29 2011 -0700
+
+    icon for actd in linux
+
+commit e389aed897b713f91508cd2a4ae430d563f70b78
+Merge: a1799a8 7e566f4
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 12 15:24:07 2011 -0700
+
+    Merge branch 'all-in-one' of github.com:zhenkai/mumble into all-in-one
+
+commit 7e566f4c724f37acaea0170518ea338ff6815fc9
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jul 12 15:23:57 2011 -0700
+
+    add qt.conf
+
+commit a1799a8c2838148c95d5277ddd3b474289b541f9
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 12 15:22:38 2011 -0700
+
+    debian packagingw
+
+commit 2abbf8ecd5d34e6ea42e932538aff2709c798d99
+Author: zhenkai@cs.ucla.edu <zhenkai@cs.ucla.edu>
+Date:   Tue Jul 12 11:32:50 2011 -0700
+
+    add debian dir
+
+commit 0a943f0a44221ee023ff4253f9e1f590f21c1652
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jul 12 11:10:31 2011 -0700
+
+    launch for linux
+
+commit c9600aabf4c708a07b98d65bce28dacd44550eae
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 11 16:08:50 2011 -0700
+
+    display current prefix
+
+commit 21e6438c85671fb1624f1f553de87b91dfb0e912
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 11 15:42:16 2011 -0700
+
+    disable private conf for now
+
+commit be477860d6c1f25222010f5af811c8f19e0c8ce1
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 11 14:48:16 2011 -0700
+
+    disable CELT
+
+commit eca7fdc552f87a4fc1820464f4976eea17e7358e
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 11 14:07:48 2011 -0700
+
+    disable text
+
+commit 36f72ccda1dca615022985dadff941eaaac6cc33
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 11 13:55:08 2011 -0700
+
+    disable positional audio
+
+commit 0df9e0323ce0e010b73d505e3e3921bea73b38d0
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 11 13:39:52 2011 -0700
+
+    launch mumble correctly in Mac OS X; disable debugging output in release
+
+commit 9a226737659c5fcaf367774ed2a5fe1a4c920e7f
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Mon Jul 11 12:38:43 2011 -0700
+
+    also copy qt plugins when packaging
+
+commit 4be6f8ae14137a6b3c7bfb0c42da2428ddcb1d30
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jul 8 18:16:43 2011 -0700
+
+    unifies actd and mumble
+
+commit e6b29ccd84153e2513def53fd3cb1f3f2fb28678
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jul 8 17:29:27 2011 -0700
+
+    mac deploy script added
+
+commit 38331484b8ee28ac27fae627d88ecfe2602130fb
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jul 8 16:26:19 2011 -0700
+
+    skip cert, server select in Mumble
+
+commit a38e3200ecf1be31785e5fdc785001e61d75edf1
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jul 8 13:45:05 2011 -0700
+
+    launch mumble and murmur within package
+
+commit 84171e15a06e8a7d9f1898df4fa3e774959a38c4
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jul 8 12:02:11 2011 -0700
+
+    disable wav logging. catch sigabrt in actd
+
+commit a1d95149173639588007ac2b9a74322777f9925d
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jul 7 17:18:10 2011 -0700
+
+    all in one
+
+commit 280a7741552bc8a25026524324b4a84e0f322819
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jul 7 15:21:28 2011 -0700
+
+    magically worked!
+
+commit 06e2603782a482d9a80d3aaf65ae5868280aec09
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Jul 6 16:00:18 2011 -0700
+
+    no preprocess when AEC is used
+
+commit f649cd281d23dca0d4d1f7ffc5c82f6ad9344073
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Jun 23 00:09:24 2011 -0700
+
+    log works
+
+commit 6dbd4e719931f75f03f5a12d71f7054608793e1b
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Wed Jun 22 21:48:58 2011 -0700
+
+    no overflow. log is not right
+
+commit cf5f73b189787dd769366a5e4f2a5758fe8f5c68
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jun 22 18:03:58 2011 -0700
+
+    attempt to catch SIGABRT, failed
+
+commit 18d5093139961e8cf3cd9a032a22a94c51c14d67
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jun 22 17:34:58 2011 -0700
+
+    init circularbuffer changed
+
+commit a4835d25fd871ac4ac592cfe95786982aa26b2ec
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jun 22 17:13:20 2011 -0700
+
+    seperate thread for logging
+
+commit e16e2894ed6757c5d461e20cd08c9bb4eb3ff414
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jun 22 11:56:34 2011 -0700
+
+    disable all logging
+
+commit f4d5f2a0c135abd7735af6cc1985396b2cd49f76
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jun 21 16:55:20 2011 -0700
+
+    do not insert delay frame to check qlEchoFrame.size
+
+commit 80e8537b8b618e196c84672806be4b840c456d09
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jun 21 16:22:43 2011 -0700
+
+    delay output by one frame before echo cancellation
+
+commit 15f98c73429a1525f2de71b09d03554fce4e215f
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Tue Jun 21 10:36:52 2011 -0700
+
+    no excesive logging, fix psSpeaker log freq
+
+commit 2f4e7b547657bbdc459c9a926c3e94e31a8890d1
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jun 20 13:37:46 2011 -0700
+
+    print qlist insert and remove time
+
+commit 476f2f3a58ca744157a6276d07f5742fee0a090c
+Merge: a0958a2 1f06db7
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jun 20 13:26:49 2011 -0700
+
+    Merge branch 'master' into prints
+
+commit 1f06db7d9ec4bd6864c5259a4585d051a4de0255
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jun 20 12:54:44 2011 -0700
+
+    set iEchoFreq = iMixerFreq
+
+commit a0958a295fd8e669bc366d439ae3950a70839716
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jun 20 12:04:16 2011 -0700
+
+    print parameter
+
+commit b26345bc2b75eece789780b17057b82d767be316
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 16:35:05 2011 -0700
+
+    debug for SIGABRT
+
+commit d9a451030a842d15f8ca146121c08ab65c1dd121
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 14:22:36 2011 -0700
+
+    fix logWav (append)
+
+commit 7eb362cd90b0a49c030e8b8a95d8d0e6263051f6
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 13:30:38 2011 -0700
+
+    last commit worked. actually reset seq
+
+commit bd951f4ba39e82b8eda7ba76d4a2fd21354126b6
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 13:13:27 2011 -0700
+
+    wonder if this fix the insane behaviour
+
+commit c66adbfde380629606941f1e5c18accf11d57d10
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 12:56:39 2011 -0700
+
+    switch order of sync and audio comp in sync interest
+
+commit 2c52c3561a59160fb7b0076f59abca157f34f9dc
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 11:57:55 2011 -0700
+
+    what's going on?
+
+commit 0dd1c5e87f230c78717ed3d67b38b3cbadef33d6
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 11:49:47 2011 -0700
+
+    not reset seq
+
+commit 5f9ab7d3b5ed28e9d62f62c2a89438a6cff6d638
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Fri Jun 17 11:29:05 2011 -0700
+
+    sync seq fix v0
+
+commit 4763efe0fa5ff4c9d2fb29d0c652fdc9c82cab2e
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Jun 16 18:48:21 2011 -0700
+
+    switch the init order of input and output
+
+commit 7302dac93e3db386e9cbfdb32ad1297460768c48
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Jun 16 17:44:02 2011 -0700
+
+    log wav
+
+commit 3c71460bfa40cc5b26a4625de2d05ff421fde769
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Jun 16 17:04:28 2011 -0700
+
+    add internal echo
+
+commit 998ee2328ae6cca77c485df339b9facf5ee716c5
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Thu Jun 16 12:00:29 2011 -0700
+
+    reverted to  017471cfb9a2146aa6d5ab37e7a7f1158934956c
+
+commit de5b3ffa8f35fb1afd5a370385f246dd7f93f124
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jun 15 17:39:02 2011 -0700
+
+    resample the output to match sample rate
+
+commit d42425663e356405819d3afa20e499c4623c5dbe
+Author: zzhu <zzhu@ndn01.parc.xerox.com>
+Date:   Wed Jun 15 13:19:01 2011 -0700
+
+    iMicFreq != SAMPLE_RATE
+
+commit bff885059bc77aa31a4000dc415634c9c3807f4c
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jun 14 17:29:11 2011 -0700
+
+    feed output to psSpeaker
+
+commit 017471cfb9a2146aa6d5ab37e7a7f1158934956c
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Jun 14 11:35:21 2011 -0700
+
+    add sequence sync
+
+commit 7997fc37a39bcdcea4def297b4511d304aaa353a
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 10 17:46:11 2011 -0700
+
+    do not close server if the client has not been authenticated
+
+commit f1102f066188b1e247a15ace327535226f49b4e2
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Mon Jun 6 12:15:33 2011 -0700
+
+    add mutex for qhRemoteUsers hash in G and M
+
+commit 663174ea77b19af71b4c435ecb5b8b131baa4e88
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Sun Jun 5 00:28:50 2011 -0700
+
+    echo cancellation
+
+commit 4591a852607866e69ee8423b3f97dc2144419943
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 17:25:45 2011 -0700
+
+    comment line 210 in Overlay_macx.mm; use SDK10.6 because otherwise it complains that it can not find lcrt1.10.6.so
+
+commit 3965c458259ecf941c51b01f94a3d846d4411805
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 15:52:42 2011 -0700
+
+    remove language files
+
+commit e8150df780f2e9080705c2572e4fde11b03faa1d
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 15:40:49 2011 -0700
+
+    update ignore list
+
+commit 673d1163595e0decdb5b7c75e8bdd9f9afed8f87
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 15:39:51 2011 -0700
+
+    nurnur patched
+
+commit 581a02a95ba447ee5346644e0c831b647e8e7789
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 15:24:24 2011 -0700
+
+    apply nurnur_patch
+
+commit 3643cb0772da048c8dedd22b80fae37db9d65742
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Fri Jun 3 15:19:31 2011 -0700
+
+    compiles. No translation; two places in Overlay_macx.mm commented out due to compiling error. macx/overlay commented out from macx.pro due to compiling error.No mumble-11x

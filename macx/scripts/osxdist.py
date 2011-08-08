@@ -457,11 +457,11 @@ if __name__ == '__main__':
 	if options.release:
 		ver = options.release
 		if options.universal:
-			fn = 'release/Mumble-Universal-%s.dmg' % ver
-			title = 'Mumble %s (Universal) ' %ver
+			fn = 'release/Act-Universal-%s.dmg' % ver
+			title = 'Act-%s (Universal) ' %ver
 		else:
-			fn = 'release/Mumble-%s.dmg' % ver
-			title = 'Mumble-%s' % ver
+			fn = 'release/Act-%s.dmg' % ver
+			title = 'Act-%s' % ver
 	# Snapshot
 	elif options.snapshot or options.git:
 		if not options.git:
@@ -469,11 +469,11 @@ if __name__ == '__main__':
 		else:
 			ver = gitrev()	
 		if options.universal:
-			fn = 'release/Mumble-Universal-Snapshot-%s.dmg' % ver
-			title = 'Mumble Snapshot %s (Universal)' % ver
+			fn = 'release/Act-Universal-Snapshot-%s.dmg' % ver
+			title = 'Act-Snapshot %s (Universal)' % ver
 		else:
-			fn = 'release/Mumble-Snapshot-%s.dmg' % ver
-			title = 'Mumble Snapshot %s' % ver
+			fn = 'release/Act-Snapshot-%s.dmg' % ver
+			title = 'Act-Snapshot %s' % ver
 	else:
 		print 'Neither snapshot or release selected. Bailing.'
 		sys.exit(1)
@@ -515,7 +515,7 @@ if __name__ == '__main__':
 			# 1.2.x
 			'release/Mumble.app',
 			'release/Mumble.app/Contents/MacOS/ndn-murmurd',
-			'release/Mumble.app/Contents/MacOS/mumble-g15-helper',
+			#'release/Mumble.app/Contents/MacOS/mumble-g15-helper',
 			'release/Mumble.app/Contents/Plugins/liblink.dylib',
 			'release/Mumble.app/Contents/Plugins/libmanual.dylib',
 			'release/Mumble.app/Contents/Codecs/libcelt0.0.7.0.dylib',
