@@ -88,9 +88,7 @@ static char *ccn_name_comp_to_str(const unsigned char *ccnb,
 void SessionEnum::setListPrivate(bool b) {
 	listPrivate = b;
 	if (listPrivate) {
-		mutex_trylock();
 		enumeratePriConf();
-		mutex_unlock();
 	}
 	if (!listPrivate && priConferences.size() > 0) {
 		for (int i = 0; i < priConferences.size(); i ++) {
@@ -1089,8 +1087,8 @@ void SessionEnum::sendDismissSignal(Announcement *a) {
 	ccn_name_append_str(interest, a->getOrganizer().toStdString().c_str());
 
 	
-	mutex_trylock();
 	// fetch_announce handler should never be triggered in this case
+	mutex_trylock();
 	res = ccn_express_interest(ccn, interest, fetch_announce, NULL);
 	mutex_unlock();
 	if (res < 0) {
@@ -1101,12 +1099,10 @@ void SessionEnum::sendDismissSignal(Announcement *a) {
 }
 
 void SessionEnum::enumerate() {
-	mutex_trylock();
 	enumeratePubConf();
 	if (listPrivate) {
 		enumeratePriConf();
 	}
-	mutex_unlock();
 }
 
 void SessionEnum::enumeratePubConf() {
@@ -1155,8 +1151,9 @@ void SessionEnum::enumeratePubConf() {
     }
 
     ccn_charbuf_append_closer(templ); // </Interest> 
-	
+	mutex_trylock();	
 	res = ccn_express_interest(ccn, interest, fetch_announce, templ);
+	mutex_unlock();
 	if (res < 0) {
 		critical("express interest failed!");
 	}
@@ -1214,7 +1211,9 @@ void SessionEnum::enumeratePriConf() {
 
     ccn_charbuf_append_closer(templ); // </Interest> 
 	
+	mutex_trylock();
 	res = ccn_express_interest(ccn, interest, fetch_private, templ);
+	mutex_unlock();
 	if (res < 0) {
 		critical("express interest failed!");
 	}
