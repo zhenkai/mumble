@@ -815,7 +815,7 @@ void SessionEnum::ccnConnect() {
 
     ccn = ccn_create();
     if (ccn == NULL || ccn_connect(ccn, NULL) == -1) {
-		QString qs = ("Failed to initialize ccn agent connection");
+		QString qs = ("Failed to connect to ccnd. Act will quit.");
 		critical(qs);
     }
 

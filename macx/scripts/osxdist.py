@@ -535,7 +535,7 @@ if __name__ == '__main__':
 	d.mkdir('.background')
 	d.copy('icons/mumble.osx.installer.png', '/.background/background.png')
 	d.symlink('/Applications', '/Applications')
-	d.copy('release/Mumble.app')
+	d.copy('release/Mumble.app', '/Act.app')
 	d.copy('README', '/ReadMe.txt')
 	d.copy('CHANGES', '/Changes.txt')
 	d.mkdir('Licenses')
