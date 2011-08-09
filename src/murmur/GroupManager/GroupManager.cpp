@@ -382,7 +382,7 @@ void GroupManager::checkAlive() {
 	debug("check alive timer triggered");
 	while (i != qhRemoteUsers.end()) {
 		RemoteUser * ru = i.value();
-		if (ru->isStaled()) {
+		if (ru != NULL && ru->isStaled()) {
 			if (!ru->hasLeft()) {
 				userLeft(ru);
 			}
