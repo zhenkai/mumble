@@ -7,7 +7,7 @@ void debug(QString msg) {
 
 void critical (QString msg) {
 	QMessageBox::critical(0, "Critical Error", msg);
-	std::exit(1);
+	exit(1);
 }
 
 #else
