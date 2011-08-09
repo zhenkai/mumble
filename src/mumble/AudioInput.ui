@@ -603,7 +603,7 @@
          <string>&lt;b&gt;This selects how many audio frames should be put in one packet.&lt;/b&gt;&lt;br /&gt;Increasing this will increase the latency of your voice, but will also reduce bandwidth requirements.</string>
         </property>
         <property name="minimum">
-         <number>1</number>
+         <number>4</number>
         </property>
         <property name="maximum">
          <number>4</number>

@@ -560,12 +560,18 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 }
 
 bool AudioInput::preferCELT(int bitrate, int frames) {
-	return ((bitrate >= 32000) || (frames == 1));
+	//return ((bitrate >= 32000) || (frames == 1));
+	return false;
 }
 
 void AudioInput::adjustBandwidth(int bitspersec, int &bitrate, int &frames) {
-	frames = g.s.iFramesPerPacket;
+	// frames should always be set to 4;  i.e. 40 ms per packet
+	frames = 4;
+	//frames = g.s.iFramesPerPacket;
 	bitrate = g.s.iQuality;
+
+	// no limit
+	bitspersec = -1;
 
 	if (bitspersec == -1) {
 		// No limit
@@ -586,6 +592,7 @@ void AudioInput::adjustBandwidth(int bitspersec, int &bitrate, int &frames) {
 	}
 	if (bitrate <= 8000)
 		bitrate = 8000;
+
 }
 
 void AudioInput::setMaxBandwidth(int bitspersec) {
