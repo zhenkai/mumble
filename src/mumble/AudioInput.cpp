@@ -565,8 +565,8 @@ bool AudioInput::preferCELT(int bitrate, int frames) {
 }
 
 void AudioInput::adjustBandwidth(int bitspersec, int &bitrate, int &frames) {
-	// frames should always be set to 2;  i.e. 40 ms per packet
-	frames = 2;
+	// frames should always be set to 4;  i.e. 40 ms per packet
+	frames = 4;
 	//frames = g.s.iFramesPerPacket;
 	bitrate = g.s.iQuality;
 
