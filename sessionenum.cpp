@@ -29,6 +29,7 @@ struct ccn_bloom {
 static void mutex_trylock() {
 	int c = 0;
 	while(pthread_mutex_trylock(&actd_mutex) != 0) {
+		usleep(200);
 		c++;
 		if (c> 10000) {
 			fprintf(stderr, "cannot obtain lock %s: %d \n", __FILE__, __LINE__);
