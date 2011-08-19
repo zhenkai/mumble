@@ -1,3 +1,79 @@
+commit ff3da370896716fc5dc3fc6cbd9e0f19a9245757
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Aug 18 22:19:58 2011 -0400
+
+    per packet len = 40
+
+commit 48103b80402615304beccc6607f442001751439b
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Wed Aug 10 17:36:04 2011 -0700
+
+    per packet len = 20
+
+commit d6c4a8ae427832ed9c7c55ab3f2ec973fd86a02c
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Wed Aug 10 15:36:00 2011 -0700
+
+    Revert "always 40ms per second"
+    
+    This reverts commit 18a839baeee3127136e4f6112c39f99252e8a625.
+
+commit 51599febd8d001248b5bf742766da480bbbf83ca
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Wed Aug 10 15:35:49 2011 -0700
+
+    Revert "frames = 2; maybe this is 40 ms"
+    
+    This reverts commit 897289461e469a57619eb1cc5af3547fd44a6a09.
+
+commit f45ba105523571785f386a5c3ff52f97201d6289
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Wed Aug 10 13:15:49 2011 -0700
+
+    usleep(200) in while loop when trylock
+
+commit 897289461e469a57619eb1cc5af3547fd44a6a09
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 8 17:39:37 2011 -0700
+
+    frames = 2; maybe this is 40 ms
+
+commit 027d118d3e818afc0360dff85b7a9c59eb0001ed
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 8 17:37:45 2011 -0700
+
+    check ru exist before check isStale
+
+commit 18a839baeee3127136e4f6112c39f99252e8a625
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 8 17:27:38 2011 -0700
+
+    always 40ms per second
+
+commit 5522805113c77a544b58039c0561309d03f7e9eb
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 8 13:57:21 2011 -0700
+
+    lock of actd
+
+commit 3434683712e8f4b9553078a9164f85f6e7364c94
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 8 11:51:22 2011 -0700
+
+    check timestamp is not null
+
+commit 2a4c115a397a443a76215ac94e2f5810bfe33cbf
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 8 11:24:57 2011 -0700
+
+    pop a qmsgbox and complain if ccn_connect failed
+
+commit 68160494ae95433906a8e68eb67aa05f2a4ccb57
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 8 10:47:07 2011 -0700
+
+    mac packaging scripts changed; changelog added
+
 commit 5beaff36111bc44ed15fd9fe98ac9e9548580a90
 Author: Zhenkai Zhu <zzhu@parc.com>
 Date:   Fri Aug 5 18:41:23 2011 -0700
