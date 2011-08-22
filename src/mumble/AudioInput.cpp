@@ -212,7 +212,8 @@ AudioInput::AudioInput() {
 	dPeakSignal = dPeakSpeaker = dPeakMic = dPeakCleanMic = 0.0;
 
 	if (g.uiSession) {
-		setMaxBandwidth(g.iMaxBandwidth);
+		// no bandwidth limit for us
+		//setMaxBandwidth(g.iMaxBandwidth);
 	}
 
 	bRunning = true;
