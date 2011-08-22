@@ -216,6 +216,10 @@ AudioInput::AudioInput() {
 		//setMaxBandwidth(g.iMaxBandwidth);
 	}
 
+	// hard code quality and audio frames
+	iAudioQuality = 31900;
+	iAudioFrames = 2;
+
 	bRunning = true;
 
 	connect(this, SIGNAL(doDeaf()), g.mw->qaAudioDeaf, SLOT(trigger()), Qt::QueuedConnection);
