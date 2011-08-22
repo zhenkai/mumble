@@ -42,9 +42,10 @@ static pthread_mutex_t ccn_mutex;
 static pthread_mutexattr_t ccn_attr;
 pthread_t ccn_thread;
 
-void *ccn_event_run(void *ccn_handle);
+//void *ccn_event_run(void *ccn_handle);
 void content_received(struct ccn_upcall_info *info, struct ccn_closure *selfp);
 
+/*
 void *ccn_event_run(void *handle) {
 	int res = 0;
 	int ret;
@@ -68,6 +69,7 @@ void *ccn_event_run(void *handle) {
 		}
 	}
 }
+*/
 
 static void append_lifetime(ccn_charbuf *templ) {
 	unsigned int nonce = rand() % MAXNONCE;
@@ -782,10 +784,12 @@ int NdnMediaProcess::stopThread() {
 
 void NdnMediaProcess::run() {
     int res = 0;
+	int ret;
 	
 	// now a separate thread for ccn_run
-	pthread_create(&ccn_thread, NULL, ccn_event_run, (void *)(ndnState.ccn));
+	//pthread_create(&ccn_thread, NULL, ccn_event_run, (void *)(ndnState.ccn));
 
+	res = ccn_run(ndnState.ccn, 0);
 	// also a separate thread to ccn_put content and sending probe interest
     for(;;) {
         if (ndnState.active != 0) {
@@ -801,6 +805,22 @@ void NdnMediaProcess::run() {
         else /* other module has stopped this thread */
             res = -1;
 
+		if (res >= 0) {
+			ret = poll(pfds, 1, 10);	
+			if (ret >= 0) {
+				int c = 0;
+				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
+					c++;
+					usleep(200);
+					if (c> 10000) {
+						fprintf(stderr, "cannot obtain lock at ccn_run\n");
+						abort();
+					}
+				}
+				res = ccn_run(ndnState.ccn, 0);
+				pthread_mutex_unlock(&ccn_mutex);
+			}
+		}
 
         if (res < 0)
             break;
