@@ -368,6 +368,7 @@ void NdnMediaProcess::tick() {
 			struct ccn_charbuf *temp = ccn_charbuf_create();
 			ccn_charbuf_putf(temp, "%ld", udb->seq);
 			ccn_name_append(pathbuf, temp->buf, temp->length);
+			/*
 			int c = 0;
 			while (pthread_mutex_trylock(&ccn_mutex) != 0) {
 				c++;
@@ -376,6 +377,8 @@ void NdnMediaProcess::tick() {
 					std::exit(1);
 				}
 			}
+			*/
+			pthread_mutex_lock(&ccn_mutex);
 			int res = ccn_express_interest(ndnState.ccn, pathbuf, udb->data_buf.pipe_callback, NULL);
 			pthread_mutex_unlock(&ccn_mutex);
 			if (res < 0) {
@@ -611,6 +614,7 @@ int NdnMediaProcess::doPendingSend()
 	if (b != NULL) {
 		p = b->link;
 		if (b != NULL && b->buf != NULL) {
+			/*
 			int c = 0;
 			while (pthread_mutex_trylock(&ccn_mutex) != 0) {
 				c++;
@@ -619,6 +623,8 @@ int NdnMediaProcess::doPendingSend()
 					std::exit(1);
 				}
 			}
+			*/
+			pthread_mutex_lock(&ccn_mutex);
 			res = ccn_put(ndnState.ccn, b->buf, b->len);
 			pthread_mutex_unlock(&ccn_mutex);
 			free(b->buf);
@@ -653,6 +659,7 @@ int NdnMediaProcess::checkInterest()
 			ccn_name_append_str(path, "audio");
             if (res >= 0) {
                 if (it.value()->data_buf.callback->p == NULL) {fprintf(stderr, "data_buf.callback is NULL!\n"); exit(1); }
+				/*
 				int c = 0;
 				while (pthread_mutex_trylock(&ccn_mutex) != 0) {
 					c++;
@@ -661,6 +668,8 @@ int NdnMediaProcess::checkInterest()
 						std::exit(1);
 					}
 				}
+				*/
+				pthread_mutex_lock(&ccn_mutex);
                 res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.callback, templ);
 				pthread_mutex_unlock(&ccn_mutex);
                 it.value()->interested = 1;
@@ -808,6 +817,7 @@ void NdnMediaProcess::run() {
 		if (res >= 0) {
 			ret = poll(pfds, 1, 10);	
 			if (ret >= 0) {
+				/*
 				int c = 0;
 				while(pthread_mutex_trylock(&ccn_mutex) != 0) {
 					c++;
@@ -817,6 +827,8 @@ void NdnMediaProcess::run() {
 						abort();
 					}
 				}
+				*/
+				pthread_mutex_lock(&ccn_mutex);
 				res = ccn_run(ndnState.ccn, 0);
 				pthread_mutex_unlock(&ccn_mutex);
 			}
