@@ -114,6 +114,10 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 	readParams();
 	initialize();
 
+	// test ipv4
+	qlBind.clear();
+	qlBind.append(QHostAddress::Any);
+
 	foreach(const QHostAddress &qha, qlBind) {
 		SslServer *ss = new SslServer(this);
 
@@ -1677,7 +1681,7 @@ void Server::receiveRemoteData(QString strUserName) {
     QHash<unsigned int, ServerUser *>::const_iterator i;
     for (i = qhUsers.constBegin(); i != qhUsers.constEnd(); i++ ) {
         sendMessage(i.value(), buf, res, qba, true);
-		//fprintf(stderr, "sending content to %s\n", i.value()->qsName.toLocal8Bit().constData());
+		//fprintf(stderr, "sending content to %s\n", i.value()->haAddress.toStdString());
 	}
 
 }
