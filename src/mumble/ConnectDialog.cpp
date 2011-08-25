@@ -804,12 +804,33 @@ ConnectDialog::ConnectDialog(QWidget *p, bool autoconnect) : QDialog(p), bAutoCo
 	QList<QTreeWidgetItem *> ql;
 	QList<FavoriteServer> favorites = Database::getFavorites();
 
+#ifdef NDN_MUMBLE
+	bool hasFavorite = false;
+#endif
 	foreach(const FavoriteServer &fs, favorites) {
 		ServerItem *si = new ServerItem(fs);
 		qlItems << si;
 		startDns(si);
 		qtwServers->siFavorite->addServerItem(si);
+#ifdef NDN_MUMBLE
+		hasFavorite = true;
+#endif
 	}
+
+#ifdef NDN_MUMBLE
+	if (!hasFavorite) {
+		ConnectDialogEdit *cde = new ConnectDialogEdit(this, "Localhost", "127.0.0.1", "", 64738, "", true);
+
+		if (cde->exec() == QDialog::Accepted) {
+			ServerItem *si = new ServerItem(cde->qsName, cde->qsHostname, cde->usPort, cde->qsUsername, cde->qsPassword);
+			qlItems << si;
+			qtwServers->siFavorite->addServerItem(si);
+			qtwServers->setCurrentItem(si);
+			startDns(si);
+		}
+		delete cde;
+	}
+#endif
 
 #ifdef USE_BONJOUR
 	// Make sure the we got the objects we need, then wire them up
