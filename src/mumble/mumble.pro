@@ -204,7 +204,7 @@ asio {
 }
 
 bonjour {
-	DEFINES *= USE_BONJOUR
+	#DEFINES *= USE_BONJOUR
 
 	HEADERS *= ../bonjour/bonjourrecord.h ../bonjour/bonjourserviceresolver.h ../bonjour/bonjourservicebrowser.h BonjourClient.h
 	SOURCES *= ../bonjour/bonjourserviceresolver.cpp ../bonjour/bonjourservicebrowser.cpp BonjourClient.cpp

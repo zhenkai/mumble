@@ -119,7 +119,7 @@ ice {
 }
 
 bonjour {
-	DEFINES *= USE_BONJOUR
+	#DEFINES *= USE_BONJOUR
 
 	HEADERS *= ../bonjour/BonjourRecord.h ../bonjour/BonjourServiceRegister.h BonjourServer.h
 	SOURCES *= ../bonjour/BonjourServiceRegister.cpp BonjourServer.cpp
