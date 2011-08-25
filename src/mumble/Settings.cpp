@@ -245,7 +245,11 @@ Settings::Settings() {
 	qRegisterMetaTypeStreamOperators<ShortcutTarget>("ShortcutTarget");
 	qRegisterMetaType<QVariant>("QVariant");
 
+#ifndef NDN_MUMBLE
 	atTransmit = VAD;
+#else
+	atTransmit = Continous;
+#endif
 	bTransmitPosition = false;
 	bMute = bDeaf = false;
 #ifdef NDN_MUMBLE
