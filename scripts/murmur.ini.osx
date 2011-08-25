@@ -74,14 +74,14 @@ port=64738
 
 # Specific IP or hostname to bind to.
 # If this is left blank (default), murmur will bind to all available addresses.
-#host=
+host=127.0.0.1
 
 # Password to join server
 serverpassword=
 
 # Maximum bandwidth (in bits per second) clients are allowed
 # to send speech at.
-bandwidth=72000
+bandwidth=720000
 
 # Maximum number of concurrent clients allowed.
 users=100
