@@ -1,3 +1,57 @@
+commit 5e52c705ed080080c3e606150bfa8aca3515bdf3
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Thu Aug 25 10:29:57 2011 -0700
+
+    no Bonjour
+
+commit 8147149500ae2ba0add16acc7f9e29a2e72a0230
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Thu Aug 25 10:24:58 2011 -0700
+
+    add localhost as server if no favorite exists
+
+commit 08db9436fc968ef8e24ec07212c5ab71efe23138
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Thu Aug 25 09:48:14 2011 -0700
+
+    scripts/ini.* changed
+
+commit 1567f175d2e76b0743f7168e93d50cd8ca13d491
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Tue Aug 23 18:19:04 2011 -0700
+
+    server bind to 127.0.0.1
+
+commit 14f99792aed4fe780e38e27a7ac89c36cc1ab50a
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 22 14:37:03 2011 -0700
+
+    pthread lock instead of trylock in media
+
+commit ccb7cab2e6b3489fad15102466fbae7a846bc26d
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 22 12:05:10 2011 -0700
+
+    no separate thread for ccn_run in media
+
+commit 01d41b3419f774e99f56f80015799652d62a95b4
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 22 11:23:44 2011 -0700
+
+     hard code quality and audio frames
+
+commit 6d1c4ced76060d6047e5308df3cc528aa6cd16bb
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Mon Aug 22 11:21:34 2011 -0700
+
+    no bandwidth limit
+
+commit af59123e43ba474caf86b4feb37b3824af591049
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Aug 18 22:43:21 2011 -0400
+
+    update changes
+
 commit ff3da370896716fc5dc3fc6cbd9e0f19a9245757
 Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
 Date:   Thu Aug 18 22:19:58 2011 -0400

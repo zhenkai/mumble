@@ -171,7 +171,9 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		ok = false;
 	}
 
-	if (! ok) {
+// never ban client
+	//if (! ok) {
+	if(false) {
 		log(uSource, QString("Rejected connection: %1").arg(reason));
 		MumbleProto::Reject mpr;
 		mpr.set_reason(u8(reason));
