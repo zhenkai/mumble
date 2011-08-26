@@ -1,3 +1,21 @@
+commit c52381a082e7ddcb5cbd34ba20f17081ecb7d1f2
+Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+Date:   Thu Aug 25 22:22:43 2011 -0700
+
+    do not try to create actd_keystore
+
+commit 1487c41ca5563b954ef246dbf44ae09660761952
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Thu Aug 25 12:15:22 2011 -0700
+
+    default to be "continuous" instead of VAD
+
+commit 1b543c2b9c66d1ad1939711d5139e9a9d75ef880
+Author: Zhenkai Zhu <zzhu@parc.com>
+Date:   Thu Aug 25 11:43:37 2011 -0700
+
+    server never ban user
+
 commit 5e52c705ed080080c3e606150bfa8aca3515bdf3
 Author: Zhenkai Zhu <zzhu@parc.com>
 Date:   Thu Aug 25 10:29:57 2011 -0700
