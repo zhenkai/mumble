@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
+#include <QTimer>
 
 #include "mainwindow.h"
 #include "debugbox.h"
@@ -98,11 +99,13 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	connect(dismissButton, SIGNAL(clicked()), this, SLOT(dismissConference()));
 	connect(pubConfList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(processItem()));
 	
-
-	
-	sd = new SessionEnum(prefix);
+	sd = new SessionEnum();
 	connect(sd, SIGNAL(expired(QString, QString)), this, SLOT(removeConferenceFromList(QString, QString)));
 	connect(sd, SIGNAL(add(Announcement *)), this, SLOT(addConferenceToList(Announcement *)));
+
+	if (prefix == "") {
+		QTimer::singleShot(500, this, SLOT(changePref()));
+	}
 	
 }
 
@@ -146,19 +149,11 @@ void MainWindow::processItem(){
 void MainWindow::readSettings() {
 	QSettings settings("UCLA_IRL", "ACTD");
 	prefix = settings.value("prefix", QString("")).toString();
-
-	if (prefix == "") {
-		changePref();
-	}
-
-	audioPath = settings.value("audioPath", QString("")).toString();
-
 }
 
 void MainWindow::writeSettings() {
 	QSettings settings("UCLA_IRL", "ACTD");
 	settings.setValue("prefix", prefix);
-	settings.setValue("audioPath", audioPath);
 }
 
 void MainWindow::about() {

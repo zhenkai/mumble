@@ -34,10 +34,8 @@ public:
 	void run();
 	void startThread();
 	void stopThread();
-	SessionEnum(QString prefix);
 	SessionEnum();
 	~SessionEnum();
-	void setPrefix(QString prefix) { this->prefix = prefix; }
 	void removeFromMyConferences(Announcement *a);
 	void addToMyConferences(Announcement *a);
 	void addToConferences(Announcement *a, bool pub);
@@ -79,7 +77,6 @@ private:
 						   size_t padding); 
 
 private:
-	QString prefix;
 	QList<Announcement *> myConferences;
 	QList<Announcement *> myPrivateConferences;
 	QList<FetchedAnnouncement *> pubConferences;
