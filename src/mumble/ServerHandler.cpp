@@ -252,6 +252,9 @@ void ServerHandler::run() {
 	bStrong = true;
 	QSslSocket *qtsSock = new QSslSocket(this);
 
+	// always trust server
+	qtsSock->setPeerVerifyMode(QSslSocket::QueryPeer);
+
 	if (! g.s.bSuppressIdentity && CertWizard::validateCert(g.s.kpCertificate)) {
 		qtsSock->setPrivateKey(g.s.kpCertificate.second);
 		qtsSock->setLocalCertificate(g.s.kpCertificate.first.at(0));
