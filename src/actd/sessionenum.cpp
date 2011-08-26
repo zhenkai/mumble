@@ -147,6 +147,7 @@ void SessionEnum::initKeystoreAndSignedInfo() {
 	}
 
 	// public & private key pair for actd
+	/*
 	actd_keystore = NULL;
 	actd_keystore = ccn_keystore_create();
 	temp = ccn_charbuf_create();
@@ -158,6 +159,7 @@ void SessionEnum::initKeystoreAndSignedInfo() {
 		critical("Failed to initialze keystore for actd");
 
 	ccn_charbuf_destroy(&temp);
+	*/
 }
 
 
