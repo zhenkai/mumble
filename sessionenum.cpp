@@ -1302,7 +1302,7 @@ void SessionEnum::checkAlive() {
 
 }
 
-SessionEnum::SessionEnum(QString prefix) {
+SessionEnum::SessionEnum() {
 	gsd = this;
 	listPrivate = false;
 	QUuid quuid = QUuid::createUuid();
@@ -1313,7 +1313,6 @@ SessionEnum::SessionEnum(QString prefix) {
 	fetch_private->p = &incoming_private_content;
 	ccnConnect();
 	initKeystoreAndSignedInfo();
-	setPrefix(prefix);
 
 	enumTimer = new QTimer(this);
 	connect(enumTimer, SIGNAL(timeout()), this, SLOT(enumerate()));
