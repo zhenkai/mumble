@@ -4,7 +4,6 @@
  A voicechat utility for gamers
 
 	  redmine.irl.cs.ucla.edu/projects/ndn-act/repository
-      #mumble on freenode
 
 Mumble is a voicechat program for gamers written on top of Qt and Speex.
 
