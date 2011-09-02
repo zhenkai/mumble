@@ -104,6 +104,7 @@ class GroupManager: public QThread {
         int parseXmlUserList(const unsigned char *incoming_data, size_t len);
 		void sendLeaveInterest();
 		QString getFullLocalName() { return (prefix + "/" + userName); }
+		void expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude);
 
     signals:
         void remoteUserJoin(RemoteUser *);

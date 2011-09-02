@@ -63,13 +63,23 @@ static pthread_mutex_t gm_mutex;
 static pthread_mutexattr_t attr;
 static pollfd pfds[1];
 
-struct ccn_bloom {
-   int n;
-   struct ccn_bloom_wire *wire;
-};
-
-const int ESTUSERS = 20;
-const unsigned char SEED[] = "1412";
+static int namecompare(const void *a, const void *b);
+static void append_bf_all(struct ccn_charbuf *c);
+/*
+ * This appends a tagged, valid, fully-saturated Bloom filter, useful for
+ * excluding everything between two 'fenceposts' in an Exclude construct.
+ */
+static void
+append_bf_all(struct ccn_charbuf *c)
+{
+    unsigned char bf_all[9] = { 3, 1, 'A', 0, 0, 0, 0, 0, 0xFF };
+    const struct ccn_bloom_wire *b = ccn_bloom_validate_wire(bf_all, sizeof(bf_all));
+    if (b == NULL) abort();
+    ccn_charbuf_append_tt(c, CCN_DTAG_Bloom, CCN_DTAG);
+    ccn_charbuf_append_tt(c, sizeof(bf_all), CCN_BLOB);
+    ccn_charbuf_append(c, bf_all, sizeof(bf_all));
+    ccn_charbuf_append_closer(c);
+}
 
 static ccn_keystore *cached_keystore = NULL;
 static GroupManager *pGroupManager = NULL;
@@ -84,8 +94,6 @@ static enum ccn_upcall_res handle_leave(ccn_closure *selfp,
 										ccn_upcall_kind kind,
 										ccn_upcall_info *info);
 
-static void append_bloom_filter(ccn_charbuf *templ, ccn_bloom *b);
-
 static char *ccn_name_comp_to_str(const unsigned char *ccnb,
 								  const struct ccn_indexbuf *comps,
 								  int index);
@@ -95,9 +103,41 @@ static const ccn_pkey *get_my_private_key();
 static const ccn_pkey *get_my_public_key();
 static const unsigned char *get_my_publisher_key_id();
 static ssize_t get_my_publisher_key_id_length();
-static ccn_charbuf *make_interest_template(struct ccn_bloom *exclusive_filter);
 
 static int ccn_create_keylocator(ccn_charbuf *c, const ccn_pkey *k);
+
+static void mutex_trylock() {
+	int c = 0;
+	while(pthread_mutex_trylock(&gm_mutex) != 0) {
+		usleep(200);
+		c++;
+		if (c> 10000) {
+			fprintf(stderr, "cannot obtain lock %s: %d \n", __FILE__, __LINE__);
+			abort();
+		}
+	}
+}
+
+static void mutex_unlock() {
+	pthread_mutex_unlock(&gm_mutex);
+}
+
+/*
+ * Comparison operator for sorting the excl list with qsort.
+ * For convenience, the items in the excl array are
+ * charbufs containing ccnb-encoded Names of one component each.
+ * (This is not the most efficient representation.)
+ */
+static int /* for qsort */
+namecompare(const void *a, const void *b)
+{
+    const struct ccn_charbuf *aa = *(const struct ccn_charbuf **)a;
+    const struct ccn_charbuf *bb = *(const struct ccn_charbuf **)b;
+    int ans = ccn_compare_names(aa->buf, aa->length, bb->buf, bb->length);
+    if (ans == 0)
+        fprintf(stderr, "wassat? %d\n", __LINE__);
+    return (ans);
+}
 
 static char *ccn_name_comp_to_str(const unsigned char *ccnb,
 								  const struct ccn_indexbuf *comps,
@@ -135,17 +175,6 @@ static void init_cached_keystore() {
 	ccn_charbuf_destroy(&temp);
 	cached_keystore = keystore;
     }
-}
-
-static void append_bloom_filter(ccn_charbuf *templ, ccn_bloom *b) {
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Bloom, CCN_DTAG);
-    int wireSize = ccn_bloom_wiresize(b);
-    ccn_charbuf_append_tt(templ, wireSize, CCN_BLOB);
-    ccn_bloom_store_wire(b, ccn_charbuf_reserve(templ, wireSize), wireSize);
-    templ->length += wireSize;
-    ccn_charbuf_append_closer(templ);
-    ccn_charbuf_append_closer(templ);
 }
 
 
@@ -277,16 +306,9 @@ void GroupManager::run() {
         if (res >= 0) {
 			int ret = poll(pfds, 1, 100);	
 			if (ret >= 0) {
-				int c = 0;
-				while(pthread_mutex_trylock(&gm_mutex) != 0) {
-					c++;
-					if (c> 10000000) {
-						fprintf(stderr, "cannot obtain lock at %s: %d\n", __FILE__, __LINE__);
-						std::exit(1);
-					}
-				}
+				mutex_trylock();
 				res = ccn_run(ccn, 0);
-				pthread_mutex_unlock(&gm_mutex);
+				mutex_unlock();
 			}
         }
     }
@@ -558,6 +580,83 @@ int GroupManager::ccn_open() {
     return 0;
 }
 
+void GroupManager::expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude) {
+
+	if (toExclude.size() == 0) {
+		mutex_trylock();	
+		int res = ccn_express_interest(ccn, interest, join_closure, NULL);
+		mutex_unlock();
+		if (res < 0) {
+			critical("express interest failed!");
+		}
+		ccn_charbuf_destroy(&interest);
+		return;
+	}
+
+	struct ccn_charbuf **excl = NULL;
+	if (toExclude.size() > 0) {
+		excl = new ccn_charbuf *[toExclude.size()];
+		for (int i = 0; i < toExclude.size(); i ++) {
+			QString compName = toExclude.at(i);
+			struct ccn_charbuf *comp = ccn_charbuf_create();
+			ccn_name_init(comp);
+			ccn_name_append_str(comp, compName.toStdString().c_str());
+			excl[i] = comp;
+			comp = NULL;
+		}
+		qsort(excl, toExclude.size(), sizeof(excl[0]), &namecompare);
+	}
+
+	int begin = 0;
+	bool excludeLow = false;
+	bool excludeHigh = true;
+	while (begin < toExclude.size()) {
+		if (begin != 0) {
+			excludeLow = true;
+		}
+		struct ccn_charbuf *templ = ccn_charbuf_create();
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG); // <Interest>
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG); // <Name>
+		ccn_charbuf_append_closer(templ); // </Name> 
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG); // <Exclude>
+		if (excludeLow) {
+			append_bf_all(templ);
+		}
+		for (; begin < toExclude.size(); begin++) {
+			struct ccn_charbuf *comp = excl[begin];
+			if (comp->length < 4) abort();
+			// we are being conservative here
+			if (interest->length + templ->length + comp->length > 1350) {
+				break;
+			}
+			ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
+		}
+		if (begin == toExclude.size()) {
+			excludeHigh = false;
+		}
+		if (excludeHigh) {
+			append_bf_all(templ);
+		}
+		ccn_charbuf_append_closer(templ); // </Exclude>
+
+		ccn_charbuf_append_closer(templ); // </Interest> 
+		mutex_trylock();	
+		int res = ccn_express_interest(ccn, interest, join_closure, templ);
+		mutex_unlock();
+		if (res < 0) {
+			critical("express interest failed!");
+		}
+		ccn_charbuf_destroy(&templ);
+	}
+	ccn_charbuf_destroy(&interest);
+	for (int i = 0; i < toExclude.size(); i++) {
+		ccn_charbuf_destroy(&excl[i]);
+	}
+	if (excl != NULL) {
+		delete []excl;
+	}
+}
+
 void GroupManager::enumerate() {
     ccn_charbuf *interest_path = NULL;
     ccn_charbuf *templ = NULL;
@@ -569,55 +668,23 @@ void GroupManager::enumerate() {
     ccn_name_append_str(interest_path, confName.toLocal8Bit().constData());
 	ccn_name_append_str(interest_path, "speaker-list");
 
-    struct ccn_bloom *exclusive_filter = ccn_bloom_create(ESTUSERS, SEED);
-    if (exclusive_filter == NULL) {
-        DPRINT("Failed to initialize ccn bloom filter");
-    }
-	
-    unsigned char *bloom = exclusive_filter->wire->bloom;
-    memset(bloom, 0, 1024);
-
-	// TODO: get rid of the bloom filter
     // update exclusive filter according to recently known remote users
     QHash<QString, RemoteUser *>::const_iterator it = (pGroupManager->qhRemoteUsers).constBegin();
+	QList<QString> toExclude;
     while (it != (pGroupManager->qhRemoteUsers).constEnd())
     {
 		RemoteUser *ru = it.value();
 		if (ru && !ru->needRefresh()) {
-			QByteArray qba = it.key().toLocal8Bit();
-			ccn_bloom_insert(exclusive_filter, qba.constData(), qba.size());
+			toExclude.append(ru->getName());
 		}
 		++it;
     }
 
-	// exclude self
-	if (pGroupManager->userName.isEmpty())
-		pGroupManager->userName = "murmur-debug-test";
+	// TODO: do not exclude local user (when staleness comes to play)
+	// always exclude localuser by now
+	toExclude.append(userName);
 
-	QByteArray qba = pGroupManager->userName.toLocal8Bit();
-	ccn_bloom_insert(exclusive_filter, qba.constData(), qba.size());
-	//fprintf(stderr, "user name is %s\n", pGroupManager->userName.toLocal8Bit().constData());
-
-
-    templ = make_interest_template(exclusive_filter);
-	QByteArray x((char *)templ->buf, (int)templ->length);
-	QString y = QString(x.toBase64());
-	//fprintf(stderr, "templ is %s\n", y.toStdString().c_str());
-
-	// no need to lock if we already have the lock
-	int c = 0;
-	while(pthread_mutex_trylock(&gm_mutex) != 0) {
-		c++;
-		if (c> 10000000) {
-			fprintf(stderr, "cannot obtain lock at %s:%d\n", __FILE__, __LINE__);
-			std::exit(1);
-		}
-	}
-    ccn_express_interest(ccn, interest_path, join_closure, templ);
-	pthread_mutex_unlock(&gm_mutex);
-    ccn_charbuf_destroy(&templ);
-    ccn_charbuf_destroy(&interest_path);
-    if (exclusive_filter != NULL) ccn_bloom_destroy(&exclusive_filter);
+	expressEnumInterest(interest_path, toExclude);
 }
 
 /* send optional leave notification before actually leaves
@@ -632,16 +699,9 @@ void GroupManager::sendLeaveInterest() {
 	ccn_name_append_str(interest_path, "leave");
 	ccn_name_append_str(interest_path, userName.toLocal8Bit().constData());
 	static ccn_charbuf *templ = NULL;
-	int c = 0;
-	while(pthread_mutex_trylock(&gm_mutex) != 0) {
-		c++;
-		if (c> 10000000) {
-			fprintf(stderr, "cannot obtain lock at %s: %d\n", __FILE__, __LINE__);
-			std::exit(1);
-		}
-	}
+	mutex_trylock();
     ccn_express_interest(ccn, interest_path, leave_closure, NULL);
-	pthread_mutex_unlock(&gm_mutex);
+	mutex_unlock();
     ccn_charbuf_destroy(&interest_path);
 	templ = NULL;
 }
@@ -818,17 +878,6 @@ static enum ccn_upcall_res incoming_content(ccn_closure *selfp,
     return (CCN_UPCALL_RESULT_OK);   
 }
 
-static ccn_charbuf *make_interest_template(struct ccn_bloom *exclusive_filter) {
-
-    ccn_charbuf *templ = ccn_charbuf_create();
-
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
-    ccn_charbuf_append_closer(templ); /* </Name> */
-	append_bloom_filter(templ, exclusive_filter);
-    ccn_charbuf_append_closer(templ); /* </Interest> */
-    return (templ);
-}
 
 
 static const ccn_pkey *get_my_private_key() {

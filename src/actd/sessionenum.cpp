@@ -11,8 +11,6 @@
 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 #define FRESHNESS 10
-#define EXCLUDE_LOW 1
-#define EXCLUDE_HIGH 2
 
 
 static struct pollfd pfds[1];
