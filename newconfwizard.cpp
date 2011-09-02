@@ -17,7 +17,8 @@ Announcement *ConfWizard::getAnnouncement() {
 ConfWizard::ConfWizard(QWidget *parent)
 	: QWizard(parent)
 {
-	addPage(new IntroPage);
+	// no intro
+	// addPage(new IntroPage);
 	addPage(new ConfigPage);
 	addPage(new ConclusionPage);
 	a = NULL;
@@ -135,8 +136,11 @@ ConfigPage::ConfigPage(QWidget *parent)
 	emailLineEdit = new QLineEdit;
 	emailLabel->setBuddy(emailLineEdit);
 
+	// disable these two for now
 	videoCheckBox = new QCheckBox(tr("Enable Video"));
 	privateConfBox = new QCheckBox(tr("Private Conference"));
+	videoCheckBox->setEnabled(false);
+	privateConfBox->setEnabled(false);
 
 	descLabel = new QLabel(tr("Conference &Description"));
 	descTextEdit = new QTextEdit;
