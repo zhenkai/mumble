@@ -1,8 +1,7 @@
 
          M U M B L E
-
- A voicechat utility for gamers
-
+		
+	  Audio Conference Tool Over NDN
 	  redmine.irl.cs.ucla.edu/projects/ndn-act/repository
 
 Mumble is a voicechat program for gamers written on top of Qt and Speex.
