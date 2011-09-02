@@ -24,5 +24,4 @@ ICON = actd.icns
 CONFIG += console 
 QT += xml
 
-system("(test -e ~/.actd/actd_private_key.pem) &&( test -e ~/.actd/actd_cert.pem) || ./actd_initkeystore.sh")
 include(../../symbols.pri)
