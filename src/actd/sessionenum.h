@@ -47,6 +47,7 @@ public:
 	bool isConferenceRefresh(unsigned char *hash, bool pub);
 	void sendDismissSignal(Announcement *a);
 	void setListPrivate(bool b);
+	void expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude);
 
 private slots:
 	void enumerate();

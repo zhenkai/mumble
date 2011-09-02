@@ -267,3 +267,4 @@ bool FetchedAnnouncement::isStaled() {
 	}
 	return false;
 }
+

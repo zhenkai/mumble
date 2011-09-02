@@ -108,6 +108,8 @@ class FetchedAnnouncement : public Announcement
 		QDateTime timestamp;
 		bool dismissed;
 		bool isEligible;
+
+
 };
 
 QString &operator<<(QString &out, Announcement *a);
