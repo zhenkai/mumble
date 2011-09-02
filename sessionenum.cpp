@@ -10,21 +10,21 @@
 
 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
-#define EST_USERS 20
-#define FRESHNESS 30
+#define FRESHNESS 10
+#define EXCLUDE_LOW 1
+#define EXCLUDE_HIGH 2
+
 
 static struct pollfd pfds[1];
 static pthread_mutex_t actd_mutex; 
 static pthread_mutexattr_t ccn_attr;
 
-const unsigned char SEED[] = "1412";
+
+static int namecompare(const void *a, const void *b);
 
 static SessionEnum *gsd = NULL;
 
-struct ccn_bloom {
-    int n;
-    struct ccn_bloom_wire *wire;
-};
+static void append_bf_all(struct ccn_charbuf *c);
 
 static void mutex_trylock() {
 	int c = 0;
@@ -66,7 +66,40 @@ static enum ccn_upcall_res incoming_private_content(struct ccn_closure *selfp,
 													enum ccn_upcall_kind kind,
 													struct ccn_upcall_info *info);
 
-static void append_bloom_filter(struct ccn_charbuf *templ, struct ccn_bloom *b);
+
+/*
+ * Comparison operator for sorting the excl list with qsort.
+ * For convenience, the items in the excl array are
+ * charbufs containing ccnb-encoded Names of one component each.
+ * (This is not the most efficient representation.)
+ */
+static int /* for qsort */
+namecompare(const void *a, const void *b)
+{
+    const struct ccn_charbuf *aa = *(const struct ccn_charbuf **)a;
+    const struct ccn_charbuf *bb = *(const struct ccn_charbuf **)b;
+    int ans = ccn_compare_names(aa->buf, aa->length, bb->buf, bb->length);
+    if (ans == 0)
+        fprintf(stderr, "wassat? %d\n", __LINE__);
+    return (ans);
+}
+
+
+/*
+ * This appends a tagged, valid, fully-saturated Bloom filter, useful for
+ * excluding everything between two 'fenceposts' in an Exclude construct.
+ */
+static void
+append_bf_all(struct ccn_charbuf *c)
+{
+    unsigned char bf_all[9] = { 3, 1, 'A', 0, 0, 0, 0, 0, 0xFF };
+    const struct ccn_bloom_wire *b = ccn_bloom_validate_wire(bf_all, sizeof(bf_all));
+    if (b == NULL) abort();
+    ccn_charbuf_append_tt(c, CCN_DTAG_Bloom, CCN_DTAG);
+    ccn_charbuf_append_tt(c, sizeof(bf_all), CCN_BLOB);
+    ccn_charbuf_append(c, bf_all, sizeof(bf_all));
+    ccn_charbuf_append_closer(c);
+}
 
 static char *ccn_name_comp_to_str(const unsigned char *ccnb,
 								  const struct ccn_indexbuf *comps,
@@ -607,13 +640,6 @@ void SessionEnum::handleEnumContent(struct ccn_upcall_info *info) {
 
 		addToConferences(a, true);
 
-		// TODO: wierd, can not free
-		/*
-		if (value) {
-			free((void *)value);
-			value = NULL;
-		}
-		*/
 }
 
 
@@ -745,9 +771,6 @@ void SessionEnum::handleEnumPrivateContent(struct ccn_upcall_info *info) {
 
 
 		addToConferences(a, false);
-		// TODO: weird, can not free
-		//if (value)
-			//free((void *)value);
 
 		debug("handle private content done");
 }
@@ -1108,6 +1131,84 @@ void SessionEnum::enumerate() {
 	}
 }
 
+
+void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude) {
+
+	if (toExclude.size() == 0) {
+		mutex_trylock();	
+		int res = ccn_express_interest(ccn, interest, fetch_announce, NULL);
+		mutex_unlock();
+		if (res < 0) {
+			critical("express interest failed!");
+		}
+		ccn_charbuf_destroy(&interest);
+		return;
+	}
+
+	struct ccn_charbuf **excl = NULL;
+	if (toExclude.size() > 0) {
+		excl = new ccn_charbuf *[toExclude.size()];
+		for (int i = 0; i < toExclude.size(); i ++) {
+			QString compName = toExclude.at(i);
+			struct ccn_charbuf *comp = ccn_charbuf_create();
+			ccn_name_init(comp);
+			ccn_name_append_str(comp, compName.toStdString().c_str());
+			excl[i] = comp;
+			comp = NULL;
+		}
+		qsort(excl, toExclude.size(), sizeof(excl[0]), &namecompare);
+	}
+
+	int begin = 0;
+	bool excludeLow = false;
+	bool excludeHigh = true;
+	while (begin < toExclude.size()) {
+		if (begin != 0) {
+			excludeLow = true;
+		}
+		struct ccn_charbuf *templ = ccn_charbuf_create();
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG); // <Interest>
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG); // <Name>
+		ccn_charbuf_append_closer(templ); // </Name> 
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG); // <Exclude>
+		if (excludeLow) {
+			append_bf_all(templ);
+		}
+		for (; begin < toExclude.size(); begin++) {
+			struct ccn_charbuf *comp = excl[begin];
+			if (comp->length < 4) abort();
+			// we are being conservative here
+			if (interest->length + templ->length + comp->length > 1350) {
+				break;
+			}
+			ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
+		}
+		if (begin == toExclude.size()) {
+			excludeHigh = false;
+		}
+		if (excludeHigh) {
+			append_bf_all(templ);
+		}
+		ccn_charbuf_append_closer(templ); // </Exclude>
+
+		ccn_charbuf_append_closer(templ); // </Interest> 
+		mutex_trylock();	
+		int res = ccn_express_interest(ccn, interest, fetch_announce, templ);
+		mutex_unlock();
+		if (res < 0) {
+			critical("express interest failed!");
+		}
+		ccn_charbuf_destroy(&templ);
+	}
+	ccn_charbuf_destroy(&interest);
+	for (int i = 0; i < toExclude.size(); i++) {
+		ccn_charbuf_destroy(&excl[i]);
+	}
+	if (excl != NULL) {
+		delete []excl;
+	}
+}
+
 void SessionEnum::enumeratePubConf() {
 	struct ccn_charbuf *interest = ccn_charbuf_create();
 	if (interest == NULL ) {
@@ -1118,50 +1219,20 @@ void SessionEnum::enumeratePubConf() {
 		critical("Bad ccn URI");
 	
 	ccn_name_append_str(interest, "conference-list");
-	
-	struct ccn_bloom *exc_filter = ccn_bloom_create(EST_USERS, SEED);
-	unsigned char *bloom = exc_filter->wire->bloom;
-	memset(bloom, 0, 1024);
+
+	QList<QString> toExclude;
 	for (int i = 0; i < pubConferences.size(); i++) {
 		FetchedAnnouncement *fa = pubConferences.at(i);
 		if (fa == NULL) 
 			critical("SessionEnum::enumrate");
 
 		if (!fa->needRefresh()) {
-			QByteArray qba = fa->getConfName().toLocal8Bit();
-			ccn_bloom_insert(exc_filter, qba.constData(), qba.size());
+			toExclude.append(fa->getConfName());
 		}
 	}
 
-	for (int j = 0; j < myConferences.size(); j++) {
-		Announcement *a = myConferences.at(j);
-		if (a == NULL) 
-			critical("SessionEnum::enumrate");
-
-		QByteArray qba = a->getConfName().toLocal8Bit();
-		ccn_bloom_insert(exc_filter, qba.constData(), qba.size());
-	}
-
-    struct ccn_charbuf *templ = ccn_charbuf_create();
-
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG); // <Interest>
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG); // <Name>
-    ccn_charbuf_append_closer(templ); // </Name> 
-
-    if (ccn_bloom_n(exc_filter) != 0) { 
-        // exclusive_filter not empty, append it to the interest
-        append_bloom_filter(templ, exc_filter);
-    }
-
-    ccn_charbuf_append_closer(templ); // </Interest> 
-	mutex_trylock();	
-	res = ccn_express_interest(ccn, interest, fetch_announce, templ);
-	mutex_unlock();
-	if (res < 0) {
-		critical("express interest failed!");
-	}
-	ccn_charbuf_destroy(&templ);
-	ccn_charbuf_destroy(&interest);
+	expressEnumInterest(interest, toExclude);
+	//testtest(interest, toExclude);
 	
 }
 
@@ -1176,54 +1247,20 @@ void SessionEnum::enumeratePriConf() {
 	
 	ccn_name_append_str(interest, "private-list");
 	
-	struct ccn_bloom *exc_filter = ccn_bloom_create(EST_USERS, SEED);
-	unsigned char *bloom = exc_filter->wire->bloom;
-	memset(bloom, 0, 1024);
+	QList<QString> toExclude;
 	for (int i = 0; i < priConferences.size(); i++) {
 		FetchedAnnouncement *fa = priConferences.at(i);
 		if (fa == NULL) 
 			critical("SessionEnum::enumrate");
 
 		if (!fa->needRefresh()) {
-			QByteArray qba = fa->getOpaqueName().toLocal8Bit();
-			ccn_bloom_insert(exc_filter, qba.constData(), qba.size());
-			debug("append " + fa->getOpaqueName() + " to private exclude filter");
+			toExclude.append(fa->getOpaqueName());
 		}
 	}
 
-	for (int i = 0; i < myPrivateConferences.size(); i++) {
-		Announcement *a = myPrivateConferences.at(i);
-		if (a == NULL)
-			critical("sessionEnum:: enumrate");
+	expressEnumInterest(interest, toExclude);
+	//testtest(interest, toExclude);
 
-		//QByteArray qba = myPrivateConference->getConfName().toLocal8Bit();
-		QByteArray qba = a->getOpaqueName().toLocal8Bit();
-		ccn_bloom_insert(exc_filter, qba.constData(), qba.size());
-	}
-
-    struct ccn_charbuf *templ = ccn_charbuf_create();
-
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG); // <Interest>
-    ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG); // <Name>
-    ccn_charbuf_append_closer(templ); // </Name> 
-
-    if (ccn_bloom_n(exc_filter) != 0) { 
-        // exclusive_filter not empty, append it to the interest
-        append_bloom_filter(templ, exc_filter);
-    }
-
-    ccn_charbuf_append_closer(templ); // </Interest> 
-	
-	mutex_trylock();
-	res = ccn_express_interest(ccn, interest, fetch_private, templ);
-	mutex_unlock();
-	if (res < 0) {
-		critical("express interest failed!");
-	}
-	debug("expressing private interest");
-	ccn_charbuf_destroy(&templ);
-	ccn_charbuf_destroy(&interest);
-	
 }
 
 void SessionEnum::startThread() {
@@ -1235,7 +1272,6 @@ void SessionEnum::startThread() {
 		pfds[0].fd = ccn_get_connection_fd(ccn);
 		pfds[0].events = POLLIN; 
 		start(QThread::HighestPriority);
-
 	}
 }
 
@@ -1321,6 +1357,7 @@ SessionEnum::SessionEnum() {
 	aliveTimer = new QTimer(this);
 	connect(aliveTimer, SIGNAL(timeout()), this, SLOT(checkAlive()));
 	aliveTimer->start(15000);
+
 
 	startThread();
 
