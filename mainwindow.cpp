@@ -29,18 +29,11 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	pubConfList->setColumnWidth(3, 200);
 	pubConfList->setColumnWidth(4, 150);
 
-
-	//myConfList = new QTreeWidget;
-	//myConfList->setEnabled(false);
-	//myConfList->setRootIsDecorated(false);
-	//myConfList->setHeaderLabels(QStringList() << tr("Audio")<<tr("Video")<<tr("Conference Name")<<tr("Organizer"));
-
 	confDesc = new QTextEdit;
 	confDesc->setReadOnly(true);
 	confDesc->setEnabled(false);
 
 	pubConfLabel = new QLabel(tr("Public Conferences"));
-	//myConfLabel = new QLabel(tr("My Conferences"));
 	confDescLabel = new QLabel(tr("Conference Descriptions"));
 	QString warning = "Current prefix for voice data is: " + prefix ;
 	currentPrefLabel = new QLabel(warning);
@@ -52,15 +45,11 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 
 	joinButton = new QPushButton(tr("Join"));
 	joinButton->setEnabled(false);
-	//editButton = new QPushButton(tr("Edit"));
-	//editButton->setEnabled(false);
 	dismissButton = new QPushButton(tr("Dismiss"));
 	dismissButton->setEnabled(false);
 
 	listPrivate = new QCheckBox(tr("Also List Private Conferences"));
 	connect(listPrivate, SIGNAL(stateChanged(int)), this, SLOT(listPrivateConferences()));
-	// TODO: should enable this in near future
-	listPrivate->setEnabled(false);
 	
 	QHBoxLayout *topLayout = new QHBoxLayout;
 	topLayout->addWidget(newButton);
@@ -71,7 +60,6 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 
 	footButtonBox = new QDialogButtonBox;
 	footButtonBox->addButton(joinButton, QDialogButtonBox::ActionRole);
-	//footButtonBox->addButton(editButton, QDialogButtonBox::ActionRole);
 	footButtonBox->addButton(dismissButton, QDialogButtonBox::ActionRole);
 
 	QHBoxLayout *midLayout = new QHBoxLayout;
@@ -95,7 +83,6 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	connect(aboutButton, SIGNAL(clicked()), this, SLOT(about()));
 	connect(quitButton, SIGNAL(clicked()), this, SLOT(close()));
 	connect(joinButton, SIGNAL(clicked()), this, SLOT(joinConference()));
-	//connect(editButton, SIGNAL(clicked()), this, SLOT(editConference()));
 	connect(dismissButton, SIGNAL(clicked()), this, SLOT(dismissConference()));
 	connect(pubConfList, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)), this, SLOT(processItem()));
 	
@@ -122,7 +109,6 @@ void MainWindow::processItem(){
 		confDesc->clear();
 		confDesc->setEnabled(false);
 		joinButton->setEnabled(false);
-		//editButton->setEnabled(false);
 		dismissButton->setEnabled(false);
 		return;
 	}
@@ -130,15 +116,12 @@ void MainWindow::processItem(){
 	Announcement *a = itemToAnnouncement[current];
 	if (a->getOwner()) {
 		joinButton->setEnabled(true);
-		//editButton->setEnabled(true);
 		dismissButton->setEnabled(true);
 
 	} else {
 		joinButton->setEnabled(true);
-		//editButton->setEnabled(false);
 		dismissButton->setEnabled(false);
 	}
-//	confDesc->setPlainText(a->getDesc());
 	QString desc = current->data(3, Qt::UserRole).toString();
 	confDesc->setPlainText(desc);
 
@@ -182,7 +165,6 @@ void MainWindow::joinConference() {
 	}
 
 	QString confName = current->text(3);
-	// should be indicated from current item in the future
 	bool audio = true;
 	bool video = false;
 	if (video) {
@@ -190,21 +172,6 @@ void MainWindow::joinConference() {
 	}
 	if (audio) {
 
-/*
-		if (audioProcess != NULL && audioProcess->state() != QProcess::NotRunning) {
-			int ret = QMessageBox::warning(this, tr("Conference Tool Set"),
-											tr("The audio daemon is already running.\n" "Do you want to continue?"), QMessageBox::Cancel | QMessageBox::Yes, QMessageBox::Cancel);
-			if (ret == QMessageBox::Cancel)
-				return;
-			else {
-				audioProcess->kill();
-				//if (audioProcess->state() != QProcess::NotRunning)
-				//	debug("panic! can not kill audio tool process!");
-				delete audioProcess;
-				audioProcess = new QProcess(this);
-			}
-		}
-		*/
 
 		QString qsConfig = "<config><prefix>" + prefix + "</prefix><confName>"\
 							+ confName + "</confName>";
@@ -302,12 +269,8 @@ void MainWindow::dismissConference() {
 		critical(qs);
 	}
 
-	// remove from QList
-	//QString confName = current->text(3);
-	//QString organizer = current->text(4);
 	Announcement *a = itemToAnnouncement[current];
 	
-	//sd->removeFromMyConferences(confName, organizer);
 	sd->removeFromMyConferences(a);
 	//delete a;
 	itemToAnnouncement.remove(current);
