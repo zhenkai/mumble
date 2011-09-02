@@ -1131,7 +1131,20 @@ void SessionEnum::enumerate() {
 	}
 }
 
+
 void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude) {
+
+	if (toExclude.size() == 0) {
+		mutex_trylock();	
+		int res = ccn_express_interest(ccn, interest, fetch_announce, NULL);
+		mutex_unlock();
+		if (res < 0) {
+			critical("express interest failed!");
+		}
+		ccn_charbuf_destroy(&interest);
+		return;
+	}
+
 	struct ccn_charbuf **excl = NULL;
 	if (toExclude.size() > 0) {
 		excl = new ccn_charbuf *[toExclude.size()];
@@ -1143,6 +1156,7 @@ void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QStrin
 			excl[i] = comp;
 			comp = NULL;
 		}
+		qsort(excl, toExclude.size(), sizeof(excl[0]), &namecompare);
 	}
 
 	int begin = 0;
@@ -1169,7 +1183,7 @@ void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QStrin
 			}
 			ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
 		}
-		if (begin == toExclude.size() - 1) {
+		if (begin == toExclude.size()) {
 			excludeHigh = false;
 		}
 		if (excludeHigh) {
@@ -1179,7 +1193,6 @@ void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QStrin
 
 		ccn_charbuf_append_closer(templ); // </Interest> 
 		mutex_trylock();	
-		// TODO: do not use bloom
 		int res = ccn_express_interest(ccn, interest, fetch_announce, templ);
 		mutex_unlock();
 		if (res < 0) {
@@ -1219,6 +1232,7 @@ void SessionEnum::enumeratePubConf() {
 	}
 
 	expressEnumInterest(interest, toExclude);
+	//testtest(interest, toExclude);
 	
 }
 
@@ -1245,6 +1259,7 @@ void SessionEnum::enumeratePriConf() {
 	}
 
 	expressEnumInterest(interest, toExclude);
+	//testtest(interest, toExclude);
 
 }
 
@@ -1257,7 +1272,6 @@ void SessionEnum::startThread() {
 		pfds[0].fd = ccn_get_connection_fd(ccn);
 		pfds[0].events = POLLIN; 
 		start(QThread::HighestPriority);
-
 	}
 }
 
@@ -1343,6 +1357,7 @@ SessionEnum::SessionEnum() {
 	aliveTimer = new QTimer(this);
 	connect(aliveTimer, SIGNAL(timeout()), this, SLOT(checkAlive()));
 	aliveTimer->start(15000);
+
 
 	startThread();
 
