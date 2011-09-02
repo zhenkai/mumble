@@ -3,7 +3,7 @@
 
 include(../../compiler.pri)
 
-CONFIG += x86_64 x86 ppc debug_and_release
+CONFIG += x86_64 x86 debug_and_release
 
 TEMPLATE = lib
 CONFIG += plugin plugin_bundle

@@ -2,7 +2,7 @@
 
 include(../../compiler.pri)
 
-CONFIG += x86_64 x86 ppc debug_and_release plugin
+CONFIG += x86_64 x86 debug_and_release plugin
 
 TEMPLATE = lib
 CONFIG -= gui qt
