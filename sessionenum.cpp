@@ -178,8 +178,15 @@ void SessionEnum::initKeystoreAndSignedInfo() {
 	}
 
 	// public & private key pair for actd
-	/*
 	actd_keystore = NULL;
+	QString keystoreFilename = QString("%1/.actd/.actd_keystore").arg(getenv("HOME"));
+	QFile keystoreFile(keystoreFilename);
+	// if no keystore, create one
+	if (!keystoreFile.exists()) {
+		res = ccn_keystore_file_init((char *)keystoreFilename.toStdString().c_str(), (char *)"Th1s1s@p8ssw0rdf0r8ctd.", (char *)getenv("USER"), 1024, 365);
+		if (res < 0)
+			critical("Failed to initialize keystore file for actd.");
+	}
 	actd_keystore = ccn_keystore_create();
 	temp = ccn_charbuf_create();
 	ccn_charbuf_putf(temp, "%s/.actd/.actd_keystore", getenv("HOME"));
@@ -190,7 +197,6 @@ void SessionEnum::initKeystoreAndSignedInfo() {
 		critical("Failed to initialze keystore for actd");
 
 	ccn_charbuf_destroy(&temp);
-	*/
 }
 
 
