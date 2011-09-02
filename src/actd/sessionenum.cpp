@@ -1229,6 +1229,15 @@ void SessionEnum::enumeratePubConf() {
 		}
 	}
 
+	// always exclude own conferences
+	// TODO: do not do this (when staleness comes to play)
+	for (int i = 0; i < myConferences.size(); i++) {
+		Announcement *a = myConferences.at(i);
+		if (a == NULL) 
+			critical("SessionEnum::enumrate");
+		toExclude.append(a->getConfName());
+	}
+
 	expressEnumInterest(interest, toExclude);
 	//testtest(interest, toExclude);
 	
@@ -1254,6 +1263,15 @@ void SessionEnum::enumeratePriConf() {
 		if (!fa->needRefresh()) {
 			toExclude.append(fa->getOpaqueName());
 		}
+	}
+
+	// always exclude own conferences
+	// TODO: do not do this (when staleness comes to play)
+	for (int i = 0; i < myPrivateConferences.size(); i++) {
+		Announcement *a = myPrivateConferences.at(i);
+		if (a == NULL) 
+			critical("SessionEnum::enumrate");
+		toExclude.append(a->getOpaqueName());
 	}
 
 	expressEnumInterest(interest, toExclude);
