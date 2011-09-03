@@ -106,7 +106,7 @@ void ConclusionPage::initializePage()
 {
 	bool isPrivate = field("private").toBool();
 	if (isPrivate) {
-		QStringList certs = QFileDialog::getOpenFileNames(this, "Select the certs of eligible participants",
+		QStringList certs = QFileDialog::getOpenFileNames(this, "Import Certs of Participants",
 														"", "Certs (*.pem)");
 		QString qsCerts = certs.join(":");
 		QSettings settings("UCLA-IRL", "ACTD");
