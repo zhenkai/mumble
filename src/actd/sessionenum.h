@@ -6,10 +6,11 @@ extern "C" {
 #endif
 #include <openssl/evp.h>
 #include <openssl/rand.h>
-#include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <openssl/aes.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
+#include <openssl/pkcs12.h>
 #include <ccn/ccn.h>
 #include <ccn/bloom.h>
 #include <ccn/charbuf.h>

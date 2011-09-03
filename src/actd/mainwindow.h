@@ -31,7 +31,7 @@ private slots:
 	void editConference();
 	void dismissConference();
 	void newConference();
-	void about();
+	void exportCert();
 	void changePref();
 	void addConferenceToList(Announcement *announce);
 	void removeConferenceFromList(QString, QString);
@@ -58,7 +58,7 @@ private:
 
 	QPushButton *newButton;
 	QPushButton *prefButton;
-	QPushButton *aboutButton;
+	QPushButton *exportCertButton;
 	QPushButton *quitButton;
 
 
