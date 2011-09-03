@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QTextStream>
 #include <QTimer>
+#include "sessionenum.h"
 
 #include "mainwindow.h"
 #include "debugbox.h"
@@ -40,7 +41,7 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 
 	newButton = new QPushButton(tr("New"));
 	prefButton = new QPushButton(tr("Preferences"));
-	aboutButton = new QPushButton(tr("About"));
+	exportCertButton = new QPushButton(tr("Export Cert"));
 	quitButton = new QPushButton(tr("Quit"));
 
 	joinButton = new QPushButton(tr("Join"));
@@ -54,7 +55,7 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	QHBoxLayout *topLayout = new QHBoxLayout;
 	topLayout->addWidget(newButton);
 	topLayout->addWidget(prefButton);
-	topLayout->addWidget(aboutButton);
+	topLayout->addWidget(exportCertButton);
 	topLayout->addWidget(quitButton);
 	
 
@@ -80,7 +81,7 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 
 	connect(newButton, SIGNAL(clicked()), this, SLOT(newConference()));
 	connect(prefButton, SIGNAL(clicked()), this, SLOT(changePref()));
-	connect(aboutButton, SIGNAL(clicked()), this, SLOT(about()));
+	connect(exportCertButton, SIGNAL(clicked()), this, SLOT(exportCert()));
 	connect(quitButton, SIGNAL(clicked()), this, SLOT(close()));
 	connect(joinButton, SIGNAL(clicked()), this, SLOT(joinConference()));
 	connect(dismissButton, SIGNAL(clicked()), this, SLOT(dismissConference()));
@@ -139,9 +140,45 @@ void MainWindow::writeSettings() {
 	settings.setValue("prefix", prefix);
 }
 
-void MainWindow::about() {
-	QMessageBox::about(this, tr("About actd"), QString("%1\n%2").arg(tr("This is an application similar to sd of the MBone.")).arg(tr("Conference management is handled by this application.")));
+void MainWindow::exportCert() {
+	QString certFilename = QString("%1/.actd/actd_cert.pem").arg(getenv("HOME"));
+	QFile certFile(certFilename);
+	if (!certFile.exists()) {
+		QString keystoreFilename = QString("%1/.actd/.actd_keystore").arg(getenv("HOME"));
+		QFile keystoreFile(keystoreFilename);
+		if (!keystoreFile.exists()) {
+			critical("Keystore file has been deleted or renamed after actd launches. Please restart actd.");
+		}
+		FILE *fp;
+		PKCS12 *keystore;
+		OpenSSL_add_all_algorithms();
+		fp = fopen(keystoreFilename.toStdString().c_str(), "rb");
+		if (fp == NULL)
+			abort();
+		
+		keystore = d2i_PKCS12_fp(fp, NULL);
+		fclose(fp);
+		if (keystore == NULL)
+			abort();
 
+		EVP_PKEY *private_key;
+		X509 *certificate;
+		int res = PKCS12_parse(keystore, (char *)"Th1s1s@p8ssw0rdf0r8ctd.", &private_key, &certificate, NULL);
+		PKCS12_free(keystore);
+		if (res == 0)
+			return;
+
+		fp = fopen(certFilename.toStdString().c_str(), "w");
+		res = PEM_write_X509(fp, certificate);
+		fclose(fp);
+		if (res == 0)
+			abort();
+	}
+
+	QString exportFilename = QFileDialog::getSaveFileName(this, "Export Actd Cert", QString("%1/actd_cert.pem").arg(getenv("HOME")));
+	if (!certFile.copy(exportFilename)) {
+		QMessageBox::warning(this, "Export Cert Failed", "Can not export cert. Please check if you have write permission");
+	}
 }
 
 
