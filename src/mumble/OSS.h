@@ -41,6 +41,7 @@ class OSSInput : public AudioInput {
 	protected:
 		void release();
 	public:
+		void addInternalEcho(const void *data, unsigned int nsamp){};
 		OSSInput();
 		~OSSInput();
 		void run();

@@ -799,9 +799,7 @@ void GroupManager::incomingContent(ccn_upcall_info *info) {
         debug("Invalid user list format received"); 
     }
 	
-	// TODO: weird bug, can not free valuep
 	if (valuep != NULL) {
-	//	free(valuep);
 		valuep = NULL;
 	}
 

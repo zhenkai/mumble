@@ -43,6 +43,7 @@ class ALSAAudioInput : public AudioInput {
 		Q_OBJECT
 		Q_DISABLE_COPY(ALSAAudioInput)
 	public:
+		void addInternalEcho(const void *data, unsigned int nsamp){};
 		ALSAAudioInput();
 		~ALSAAudioInput();
 		void run();
