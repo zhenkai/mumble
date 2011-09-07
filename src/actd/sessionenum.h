@@ -49,6 +49,7 @@ public:
 	void sendDismissSignal(Announcement *a);
 	void setListPrivate(bool b);
 	void expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude);
+	void encodeAnnouncement(struct ccn_charbuf *name, char *buffer, size_t total_len, struct ccn_upcall_info *info);
 
 private slots:
 	void enumerate();
@@ -63,7 +64,7 @@ signals:
 
 private:
 	void ccnConnect();
-	void initKeystoreAndSignedInfo();
+	void initKeystoreAndKeylocator();
 	void loadPublicAndPrivateKeys();
 	static int pubKeyEncrypt(EVP_PKEY *public_key, const unsigned char *data, size_t data_length,
 					  unsigned char **encrypted_output, size_t *encrypted_output_length);
@@ -92,7 +93,7 @@ private:
 	struct ccn_closure *handle_dismiss;
 	struct ccn_keystore *keystore;
 	struct ccn_keystore *actd_keystore;
-	struct ccn_charbuf *signed_info;
+	struct ccn_charbuf *keylocator;
 	QTimer *enumTimer;
 	QTimer *aliveTimer;
 	QString uuid;
