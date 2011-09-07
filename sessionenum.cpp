@@ -137,7 +137,7 @@ void SessionEnum::setListPrivate(bool b) {
 	}
 }
 
-void SessionEnum::initKeystoreAndSignedInfo() {
+void SessionEnum::initKeystoreAndKeylocator() {
 	// prepare for ccnx
 	keystore = NULL;
 	ccn_charbuf *temp = ccn_charbuf_create();
@@ -152,7 +152,7 @@ void SessionEnum::initKeystoreAndSignedInfo() {
 	}
 	ccn_charbuf_destroy(&temp);
 	
-	struct ccn_charbuf *keylocator = ccn_charbuf_create();
+	keylocator = ccn_charbuf_create();
 	ccn_charbuf_append_tt(keylocator, CCN_DTAG_KeyLocator, CCN_DTAG);
 	ccn_charbuf_append_tt(keylocator, CCN_DTAG_Key, CCN_DTAG);
 	res = ccn_append_pubkey_blob(keylocator, ccn_keystore_public_key(keystore));
@@ -163,19 +163,7 @@ void SessionEnum::initKeystoreAndSignedInfo() {
 		ccn_charbuf_append_closer(keylocator);
 	}
 
-	signed_info = NULL;
-	signed_info = ccn_charbuf_create();
-	res = ccn_signed_info_create(signed_info,
-									ccn_keystore_public_key_digest(keystore),
-									ccn_keystore_public_key_digest_length(keystore),
-									NULL,
-									CCN_CONTENT_DATA,
-									FRESHNESS, 
-									NULL,
-									keylocator);
-	if (res < 0) {
-		critical("Failed to create signed_info");
-	}
+
 
 	// public & private key pair for actd
 	actd_keystore = NULL;
@@ -423,6 +411,74 @@ void SessionEnum::handleDismissEvent(struct ccn_upcall_info *info) {
 
 }
 
+void SessionEnum::encodeAnnouncement(struct ccn_charbuf *name, char *buffer, size_t total_len, struct ccn_upcall_info *info) {
+
+	struct ccn_charbuf *signed_info = NULL;
+	struct ccn_charbuf *finalblockid = NULL;
+	struct ccn_charbuf *content = NULL;
+	struct ccn_charbuf *seq = NULL;
+	struct ccn_charbuf *name_with_seq = NULL;
+	char *buffer_ptr = buffer;
+
+	// 1024 per segment 
+	int block_size = 1024;
+	int len;
+	for (int i = 0; i < total_len; i += block_size) {
+		if (total_len - i < block_size) {
+			len = total_len - i;
+			seq = ccn_charbuf_create();
+			ccn_charbuf_putf(seq, "%d", i/block_size);
+			finalblockid = ccn_charbuf_create();
+			ccn_charbuf_append_tt(finalblockid, seq->length, CCN_BLOB);
+			ccn_charbuf_append(finalblockid, seq->buf, seq->length);
+			ccn_charbuf_destroy(&seq);
+		}
+		else {
+			len = block_size;
+		}
+		
+		signed_info = ccn_charbuf_create();
+		// create signed info
+		int res = ccn_signed_info_create(signed_info,
+										ccn_keystore_public_key_digest(keystore),
+										ccn_keystore_public_key_digest_length(keystore),
+										NULL,
+										CCN_CONTENT_DATA,
+										FRESHNESS, 
+										finalblockid,
+										keylocator);
+		if (res < 0) {
+			critical("Failed to create signed_info");
+		}
+		name_with_seq = ccn_charbuf_create();
+		ccn_charbuf_append(name_with_seq, name->buf, name->length);
+		seq = ccn_charbuf_create();
+		ccn_charbuf_putf(seq, "%d", i/block_size);
+		ccn_name_append(name_with_seq, seq->buf, seq->length);
+		content = ccn_charbuf_create();
+		res = ccn_encode_ContentObject(content,
+										name_with_seq,
+										signed_info,
+										buffer_ptr,
+										len,
+										NULL,
+										ccn_keystore_private_key(keystore));
+
+		if (res)
+			critical("failed to create content");
+
+		buffer_ptr += len;
+
+		// already have the lock
+		ccn_put(info->h, content->buf, content->length);
+		ccn_charbuf_destroy(&name_with_seq);
+		ccn_charbuf_destroy(&content);
+		ccn_charbuf_destroy(&signed_info);
+		ccn_charbuf_destroy(&seq);
+	}
+	ccn_charbuf_destroy(&finalblockid);
+}
+
 void SessionEnum::handleEnumInterest(struct ccn_upcall_info *info) {
 	QString val = "conference-list";
 	if (ccn_name_comp_strcmp(info->interest_ccnb, info->interest_comps, 3 , val.toStdString().c_str()) != 0)
@@ -453,22 +509,13 @@ void SessionEnum::handleEnumInterest(struct ccn_upcall_info *info) {
 		memcpy(buffer, qba.constData(), qba.size());
 		buffer[qba.size()] = '\0';
 
-		content = ccn_charbuf_create();
-		int res = ccn_encode_ContentObject(content, name, signed_info,
-					(const char *)buffer, strlen(buffer), NULL, ccn_keystore_private_key(keystore));
-		if (res)
-			critical("failed to create content");
-
-		// already have the lock
-		ccn_put(info->h, content->buf, content->length);
-		ccn_charbuf_destroy(&name);
-		ccn_charbuf_destroy(&content);
 		if (buffer != NULL) {
 			free((void *)buffer);
 			buffer = NULL;
 		}
+		encodeAnnouncement(name, buffer, strlen(buffer),  info);
+		ccn_charbuf_destroy(&name);
 		name = NULL;
-		content = NULL;
 	}
 }
 
@@ -586,7 +633,6 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 
 
 		struct ccn_charbuf *name = NULL;
-		struct ccn_charbuf *content = NULL;
 		name = ccn_charbuf_create();
 		ccn_name_init(name);
 		int nameEnd = info->interest_comps->n - 1;
@@ -596,15 +642,8 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 
 		char *secret = (char *)malloc(qbaOut.size());
 		memcpy(secret, qbaOut.data(), qbaOut.size());
-		content = ccn_charbuf_create();
-		int res = ccn_encode_ContentObject(content, name, signed_info, secret, qbaOut.size(), NULL, ccn_keystore_private_key(keystore));
-		if (res)
-			critical("failed to create content");
-
-		// already have the lock
-		ccn_put(info->h, content->buf, content->length);
+		encodeAnnouncement(name, secret, qbaOut.size(), info);
 		ccn_charbuf_destroy(&name);
-		ccn_charbuf_destroy(&content);
 		if (secret)
 			free(secret);
 	}
@@ -1370,7 +1409,7 @@ SessionEnum::SessionEnum() {
 	fetch_private = (struct ccn_closure *) (calloc(1, sizeof(struct ccn_closure)));
 	fetch_private->p = &incoming_private_content;
 	ccnConnect();
-	initKeystoreAndSignedInfo();
+	initKeystoreAndKeylocator();
 
 	enumTimer = new QTimer(this);
 	connect(enumTimer, SIGNAL(timeout()), this, SLOT(enumerate()));
