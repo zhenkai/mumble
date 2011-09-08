@@ -117,7 +117,6 @@ class NDNState:public QObject{
     pthread_cond_t changed;
     /*CCN(NDN) connection*/
     struct ccn *ccn;
-	struct ccn_charbuf *signed_info;
 
     public:
     NDNState();

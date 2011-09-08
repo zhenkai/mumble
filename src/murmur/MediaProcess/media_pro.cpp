@@ -321,23 +321,7 @@ get_my_publisher_key_id_length(void)
 NDNState::NDNState() {
 	active = false;
 	ccn = NULL;
-    signed_info = ccn_charbuf_create();
-	if (cached_keystore == NULL)
-		init_cached_keystore(); 
-	ccn_charbuf *keylocator = ccn_charbuf_create();
-	ccn_create_keylocator(keylocator, ccn_keystore_public_key(cached_keystore));
-    /* Create signed_info */
-    int res = ccn_signed_info_create(signed_info,
-                                 /* pubkeyid */ get_my_publisher_key_id(),
-                                 /* publisher_key_id_size */ get_my_publisher_key_id_length(),
-                                 /* datetime */ NULL,
-                                 /* type */ CCN_CONTENT_DATA,
-                                 /* freshness */ FRESHNESS,
-				                 /* finalblockid */ NULL,
-                                 /* keylocator */ keylocator);
-    if (res != 0) {
-	    fprintf(stderr, "signed_info_create failed %d (line %d)\n", res, __LINE__);
-    }
+
 }
 
 NdnMediaProcess::NdnMediaProcess()
@@ -541,6 +525,24 @@ int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)
     ccn_name_append(path, seq->buf, seq->length);
 
 
+    struct ccn_charbuf *signed_info = ccn_charbuf_create();
+	if (cached_keystore == NULL)
+		init_cached_keystore(); 
+	ccn_charbuf *keylocator = ccn_charbuf_create();
+	ccn_create_keylocator(keylocator, ccn_keystore_public_key(cached_keystore));
+    /* Create signed_info */
+    res = ccn_signed_info_create(signed_info,
+                                 /* pubkeyid */ get_my_publisher_key_id(),
+                                 /* publisher_key_id_size */ get_my_publisher_key_id_length(),
+                                 /* datetime */ NULL,
+                                 /* type */ CCN_CONTENT_DATA,
+                                 /* freshness */ FRESHNESS,
+				                 /* finalblockid */ NULL,
+                                 /* keylocator */ keylocator);
+    if (res != 0) {
+	    fprintf(stderr, "signed_info_create failed %d (line %d)\n", res, __LINE__);
+    }
+
 	if (isPrivate) {
 		unsigned char *enc_buf = NULL;
 		size_t enc_len = 0;
@@ -552,7 +554,7 @@ int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)
 
 		res = ccn_encode_ContentObject( /* out */ message,
 					   path,
-					   ndnState.signed_info,
+					   signed_info,
 					   enc_buf, enc_len,
 					   /* keyLocator */ NULL, get_my_private_key());
 		if (enc_buf != NULL) {
@@ -563,7 +565,7 @@ int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)
 	} else {
 		res = ccn_encode_ContentObject( /* out */ message,
 					   path,
-					   ndnState.signed_info,
+					   signed_info,
 					   buf, len,
 					   /* keyLocator */ NULL, get_my_private_key());
 	}
@@ -573,10 +575,14 @@ int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)
         CHARBUF_DESTROY;
         return res;
     }
+
+	ccn_charbuf_destroy(&signed_info);
+	ccn_charbuf_destroy(&keylocator);
     
     ccn_msg = (unsigned char *)calloc(1, message->length);
     ccn_msg_size = message->length;
     memcpy(ccn_msg, message->buf, message->length);
+	/*
     { struct ccn_parsed_ContentObject o = {0};
         res = ccn_parse_ContentObject(ccn_msg, ccn_msg_size, &o, NULL);
         if (res < 0) {
@@ -584,6 +590,7 @@ int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)
             abort();
         }
     }
+	*/
 
     
     struct buf_list *p = NULL, *b = userBuf->data_buf.buflist;
