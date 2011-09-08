@@ -599,14 +599,13 @@ void SessionEnum::handleEnumInterest(struct ccn_upcall_info *info) {
 		char *buffer = static_cast<char *>(calloc(qba.size() + 1, sizeof(char)));
 		memcpy(buffer, qba.constData(), qba.size());
 		buffer[qba.size()] = '\0';
-
+		encodeAnnouncement(name, buffer, strlen(buffer),  info);
+		ccn_charbuf_destroy(&name);
+		name = NULL;
 		if (buffer != NULL) {
 			free((void *)buffer);
 			buffer = NULL;
 		}
-		encodeAnnouncement(name, buffer, strlen(buffer),  info);
-		ccn_charbuf_destroy(&name);
-		name = NULL;
 	}
 }
 
