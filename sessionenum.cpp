@@ -379,11 +379,11 @@ void SessionEnum::fetchRemainingBlocks(struct ccn_closure *selfp, struct ccn_upc
 		return;
 	}
 
-	const unsigned char *ib = info->interest_ccnb;
-	struct ccn_indexbuf *ic = info->interest_comps;
+	const unsigned char *cb = info->content_ccnb;
+	struct ccn_indexbuf *cc = info->content_comps;
 	struct ccn_charbuf *name = ccn_charbuf_create();
 	ccn_name_init(name);
-	ccn_name_append_components(name, ib, ic->buf[0], ic->buf[ic->n - 2]);
+	ccn_name_append_components(name, cb, cc->buf[0], cc->buf[cc->n - 2]);
 	struct ccn_charbuf *seq = ccn_charbuf_create();
 	ccn_charbuf_putf(seq, "%d", data->seq);
 	ccn_name_append(name, seq->buf, seq->length);
@@ -773,11 +773,11 @@ void SessionEnum::decodeAnnouncement(struct ccn_upcall_info *info, bool privateC
 	data->privateConf = privateConf;
 	fetch_remaining_closure->data = data;
 	fetch_remaining_closure->p = &fetched_block;
-	const unsigned char *ib = info->interest_ccnb;
-	struct ccn_indexbuf *ic = info->interest_comps;
+	const unsigned char *cb = info->content_ccnb;
+	struct ccn_indexbuf *cc = info->content_comps;
 	struct ccn_charbuf *name = ccn_charbuf_create();
 	ccn_name_init(name);
-	ccn_name_append_components(name, ib, ic->buf[0], ic->buf[ic->n - 2]);
+	ccn_name_append_components(name, cb, cc->buf[0], cc->buf[cc->n - 2]);
 	struct ccn_charbuf *seq = ccn_charbuf_create();
 	ccn_charbuf_putf(seq, "%d", data->seq);
 	ccn_name_append(name, seq->buf, seq->length);
