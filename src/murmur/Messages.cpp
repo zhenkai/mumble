@@ -39,6 +39,8 @@
 #include "Server.h"
 #include "ServerUser.h"
 #include "DBus.h"
+#include "GroupManager/debugbox.h"
+
 
 #define MSG_SETUP(st) \
 	if (uSource->sState != st) { \
@@ -228,8 +230,37 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		mpcs.set_channel_id(c->iId);
 		if (c->cParent)
 			mpcs.set_parent(c->cParent->iId);
-		if (c->iId == 0)
-			mpcs.set_name(u8(qsRegName.isEmpty() ? QLatin1String("Root") : qsRegName));
+		if (c->iId == 0) {
+			//mpcs.set_name(u8(qsRegName.isEmpty() ? QLatin1String("Root") : qsRegName));
+			QDomDocument settings;
+			QString configFileName = QDir::homePath() + "/" + \
+									".actd" + "/" + ".config";
+			QFile config(configFileName);
+			if (!config.exists()) 
+				critical("Config file does not exist!");
+			
+			if (!config.open(QIODevice::ReadOnly))
+				critical("Can not open config file!");
+			
+			if (!settings.setContent(&config)) {
+				config.close();
+				critical("can not parse config file!");
+			}
+			config.close();
+			
+			QDomElement docElem = settings.documentElement(); //<config>
+			QDomNode n = docElem.firstChild();
+
+			QString channelName;
+			while(!n.isNull()) {
+				if (n.nodeName() == "channelName") {
+					channelName = n.toElement().text();
+				}
+				n = n.nextSibling();
+			}
+			mpcs.set_name(u8(channelName.isEmpty() ? QLatin1String("Root") : channelName));
+
+		}
 		else
 			mpcs.set_name(u8(c->qsName));
 

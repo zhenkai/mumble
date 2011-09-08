@@ -216,6 +216,7 @@ GroupManager::GroupManager(NdnMediaProcess *pNdnMediaPro) {
 			prefix = n.toElement().text();
 		} else if (n.nodeName() == "confName") {
 			confName = n.toElement().text();
+		} else if (n.nodeName() == "channelName") {
 		} else if (n.nodeName() == "private") {
 			QString p = n.toElement().text();
 			if (p == "true")
