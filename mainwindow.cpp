@@ -210,11 +210,13 @@ void MainWindow::joinConference() {
 	if (audio) {
 
 
-		QString qsConfig = "<config><prefix>" + prefix + "</prefix><confName>"\
-							+ confName + "</confName>";
+		QString qsConfig = "<config><prefix>" + prefix + "</prefix><confName>";
+
+
 		
 		Announcement *a = itemToAnnouncement[current];
 		if (a->getIsPrivate()) {
+			qsConfig += a->getOpaqueName() + "</confName>";
 			qsConfig += "<private>true</private>";
 			QByteArray confKey((const char *)a->conferenceKey, (int)sizeof(a->conferenceKey));	
 			QString qsConfKey = QString(confKey.toBase64());
@@ -224,8 +226,10 @@ void MainWindow::joinConference() {
 			qsConfig += "<sessionKey>" + qsSessionKey + "</sessionKey>";
 		}
 		else {
+			qsConfig += confName + "</confName>";
 			qsConfig += "<private>false</private>";
 		}
+		qsConfig += "<channelName>" + confName + "</channelName>";
 		qsConfig += "</config>";
 
 		QDomDocument doc;
