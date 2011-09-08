@@ -42,21 +42,23 @@ public:
 	void addToConferences(Announcement *a, bool pub);
 	void handleDismissEvent(struct ccn_upcall_info *info);
 	void handleEnumInterest(struct ccn_upcall_info *info);
-	void handleEnumContent(struct ccn_upcall_info *info);
 	void handleEnumPrivateInterest(struct ccn_upcall_info *info);
-	void handleEnumPrivateContent(struct ccn_upcall_info *info);
 	bool isConferenceRefresh(unsigned char *hash, bool pub);
 	void sendDismissSignal(Announcement *a);
 	void setListPrivate(bool b);
 	void expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude);
 	void encodeAnnouncement(struct ccn_charbuf *name, char *buffer, size_t total_len, struct ccn_upcall_info *info);
+	bool isFinalBlock(struct ccn_upcall_info *info);
+	void fetchRemainingBlocks(struct ccn_closure *selfp, struct ccn_upcall_info *info);
+	void decodeAnnouncement(struct ccn_upcall_info *info, bool privateConf);
+	void handleEnumContent(const unsigned char *value, size_t len);
+	void handleEnumPrivateContent(const unsigned char *value, size_t len, struct ccn_upcall_info *info);
 
 private slots:
 	void enumerate();
 	void enumeratePriConf();
 	void enumeratePubConf();
 	void checkAlive();
-
 
 signals:
 	void expired(QString, QString);

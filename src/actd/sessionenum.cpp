@@ -12,7 +12,12 @@
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 #define FRESHNESS 10
 
-
+struct fetched_data {
+	unsigned char *value;
+	size_t len;
+	int seq;
+	bool privateConf;
+};
 static struct pollfd pfds[1];
 static pthread_mutex_t actd_mutex; 
 static pthread_mutexattr_t ccn_attr;
@@ -279,7 +284,7 @@ static enum ccn_upcall_res incoming_content(struct ccn_closure *selfp,
 
 	case CCN_UPCALL_CONTENT: {
 		debug("incoming public content");
-		gsd->handleEnumContent(info);
+		gsd->decodeAnnouncement(info, false);
 		return (CCN_UPCALL_RESULT_OK);
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
@@ -307,7 +312,7 @@ static enum ccn_upcall_res incoming_private_content(struct ccn_closure *selfp,
 
 	case CCN_UPCALL_CONTENT: {
 		debug("incoming private content");
-		gsd->handleEnumPrivateContent(info);
+		gsd->decodeAnnouncement(info, true);
 		return (CCN_UPCALL_RESULT_OK);
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
@@ -319,6 +324,92 @@ static enum ccn_upcall_res incoming_private_content(struct ccn_closure *selfp,
 	default:
 		return (CCN_UPCALL_RESULT_OK);
 	}
+}
+
+static enum ccn_upcall_res fetched_block(struct ccn_closure *selfp,
+										 enum ccn_upcall_kind kind,
+										 struct ccn_upcall_info *info) {
+	switch (kind) {
+	case CCN_UPCALL_FINAL:
+		return (CCN_UPCALL_RESULT_OK);
+	
+	case CCN_UPCALL_INTEREST_TIMED_OUT:
+		return (CCN_UPCALL_RESULT_REEXPRESS);
+
+	case CCN_UPCALL_CONTENT: {
+		debug("incoming private content");
+		gsd->fetchRemainingBlocks(selfp, info);
+		return (CCN_UPCALL_RESULT_OK);
+	}
+	case CCN_UPCALL_CONTENT_UNVERIFIED:
+	{
+		debug("unverified content!");
+		return (CCN_UPCALL_RESULT_OK);
+
+	}
+	default:
+		return (CCN_UPCALL_RESULT_OK);
+	}
+}
+
+void SessionEnum::fetchRemainingBlocks(struct ccn_closure *selfp, struct ccn_upcall_info *info) {
+	struct fetched_data *data = (struct fetched_data *)selfp->data;
+	const unsigned char *value = NULL;
+	size_t len = 0;
+	int res =ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E],
+						info->pco, &value, &len);
+	if (res < 0)
+		critical("failed to parse content object");
+
+	data->value = (unsigned char *)realloc(data->value, data->len + len);
+	memcpy(data->value + data->len, value, len);
+	data->len += len;
+	data->seq ++;
+
+	if (isFinalBlock(info)) {
+		const unsigned char *content = data->value;
+		if (data->privateConf) {
+			handleEnumPrivateContent(content, data->len, info);
+		}
+		else {
+			handleEnumContent(content, data->len);
+		}
+		free(data);
+		free(selfp);
+		return;
+	}
+
+	const unsigned char *ib = info->interest_ccnb;
+	struct ccn_indexbuf *ic = info->interest_comps;
+	struct ccn_charbuf *name = ccn_charbuf_create();
+	ccn_name_init(name);
+	ccn_name_append_components(name, ib, ic->buf[0], ic->buf[ic->n - 2]);
+	ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, data->seq);
+	// already have lock
+	res = ccn_express_interest(info->h, name, selfp, NULL);
+	if (res < 0)
+		abort();
+	ccn_charbuf_destroy(&name);
+}
+
+bool SessionEnum::isFinalBlock(struct ccn_upcall_info *info) {
+	const unsigned char *ccnb;
+	size_t ccnb_size;
+	ccnb = info->content_ccnb;
+	ccnb_size = info->pco->offset[CCN_PCO_E];
+	if (info->pco->offset[CCN_PCO_B_FinalBlockID] != info->pco->offset[CCN_PCO_E_FinalBlockID]) {
+		const unsigned char *finalid = NULL;
+		size_t finalid_size = 0;
+		const unsigned char *nameid = NULL;
+		size_t nameid_size = 0;
+		struct ccn_indexbuf *cc = info->content_comps;
+		ccn_ref_tagged_BLOB(CCN_DTAG_FinalBlockID, ccnb, info->pco->offset[CCN_PCO_B_FinalBlockID], info->pco->offset[CCN_PCO_E_FinalBlockID], &finalid, &finalid_size);
+		if (cc->n < 2) abort();
+		ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb, cc->buf[cc->n - 2], cc->buf[cc->n -1], &nameid, &nameid_size);
+		if (finalid_size == nameid_size && 0 == memcmp(finalid, nameid, nameid_size))
+			return true;
+	}
+	return false;
 }
 
 
@@ -649,14 +740,53 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 	}
 }
 
-void SessionEnum::handleEnumContent(struct ccn_upcall_info *info) {
-		const unsigned char *value = NULL;
-		size_t len = 0;
-		int res =ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E],
-							info->pco, &value, &len);
-		if (res < 0)
-			critical("failed to parse content object");
 
+
+void SessionEnum::decodeAnnouncement(struct ccn_upcall_info *info, bool privateConf)  {
+	const unsigned char *value = NULL;
+	size_t len = 0;
+	int res =ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E],
+						info->pco, &value, &len);
+	if (res < 0)
+		critical("failed to parse content object");
+
+	if (isFinalBlock(info)) {
+		unsigned char *content = (unsigned char *)calloc(1, len);
+		memcpy(content, value, len);
+		if (privateConf) {
+			handleEnumPrivateContent(content, len, info);
+		}
+		else {
+			handleEnumContent(content, len);
+		}
+		return;
+	}
+
+	struct ccn_closure *fetch_remaining_closure = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
+	struct fetched_data *data = (struct fetched_data *)calloc(1, sizeof(struct fetched_data));
+	data->value = (unsigned char *)calloc(1, len);
+	memcpy(data->value, value, len);
+	data->len = len;
+	data->seq = 1;
+	data->privateConf = privateConf;
+	fetch_remaining_closure->data = data;
+	fetch_remaining_closure->p = &fetched_block;
+	const unsigned char *ib = info->interest_ccnb;
+	struct ccn_indexbuf *ic = info->interest_comps;
+	struct ccn_charbuf *name = ccn_charbuf_create();
+	ccn_name_init(name);
+	ccn_name_append_components(name, ib, ic->buf[0], ic->buf[ic->n - 2]);
+	ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, data->seq);
+	// already have lock
+	res = ccn_express_interest(info->h, name, fetch_remaining_closure, NULL);
+	if (res < 0)
+		abort();
+	ccn_charbuf_destroy(&name);
+
+}
+
+void SessionEnum::handleEnumContent(const unsigned char *value, size_t len) {
+		
 		unsigned char hash[SHA_DIGEST_LENGTH];	
 		SHA1(value, len, hash);
 		/////
@@ -682,17 +812,13 @@ void SessionEnum::handleEnumContent(struct ccn_upcall_info *info) {
 			critical("Fetched Conference Name is empty");
 
 		addToConferences(a, true);
+		if (value != NULL)
+			free((void *)value);
 
 }
 
 
-void SessionEnum::handleEnumPrivateContent(struct ccn_upcall_info *info) {
-		const unsigned char *value = NULL;
-		size_t len = 0;
-		int res =ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E],
-							info->pco, &value, &len);
-		if (res < 0)
-			critical("failed to parse content object");
+void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t len, struct ccn_upcall_info *info) {
 
 		unsigned char hash[SHA_DIGEST_LENGTH];	
 		SHA1(value, len, hash);
@@ -720,7 +846,7 @@ void SessionEnum::handleEnumPrivateContent(struct ccn_upcall_info *info) {
 				QString encData = node.toElement().text();
 				QByteArray qbaEncData = QByteArray::fromBase64(encData.toLocal8Bit());
 				char *enc_data = qbaEncData.data();
-				res = priKeyDecrypt((EVP_PKEY*) priKey, (unsigned char *)enc_data, qbaEncData.size(), 
+				int res = priKeyDecrypt((EVP_PKEY*) priKey, (unsigned char *)enc_data, qbaEncData.size(), 
 							   (unsigned char **)&dout, &dout_len);
 				if (res != 0) {
 					debug("decrypt failed\n");
@@ -761,7 +887,7 @@ void SessionEnum::handleEnumPrivateContent(struct ccn_upcall_info *info) {
 
 				char *session_key = NULL;
 				size_t session_key_len = 0;
-				res = symDecrypt(a->conferenceKey, (unsigned char *)qbaIV.data(), (unsigned char *)enc_sk, qbaEncSK.size(), (unsigned char **)&session_key,
+				int res = symDecrypt(a->conferenceKey, (unsigned char *)qbaIV.data(), (unsigned char *)enc_sk, qbaEncSK.size(), (unsigned char **)&session_key,
 						   &session_key_len, AES_BLOCK_SIZE);
 				if (res != 0) 
 					critical("can not decrypt sessionkey");
@@ -778,7 +904,7 @@ void SessionEnum::handleEnumPrivateContent(struct ccn_upcall_info *info) {
 				QString encDesc = node.toElement().text();
 				QByteArray qbaEncDesc = QByteArray::fromBase64(encDesc.toLocal8Bit());
 				char *enc_desc = qbaEncDesc.data();
-				res = symDecrypt(a->conferenceKey, NULL, (unsigned char *)enc_desc, qbaEncDesc.size(), (unsigned char **)&desc, &desc_len, AES_BLOCK_SIZE);
+				int res = symDecrypt(a->conferenceKey, NULL, (unsigned char *)enc_desc, qbaEncDesc.size(), (unsigned char **)&desc, &desc_len, AES_BLOCK_SIZE);
 				if (res != 0) 
 					critical("can not decrypt desc");
 
@@ -814,6 +940,8 @@ void SessionEnum::handleEnumPrivateContent(struct ccn_upcall_info *info) {
 
 
 		addToConferences(a, false);
+		if (value != NULL)
+			free((void *)value);
 
 		debug("handle private content done");
 }
@@ -1418,7 +1546,6 @@ SessionEnum::SessionEnum() {
 	aliveTimer = new QTimer(this);
 	connect(aliveTimer, SIGNAL(timeout()), this, SLOT(checkAlive()));
 	aliveTimer->start(15000);
-
 
 	startThread();
 
