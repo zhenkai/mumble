@@ -384,12 +384,15 @@ void SessionEnum::fetchRemainingBlocks(struct ccn_closure *selfp, struct ccn_upc
 	struct ccn_charbuf *name = ccn_charbuf_create();
 	ccn_name_init(name);
 	ccn_name_append_components(name, ib, ic->buf[0], ic->buf[ic->n - 2]);
-	ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, data->seq);
+	struct ccn_charbuf *seq = ccn_charbuf_create();
+	ccn_charbuf_putf(seq, "%d", data->seq);
+	ccn_name_append(name, seq->buf, seq->length);
 	// already have lock
 	res = ccn_express_interest(info->h, name, selfp, NULL);
 	if (res < 0)
 		abort();
 	ccn_charbuf_destroy(&name);
+	ccn_charbuf_destroy(&seq);
 }
 
 bool SessionEnum::isFinalBlock(struct ccn_upcall_info *info) {
@@ -775,12 +778,15 @@ void SessionEnum::decodeAnnouncement(struct ccn_upcall_info *info, bool privateC
 	struct ccn_charbuf *name = ccn_charbuf_create();
 	ccn_name_init(name);
 	ccn_name_append_components(name, ib, ic->buf[0], ic->buf[ic->n - 2]);
-	ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, data->seq);
+	struct ccn_charbuf *seq = ccn_charbuf_create();
+	ccn_charbuf_putf(seq, "%d", data->seq);
+	ccn_name_append(name, seq->buf, seq->length);
 	// already have lock
 	res = ccn_express_interest(info->h, name, fetch_remaining_closure, NULL);
 	if (res < 0)
 		abort();
 	ccn_charbuf_destroy(&name);
+	ccn_charbuf_destroy(&seq);
 
 }
 
