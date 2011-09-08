@@ -252,8 +252,6 @@ void MainWindow::joinConference() {
 		audioProcess = new QProcess(this);
 		mumbleProcess = new QProcess(this);
 		connect(mumbleProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(mumbleCleanup(int, QProcess::ExitStatus)));
-		connect(mumbleProcess, SIGNAL(started()), this, SLOT(mumbleStartup()));
-		connect(audioProcess, SIGNAL(started()), this, SLOT(murmurStartup()));
 #ifdef QT_NO_DEBUG
 #ifdef __APPLE__
 		audioPath = binaryPath + "/" + "ndn-murmurd";
@@ -278,9 +276,6 @@ void MainWindow::joinConference() {
 	}
 }
 
-void MainWindow::mumbleStartup() {
-	QMessageBox::information(this, tr("Lauched Tools"), mumblePath );
-}
 
 void MainWindow::mumbleCleanup(int exitCode, QProcess::ExitStatus status) {
 	if(audioProcess->state() != QProcess::NotRunning) {
@@ -289,11 +284,6 @@ void MainWindow::mumbleCleanup(int exitCode, QProcess::ExitStatus status) {
 	delete mumbleProcess;
 	delete audioProcess;
 }
-
-void MainWindow::murmurStartup() {
-	QMessageBox::information(this, tr("Lauched Tools"), audioPath );
-}
-
 
 void MainWindow::editConference() {
 }

@@ -36,9 +36,7 @@ private slots:
 	void addConferenceToList(Announcement *announce);
 	void removeConferenceFromList(QString, QString);
 	void listPrivateConferences();
-	void mumbleStartup();
 	void mumbleCleanup(int exitCode, QProcess::ExitStatus status);
-	void murmurStartup();
 
 private:
 	void readSettings();
