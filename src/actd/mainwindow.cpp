@@ -94,6 +94,9 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	if (prefix == "") {
 		QTimer::singleShot(500, this, SLOT(changePref()));
 	}
+
+	audioProcess = NULL;
+	mumbleProcess = NULL;
 	
 }
 
@@ -196,6 +199,8 @@ void MainWindow::changePref() {
 
 void MainWindow::joinConference() {
 
+	mumbleCleanup();
+
 	QTreeWidgetItem *current = pubConfList->currentItem();	
 	if (!current) {
 		critical("current is null");
@@ -255,7 +260,6 @@ void MainWindow::joinConference() {
 
 		audioProcess = new QProcess(this);
 		mumbleProcess = new QProcess(this);
-		connect(mumbleProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(mumbleCleanup(int, QProcess::ExitStatus)));
 #ifdef QT_NO_DEBUG
 #ifdef __APPLE__
 		audioPath = binaryPath + "/" + "ndn-murmurd";
@@ -281,12 +285,18 @@ void MainWindow::joinConference() {
 }
 
 
-void MainWindow::mumbleCleanup(int exitCode, QProcess::ExitStatus status) {
-	if(audioProcess->state() != QProcess::NotRunning) {
-		audioProcess->kill();
+void MainWindow::mumbleCleanup() {
+	if (mumbleProcess != NULL) {
+		mumbleProcess->kill();
+		mumbleProcess->deleteLater();
+		mumbleProcess = NULL;
 	}
-	delete mumbleProcess;
-	delete audioProcess;
+	if (audioProcess != NULL) {
+		audioProcess->kill();
+		audioProcess->deleteLater();
+		audioProcess = NULL;
+	}
+
 }
 
 void MainWindow::editConference() {
