@@ -14,6 +14,6 @@ int main(int argc, char *argv[])
 	MainWindow actdWin(argv);
 	actdWin.show();
 	actdWin.activateWindow();
-	actdWin.raise();
+	//actdWin.raise();
 	return actdWin.exec();
 }
