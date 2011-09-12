@@ -865,11 +865,15 @@ void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t le
 					eligible = true;
 					a = new Announcement();
 					memcpy(a->conferenceKey, dout + 5, dout_len - 5);
-					if (dout)
+					if (dout) {
 						free(dout);
+						dout = NULL;
+					}
 				}
-				if (dout)
+				if (dout) {
 					free(dout);
+					dout = NULL;
+				}
 			} else
 			if (attr == "Enc-SK") { //<Enc-SK>
 				if (!eligible)
@@ -898,8 +902,10 @@ void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t le
 					critical("can not decrypt sessionkey");
 
 				memcpy(a->audioSessionKey, session_key, session_key_len);
-				if (session_key)
+				if (session_key) {
 					free(session_key);
+					session_key = NULL;
+				}
 			} else 
 			if (attr == "Enc-Desc") {
 				if (!eligible)
@@ -921,8 +927,10 @@ void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t le
 				}
 				
 				descDoc >> a;
-				if (desc)
+				if (desc) {
 					free (desc);
+					desc = NULL;
+				}
 			}
 			else {
 				critical("Unknown xml attribute");
@@ -1308,11 +1316,16 @@ void SessionEnum::enumerate() {
 }
 
 
-void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude) {
+void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude, bool privateConf) {
 
 	if (toExclude.size() == 0) {
 		mutex_trylock();	
-		int res = ccn_express_interest(ccn, interest, fetch_announce, NULL);
+		int res;
+		if (privateConf) {
+			res = ccn_express_interest(ccn, interest, fetch_private, NULL);
+		} else {
+			res = ccn_express_interest(ccn, interest, fetch_announce, NULL);
+		}
 		mutex_unlock();
 		if (res < 0) {
 			critical("express interest failed!");
@@ -1369,7 +1382,12 @@ void SessionEnum::expressEnumInterest(struct ccn_charbuf *interest, QList<QStrin
 
 		ccn_charbuf_append_closer(templ); // </Interest> 
 		mutex_trylock();	
-		int res = ccn_express_interest(ccn, interest, fetch_announce, templ);
+		int res;
+		if (privateConf) {
+			res = ccn_express_interest(ccn, interest, fetch_private, templ);
+		} else {
+			res = ccn_express_interest(ccn, interest, fetch_announce, templ);
+		}
 		mutex_unlock();
 		if (res < 0) {
 			critical("express interest failed!");
@@ -1416,7 +1434,7 @@ void SessionEnum::enumeratePubConf() {
 		toExclude.append(a->getConfName());
 	}
 
-	expressEnumInterest(interest, toExclude);
+	expressEnumInterest(interest, toExclude, false);
 	//testtest(interest, toExclude);
 	
 }
@@ -1452,7 +1470,7 @@ void SessionEnum::enumeratePriConf() {
 		toExclude.append(a->getOpaqueName());
 	}
 
-	expressEnumInterest(interest, toExclude);
+	expressEnumInterest(interest, toExclude, true);
 	//testtest(interest, toExclude);
 
 }

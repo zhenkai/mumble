@@ -46,7 +46,7 @@ public:
 	bool isConferenceRefresh(unsigned char *hash, bool pub);
 	void sendDismissSignal(Announcement *a);
 	void setListPrivate(bool b);
-	void expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude);
+	void expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude, bool privateConf);
 	void encodeAnnouncement(struct ccn_charbuf *name, char *buffer, size_t total_len, struct ccn_upcall_info *info);
 	bool isFinalBlock(struct ccn_upcall_info *info);
 	void fetchRemainingBlocks(struct ccn_closure *selfp, struct ccn_upcall_info *info);

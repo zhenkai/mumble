@@ -230,7 +230,7 @@ QDomDocument &operator>>(QDomDocument &in, Announcement *a) {
 		}
 		else
 		{
-			critical("Unknown xml attribute");
+			critical(QString("Unknown xml attribute: %1").arg(attr));
 		}
 
 		node = node.nextSibling();
