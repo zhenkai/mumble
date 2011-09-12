@@ -633,6 +633,8 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 
 			QStringList certs = a->getCerts();
 			int user_num = certs.size();
+			if (user_num == 0)
+				continue;
 			for (int i = 0; i < user_num; i++) {
 				QString path = certs.at(i);
 				FILE *fp = fopen(path.toStdString().c_str(), "r");
