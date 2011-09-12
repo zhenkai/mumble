@@ -1,6 +1,7 @@
 #include "newconfwizard.h"
 #include <QtGui>
 #include <QSpinBox>
+#include <QUuid>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,10 +59,14 @@ void ConfWizard::accept() {
 		QStringList certs = qsCerts.split(":");
 		a->setCerts(certs);
 		
+		/*
 		unsigned char bytes[32];
 		RAND_bytes(bytes, 32);
 		QByteArray qba((char *)bytes, int (32));
 		QString opaqueName(qba.toBase64()) ;
+		*/
+		QUuid opn = QUuid::createUuid();
+		QString opaqueName = opn.toString();
 		a->setOpaqueName(opaqueName);
 
 		a->initConferenceKey();
