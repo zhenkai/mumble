@@ -104,22 +104,44 @@ ConclusionPage::ConclusionPage(QWidget *parent)
 	label = new QLabel;
 	label->setWordWrap(true);
 
-	QVBoxLayout *layout = new QVBoxLayout;
-	layout->addWidget(label);
-	setLayout(layout);
-	
+	layout = new QVBoxLayout;
+	browse = new QPushButton("&Browse", this);
+	connect(browse, SIGNAL(clicked()), this, SLOT(browseCerts()));
+
+}
+
+void ConclusionPage::browseCerts() {
+	QStringList certs = QFileDialog::getOpenFileNames(this, "Import Certs of Participants",
+													getenv("HOME"), "Certs (*.pem)");
+	QString qsCerts = certs.join(":");
+	QSettings settings("UCLA-IRL", "ACTD");
+	settings.setValue("qsCerts", qsCerts);
+
+	certList->clear();
+	for (int i = 0; i < certs.size(); i++) {
+		QListWidgetItem *certFile = new QListWidgetItem;
+		certFile->setText(certs.at(i));
+		certList->addItem(certFile);
+	}
 }
 
 void ConclusionPage::initializePage()
 {
 	bool isPrivate = field("private").toBool();
 	if (isPrivate) {
-		QStringList certs = QFileDialog::getOpenFileNames(this, "Import Certs of Participants",
-														getenv("HOME"), "Certs (*.pem)");
-		QString qsCerts = certs.join(":");
-		QSettings settings("UCLA-IRL", "ACTD");
-		settings.setValue("qsCerts", qsCerts);
+
+		if (layout->count() <= 1) {
+			displayCerts = new QLabel(tr("Included certs files:"));
+			certList = new QListWidget(this);
+			QHBoxLayout *top = new QHBoxLayout;
+			top->addWidget(displayCerts);
+			top->addWidget(browse);
+			layout->addLayout(top);
+			layout->addWidget(certList);
+		}
 	}
+	layout->addWidget(label);
+	setLayout(layout);
 	QString finishText = wizard()->buttonText(QWizard::FinishButton);
 	finishText.remove('&');
 	label->setText(tr("Click %1 to generate the conference announement.").arg(finishText));
