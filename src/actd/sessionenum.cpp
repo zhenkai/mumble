@@ -659,16 +659,15 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 				out.append("<Enc-Data>");
 				out.append(base64);
 				out.append("</Enc-Data>");
-				if (fp)
-					free(fp);
-				if (cert)
+				if (cert != NULL)
 					free(cert);
-				if (public_key)
+				if (public_key != NULL)
 					free(public_key);
-				if (to_enc)
+				if (to_enc != NULL)
 					free(to_enc);
-				if (enc_data)
+				if (enc_data != NULL)
 					free(enc_data);
+					
 			}
 
 
@@ -693,7 +692,7 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 			out.append(base64SK);
 			out.append("</SK>");
 			out.append("</Enc-SK>");
-			if (enc_session_key)
+			if (enc_session_key != NULL)
 				free(enc_session_key);
 			
 			QString qsData;
@@ -713,7 +712,7 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 			out.append("<Enc-Desc>");
 			out.append(base64Desc);
 			out.append("</Enc-Desc>");
-			if (enc_desc)
+			if (enc_desc != NULL)
 				free(enc_desc);
 
 			out.append("</bundle>");
@@ -737,7 +736,7 @@ void SessionEnum::handleEnumPrivateInterest(struct ccn_upcall_info *info) {
 		memcpy(secret, qbaOut.data(), qbaOut.size());
 		encodeAnnouncement(name, secret, qbaOut.size(), info);
 		ccn_charbuf_destroy(&name);
-		if (secret)
+		if (secret != NULL)
 			free(secret);
 	}
 }
