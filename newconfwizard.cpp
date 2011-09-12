@@ -56,7 +56,10 @@ void ConfWizard::accept() {
 		QSettings settings("UCLA-IRL", "ACTD");
 		QString qsCerts = settings.value("qsCerts").toString();
 		settings.setValue("qsCerts", "");
-		QStringList certs = qsCerts.split(":");
+		QStringList certs;
+		if (qsCerts != "") {
+			certs = qsCerts.split(":");
+		}
 		a->setCerts(certs);
 		
 		/*
