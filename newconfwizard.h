@@ -13,6 +13,9 @@ class QRadioButton;
 class QTextEdit;
 class QDateTimeEdit;
 class QSpinBox;
+class QVBoxLayout;
+class QListWidget;
+class QPushButton;
 
 class ConfWizard : public QWizard
 {
@@ -75,8 +78,16 @@ public:
 	ConclusionPage(QWidget *parent = 0);
 protected:
 	void initializePage();
+
+private slots:
+	void browseCerts();
+
 private:
 	QLabel *label;
+	QVBoxLayout *layout;
+	QLabel *displayCerts;
+	QListWidget *certList;
+	QPushButton *browse;
 };
 
 
