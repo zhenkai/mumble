@@ -180,7 +180,10 @@ void MainWindow::exportCert() {
 
 	QString exportFilename = QFileDialog::getSaveFileName(this, "Export Actd Cert", QString("%1/actd_cert.pem").arg(getenv("HOME")));
 	if (!certFile.copy(exportFilename)) {
-		QMessageBox::warning(this, "Export Cert Failed", "Can not export cert. Please check if you have write permission");
+		QFile::remove(exportFilename);
+		if (!certFile.copy(exportFilename)) {
+			QMessageBox::warning(this, "Export Cert Failed", "Can not export cert. Please check if you have write permission");
+		}
 	}
 }
 
