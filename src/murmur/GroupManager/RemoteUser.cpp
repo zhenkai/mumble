@@ -70,3 +70,6 @@ bool RemoteUser::isStaled() {
 	return false;
 }
 
+void RemoteUser::setPrefix(QString prefix) {
+	this->remoteUserPrefix = prefix;
+}

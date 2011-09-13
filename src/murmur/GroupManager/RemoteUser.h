@@ -43,6 +43,7 @@ class RemoteUser: public User {
 
 		void refreshReceived();
 		void setLeft(){ left = true; }
+		void setPrefix(QString prefix);
 
 		bool needRefresh();
 		bool isStaled();

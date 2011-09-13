@@ -338,8 +338,19 @@ void GroupManager::setLocalUser(ServerUser *u) {
 
 int GroupManager::addRemoteUser(QString qPrefix, QString username) {
 
-	if( remoteUserExist(qPrefix, username))  // already add remoteUser
-        return 0;
+	QHash<QString, RemoteUser *>::const_iterator it = qhRemoteUsers.find(username);
+	if (it != qhRemoteUsers.constEnd()) { // username exists
+		RemoteUser *u = it.value();
+		u->refreshReceived();
+		if (qPrefix != u->getPrefix()) { // user updated prefix
+			QString temp = u->getPrefix() + "/" + username;	
+			pNdnMediaPro->deleteRemoteUser(temp); // delete old prefix+name in mediapro
+			temp =qPrefix + "/" + username;
+			pNdnMediaPro->addRemoteUser(temp);
+			u->setPrefix(qPrefix);
+		}
+		return 0;
+	}
 	
     QString temp =qPrefix + "/" + username;
     pNdnMediaPro->addRemoteUser(temp);
@@ -354,25 +365,6 @@ int GroupManager::addRemoteUser(QString qPrefix, QString username) {
     return 0;
 }
 
-// set timestamp of the existed remote user record in this call
-bool GroupManager::remoteUserExist(QString qPrefix, QString remoteUser) {
-
-	bool bExist = true;
-	QHash<QString, RemoteUser *>::const_iterator it = qhRemoteUsers.find(remoteUser);
-	
-	if (it == qhRemoteUsers.constEnd()) {
-		bExist = false;
-	}
-	else {
-		debug("refresh received from " + remoteUser);
-		RemoteUser *u = it.value();
-		if (qPrefix != u->getPrefix())
-			bExist = false;
-		else
-			u->refreshReceived();
-	}
-    return bExist;
-}
 
 void GroupManager::deleteRemoteUser(QString remoteUser) {
     debug(QString("deleteRemoteUser(%1)").arg(remoteUser));

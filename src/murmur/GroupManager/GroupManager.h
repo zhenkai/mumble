@@ -98,7 +98,6 @@ class GroupManager: public QThread {
         void setLocalUser(ServerUser *u);
         int addRemoteUser(QString prefix, QString userName);
 		void deleteRemoteUser(QString remoteUser);
-        bool remoteUserExist(QString prefix, QString name);
 		void userLeft(RemoteUser *ru);
         int userListtoXml(const char **);
         int parseXmlUserList(const unsigned char *incoming_data, size_t len);
