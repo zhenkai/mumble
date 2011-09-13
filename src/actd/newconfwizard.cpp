@@ -97,9 +97,10 @@ ConclusionPage::ConclusionPage(QWidget *parent)
 
 	label = new QLabel;
 	label->setWordWrap(true);
-
 	layout = new QVBoxLayout;
 	browse = new QPushButton("&Browse", this);
+	browse->setEnabled(false);
+	browse->setHidden(true);
 	connect(browse, SIGNAL(clicked()), this, SLOT(browseCerts()));
 
 }
@@ -123,7 +124,8 @@ void ConclusionPage::initializePage()
 {
 	bool isPrivate = field("private").toBool();
 	if (isPrivate) {
-
+		browse->setEnabled(true);
+		browse->setHidden(false);
 		if (layout->count() <= 1) {
 			displayCerts = new QLabel(tr("Included certs files:"));
 			certList = new QListWidget(this);
