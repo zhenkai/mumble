@@ -57,8 +57,12 @@ bool RemoteUser::isStaled() {
 
 	QDateTime now = QDateTime::currentDateTime();
 	if (timestamp.isNull()) {
+		/*
 		fprintf(stderr, "timestamp is null, will initialize one");
 		timestamp = QDateTime::currentDateTime();
+		*/
+		// Null time: this RU is weird, remote it;
+		return true;
 	}
 	if (timestamp.secsTo(now) > REMOVE_INTERVAL) {
 		return true;
