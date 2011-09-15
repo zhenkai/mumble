@@ -52,8 +52,10 @@ bool RemoteUser::needRefresh() {
 }
 
 bool RemoteUser::isStaled() {
+	/*
 	if (left)
 		return true;
+		*/
 
 	QDateTime now = QDateTime::currentDateTime();
 	if (timestamp.isNull()) {
