@@ -126,10 +126,17 @@ ccn_content_handler(struct ccn_closure *selfp,
 		    struct ccn_upcall_info *info)
 {
     UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
+    if (userBuf == NULL || userBuf->iNeedDestroy) {
+        if (userBuf != NULL) delete userBuf;
+        selfp->data = NULL;
+        return CCN_UPCALL_RESULT_OK;
+    }
 
 	switch (kind) {
 	case CCN_UPCALL_INTEREST_TIMED_OUT: {
 		// if it's short Interest without seq, reexpress
+		// TODO: check whether the user is still in the conference
+		//	     don't re-express if it is not
 		return (CCN_UPCALL_RESULT_REEXPRESS);
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
@@ -143,12 +150,6 @@ ccn_content_handler(struct ccn_closure *selfp,
 		return CCN_UPCALL_RESULT_OK;
 
 	}
-
-    if (userBuf == NULL || userBuf->iNeedDestroy) {
-        if (userBuf != NULL) delete userBuf;
-        selfp->data = NULL;
-        return CCN_UPCALL_RESULT_OK;
-    }
 
 	// got some data, reset consecutiveTimeouts
 	userBuf->consecutiveTimeouts = 0;
