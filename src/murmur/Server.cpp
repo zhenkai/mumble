@@ -1678,9 +1678,31 @@ void Server::receiveRemoteData(QString strUserName) {
     char buf[5000];
     res = ndnMediaPro.getRemoteMedia(strUserName, buf, sizeof(buf));
     if (res <= 0) return;
+	
+	QStringList list = strUserName.split("/");
+	RemoteUser *remoteUser = pGroupManager->getRemoteUser(list.back());
+	if(remoteUser==0) {
+	  fprintf(stderr, "Cannot find user %s\n", list.back().toStdString().c_str());
+		//fprintf(stderr, "sending content to %s\n", i.value()->haAddress.toStdString());
+		return;
+	}
+
+	// hack
+	// We recreate a new packet with correct session ID
+	PacketDataStream oldPacket(buf+1,res-1);
+	unsigned int wrongSessionId;
+	oldPacket >> wrongSessionId; // this session ID will always be 0, but we need to >> it to get access to the rest of the packet
+	
+	char bbb[5000];
+	PacketDataStream pds(bbb,5000);
+
+	pds.append(buf[0]);
+	pds << remoteUser->uiSession;
+	pds.append(oldPacket.charPtr(), oldPacket.left());
+	
     QHash<unsigned int, ServerUser *>::const_iterator i;
     for (i = qhUsers.constBegin(); i != qhUsers.constEnd(); i++ ) {
-        sendMessage(i.value(), buf, res, qba, true);
+        sendMessage(i.value(), bbb, pds.size(), qba, true);
 		//fprintf(stderr, "sending content to %s\n", i.value()->haAddress.toStdString());
 	}
 
