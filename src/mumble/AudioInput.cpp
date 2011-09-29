@@ -463,7 +463,6 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 					if (qlEchoFrames.isEmpty()) {
 						iJitterSeq = 0;
 						iMinBuffered = 1000;
-						playback = false;
 					} else {
 #ifdef CIRCULAR_BUFFER
 						char pbuf[200];
@@ -482,10 +481,10 @@ void AudioInput::addMic(const void *data, unsigned int nsamp) {
 
 				}
 
-				//if (echo) {
+				if (echo) {
 					delete [] psSpeaker;
 					psSpeaker = echo;
-				//}
+				}
 			}
 			encodeAudioFrame();
 		}
@@ -546,12 +545,22 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 			iJitterSeq = qMin(iJitterSeq+1,10000U);
 
 			QMutexLocker l(&qmEcho);
-			if (!playback) {
+
+			if (qlEchoFrames.isEmpty()) {
+				/* do nothing
 				short *echo_delay = new short[iEchoFrameSize];
 				for (int k = 0; k < iEchoFrameSize; k++)
 					echo_delay[k] = 0;
 				qlEchoFrames.append(echo_delay);
-				playback = true;
+				echo_delay = new short[iEchoFrameSize];
+				for (int k = 0; k < iEchoFrameSize; k++)
+					echo_delay[k] = 0;
+				qlEchoFrames.append(echo_delay);
+				echo_delay = new short[iEchoFrameSize];
+				for (int k = 0; k < iEchoFrameSize; k++)
+					echo_delay[k] = 0;
+				qlEchoFrames.append(echo_delay);
+				*/
 			}
 			qlEchoFrames.append(outbuff);
 #ifdef CIRCULAR_BUFFER
