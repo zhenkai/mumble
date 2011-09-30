@@ -751,6 +751,8 @@ void AudioInput::encodeAudioFrame() {
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_AGC_DECREMENT, &iArg);
 
 		iArg = g.s.iNoiseSuppress;
+		if (iArg >= -30)
+			iArg = 50;
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
 		if (iEchoChannels > 0) {
