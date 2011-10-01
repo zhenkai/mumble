@@ -92,9 +92,9 @@ bool ChanACL::hasPermission(ServerUser *p, Channel *chan, QFlags<Perm> perm, ACL
 	}
 
 	// Default permissions
-//	Permissions def = Traverse | Enter | Speak | Whisper | TextMessage;
+	Permissions def = Traverse | Enter | Speak | Whisper | TextMessage;
 /* zhenkai */
-Permissions def = Enter | Speak;
+//Permissions def = Enter | Speak | TextMessage;
 
 	granted = def;
 

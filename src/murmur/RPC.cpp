@@ -192,6 +192,7 @@ bool Server::setChannelState(Channel *cChannel, Channel *cParent, const QString 
 	return true;
 }
 
+// TODO: do it in NDN way
 void Server::sendTextMessage(Channel *cChannel, ServerUser *pUser, bool tree, const QString &text) {
 	MumbleProto::TextMessage mptm;
 	mptm.set_message(u8(text));
