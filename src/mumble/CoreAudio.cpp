@@ -286,8 +286,25 @@ CoreAudioInput::CoreAudioInput() {
 		return;
 	}
 
-	float inputVolume = 0.5;
-	err = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 1, inputVolume, 0);
+	// start input volume adjust
+	float inputVolume;
+	err = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Input, 1, &inputVolume);
+	if (err == noErr)
+		qWarning("CoreAudioInput: input volume was %f", inputVolume);
+	else
+		qWarning("CoreAudioInput: can not get input volume");
+
+	if (inputVolume > 0.5)
+	  inputVolume = 0.5;
+	
+	err = AudioUnitSetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Input, 1, inputVolume, 0);
+	if (err == noErr)
+	  qWarning("CoreAudioInput: input volume set to %f", inputVolume);
+	else {
+	  qWarning("CoreAudioInput: can not set input volume");
+	  return;
+	}
+	// end input volume adjust
 
 	val = 0;
 	err = AudioUnitSetProperty(au, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &val, sizeof(UInt32));
