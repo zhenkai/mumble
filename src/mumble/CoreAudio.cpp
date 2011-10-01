@@ -448,6 +448,24 @@ OSStatus CoreAudioInput::inputCallback(void *udata, AudioUnitRenderActionFlags *
 		return err;
 	}
 
+	// walk the samples to apply the gain
+	int gain = 0.5;
+	AudioSampleType sample = 0;
+	for (int bufCount = 0; bufCount < (&i->buflist)->mNumberBuffers; bufCount++) {
+		AudioBuffer buf = (&i->buflist)->mBuffers[bufCount];
+		int currentFrame = 0;
+		while(currentFrame < nframes) {
+			//	copy sample to buffer, across all channels;
+			for (int currentChannel = 0; currentChannel < buf.mNumberChannels; currentChannel++) {
+				memcpy(&sample, (char *)buf.mData + (currentFrame * 4) + (currentChannel * 2), sizeof(AudioSampleType));
+				sample = (float) sample * gain;
+				memcpy((char *)buf.mData + (currentFrame * 4) + (currentChannel * 2), &sample, sizeof(AudioSampleType));
+			}
+			currentFrame++;
+		}
+	}
+	// end walk			
+	
 	i->addMic(i->buflist.mBuffers->mData, nframes);
 
 	return noErr;
