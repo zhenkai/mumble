@@ -286,6 +286,9 @@ CoreAudioInput::CoreAudioInput() {
 		return;
 	}
 
+	float inputVolume = 0.5;
+	err = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 1, inputVolume, 0);
+
 	val = 0;
 	err = AudioUnitSetProperty(au, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &val, sizeof(UInt32));
 	if (err != noErr) {
