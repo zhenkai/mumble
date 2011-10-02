@@ -286,6 +286,7 @@ CoreAudioInput::CoreAudioInput() {
 		return;
 	}
 
+	/*
 	// start input volume adjust
 	float inputVolume;
 	err = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Input, 1, &inputVolume);
@@ -305,6 +306,7 @@ CoreAudioInput::CoreAudioInput() {
 	  return;
 	}
 	// end input volume adjust
+	*/
 
 	val = 0;
 	err = AudioUnitSetProperty(au, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &val, sizeof(UInt32));
@@ -401,6 +403,27 @@ CoreAudioInput::CoreAudioInput() {
 
 		iActualBufferLength = (int) val;
 	}
+
+	// set volume
+	float vol = 0.0;
+	len = sizeof(vol);
+	err = AudioDeviceGetProperty(devId, 1, true, kAudioDevicePropertyVolumeScalar, &len, &vol);
+	if (err != noErr) {
+		qWarning("CoreAudioInput: can not get volume");
+	} else {
+		qWarning("CoreAudioInput: volume is %lf", vol);
+	}
+
+	if (vol > 0.5)
+		vol = 0.5;
+
+	err = AudioDeviceSetProperty(devId, NULL, 1, true, kAudioDevicePropertyVolumeScalar, sizeof(float), &vol);
+	if (err != noErr) {
+		qWarning("CoreAudioInput: can not set volume");
+	} else {
+		qWarning("CoreAudioInput: volume of input set to %lf", vol);
+	}
+	// end set volume
 
 	buflist.mNumberBuffers = 1;
 	AudioBuffer *b = buflist.mBuffers;
