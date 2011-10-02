@@ -753,11 +753,12 @@ void AudioInput::encodeAudioFrame() {
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_AGC_DECREMENT, &iArg);
 
 		iArg = g.s.iNoiseSuppress;
+		if (iArg >= -40)
+			iArg = -40;
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
 		if (iEchoChannels > 0) {
-			//sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*10, 1, bEchoMulti ? iEchoChannels : 1);
-			sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*15, 1, bEchoMulti ? iEchoChannels : 1);
+			sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*10, 1, bEchoMulti ? iEchoChannels : 1);
 			iArg = iSampleRate;
 			speex_echo_ctl(sesEcho, SPEEX_ECHO_SET_SAMPLING_RATE, &iArg);
 			speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, sesEcho);
