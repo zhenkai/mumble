@@ -290,7 +290,7 @@ CoreAudioInput::CoreAudioInput() {
 	float inputVolume;
 	err = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Input, 1, &inputVolume);
 	if (err == noErr)
-		qWarning("CoreAudioInput: input volume was %f", inputVolume);
+		qWarning("CoreAudioInput: input volume was %lf", inputVolume);
 	else
 		qWarning("CoreAudioInput: can not get input volume");
 

@@ -740,10 +740,12 @@ void AudioInput::encodeAudioFrame() {
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_DENOISE, &iArg);
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_DEREVERB, &iArg);
 
-		iArg = 30000;
+		//iArg = 30000;
+		iArg = 16000;
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_AGC_TARGET, &iArg);
 
-		float v = 30000.0f / static_cast<float>(g.s.iMinLoudness);
+		//float v = 30000.0f / static_cast<float>(g.s.iMinLoudness);
+		float v = 16000.0f / static_cast<float>(g.s.iMinLoudness);
 		iArg = iroundf(floorf(20.0f * log10f(v)));
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_AGC_MAX_GAIN, &iArg);
 
@@ -752,7 +754,7 @@ void AudioInput::encodeAudioFrame() {
 
 		iArg = g.s.iNoiseSuppress;
 		if (iArg >= -30)
-			iArg = 50;
+			iArg = -50;
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
 		if (iEchoChannels > 0) {
