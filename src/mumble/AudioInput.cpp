@@ -741,11 +741,11 @@ void AudioInput::encodeAudioFrame() {
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_DEREVERB, &iArg);
 
 		//iArg = 30000;
-		iArg = 16000;
+		iArg = 20000;
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_AGC_TARGET, &iArg);
 
 		//float v = 30000.0f / static_cast<float>(g.s.iMinLoudness);
-		float v = 16000.0f / static_cast<float>(g.s.iMinLoudness);
+		float v = 20000.0f / static_cast<float>(g.s.iMinLoudness);
 		iArg = iroundf(floorf(20.0f * log10f(v)));
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_AGC_MAX_GAIN, &iArg);
 
@@ -753,12 +753,11 @@ void AudioInput::encodeAudioFrame() {
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_AGC_DECREMENT, &iArg);
 
 		iArg = g.s.iNoiseSuppress;
-		if (iArg >= -30)
-			iArg = -50;
 		speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &iArg);
 
 		if (iEchoChannels > 0) {
-			sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*10, 1, bEchoMulti ? iEchoChannels : 1);
+			//sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*10, 1, bEchoMulti ? iEchoChannels : 1);
+			sesEcho = speex_echo_state_init_mc(iFrameSize, iFrameSize*15, 1, bEchoMulti ? iEchoChannels : 1);
 			iArg = iSampleRate;
 			speex_echo_ctl(sesEcho, SPEEX_ECHO_SET_SAMPLING_RATE, &iArg);
 			speex_preprocess_ctl(sppPreprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, sesEcho);
