@@ -217,7 +217,8 @@ AudioInput::AudioInput() {
 	}
 
 	// hard code quality and audio frames
-	iAudioQuality = 31900;
+	//iAudioQuality = 31900;
+	iAudioQuality = 60000;
 	iAudioFrames = 2;
 
 	bRunning = true;
@@ -574,7 +575,8 @@ void AudioInput::addEcho(const void *data, unsigned int nsamp) {
 }
 
 bool AudioInput::preferCELT(int bitrate, int frames) {
-	return ((bitrate >= 32000) || (frames == 1));
+	//return ((bitrate >= 32000) || (frames == 1));
+	return false;
 }
 
 void AudioInput::adjustBandwidth(int bitspersec, int &bitrate, int &frames) {
