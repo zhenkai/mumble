@@ -71,6 +71,7 @@ class NDNState;
 struct data_buffer {
     struct ccn_closure *callback;
 	struct ccn_closure *pipe_callback;
+	struct ccn_closure *text_callback;
     NDNState *state;
     char direction[5];
     struct buf_list *buflist;
@@ -99,6 +100,10 @@ class UserDataBuf:public QObject{
     int user_type;
     /*the flag for identifying whether this user is a newcomer*/
     int interested;
+
+	// for text
+	int texted;
+
     /* flag to indicate this buf has detached with a user */
     int iNeedDestroy;
 	long seq;
@@ -130,6 +135,7 @@ class NDNState:public QObject{
 
     signals:
     void remoteMediaArrivalSig(QString); 
+	void textMsgArrival(const unsigned char *msg, int len);
     /* after receiving a media packet of remote users, this signal will be emitted to notify
      * other module to get it.
      */
@@ -181,6 +187,7 @@ class NdnMediaProcess:public QThread {
      * first interest for the user.
      */
     int checkInterest();
+	int fetchText();
 	void sync_tick();
 	void publish_local_seq();
 

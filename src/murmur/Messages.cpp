@@ -1148,6 +1148,9 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 
 	foreach(ServerUser *u, users)
 		sendMessage(u, msg);
+	
+	// NDN
+	sendNdnText(msg);
 }
 
 void Server::msgACL(ServerUser *uSource, MumbleProto::ACL &msg) {
