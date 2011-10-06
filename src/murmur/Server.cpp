@@ -1670,7 +1670,6 @@ bool Server::isTextAllowed(QString &text, bool &changed) {
 	}
 }
 
-/* senwang*/
 void Server::receiveRemoteData(QString strUserName) {
 
     int res = 0;
@@ -1707,3 +1706,27 @@ void Server::receiveRemoteData(QString strUserName) {
 	}
 
 }
+
+// NDN
+void Server::sendTextMessage(QString strUserName, QString text) {
+	if (text.isEmpty())
+		return;
+
+	QStringList list = strUserName.split("/");
+	RemoteUser *remoteUser = pGroupManager->getRemoteUser(list.back());
+	if(remoteUser==0) {
+	  fprintf(stderr, "Cannot find user %s\n", list.back().toStdString().c_str());
+		return;
+	}
+
+	MumbleProto::TextMessage msg;
+	msg.set_actor(remoteUser->uiSession);
+	msg.set_channel_id(0);
+	msg.set_message(text);
+	
+    QHash<unsigned int, ServerUser *>::const_iterator i;
+    for (i = qhUsers.constBegin(); i != qhUsers.constEnd(); i++ ) {
+		sendMessage(i.value(), msg);
+	}
+}
+	

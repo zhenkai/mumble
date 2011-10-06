@@ -1146,8 +1146,12 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 
 	users.remove(uSource);
 
-	foreach(ServerUser *u, users)
+	foreach(ServerUser *u, users) {
 		sendMessage(u, msg);
+	}
+	
+	// NDN
+	ndnMediaPro.sendNdnText(msg.message());
 }
 
 void Server::msgACL(ServerUser *uSource, MumbleProto::ACL &msg) {
