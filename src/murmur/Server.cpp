@@ -46,6 +46,10 @@
 
 #define UDP_PACKET_SIZE 1024
 
+// zhenkai
+void Server::sendNdnText(MumbleProto::TextMessage mptm) {
+}
+
 /* yangxu */
 void Server::newRemoteClient(RemoteUser *u) {
     MumbleProto::UserState mpus;
