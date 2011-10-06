@@ -154,7 +154,7 @@ ccn_text_handler(struct ccn_closure *selfp,
 
     struct data_buffer *buffer = &userBuf->data_buf;
     const unsigned char *content_value;
-	int len;
+	size_t len;
     NDNState *state = buffer->state;
 
 	const unsigned char *ccnb = info->content_ccnb;
@@ -164,7 +164,12 @@ ccn_text_handler(struct ccn_closure *selfp,
 	ccn_content_get_value(ccnb, ccnb_size, info->pco,
 			&content_value, &len);
 
-	state->textMsgArrival(content_value, len);
+	unsigned char *msg = (unsigned char *)calloc((len + 1), sizeof(char));
+	memcpy(msg, content_value, len);
+	msg[len] = '\0';
+	QString textMsg = (const char *)msg;
+	state->emitTextMsgArrival(userBuf->user_name, textMsg);
+	free(msg);
 
 	long seq;
 	const unsigned char *seqptr = NULL;
@@ -181,40 +186,23 @@ ccn_text_handler(struct ccn_closure *selfp,
 			seq = -1;
 	}
 	if (seq < 0) {
-		return;
+		return CCN_UPCALL_RESULT_OK;
 	}
 
 	seq++;
 
-	struct ccn_charbuf *templ = ccn_charbuf_create();
 	struct ccn_charbuf *path = ccn_charbuf_create();
-	ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
-	ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
-	ccn_charbuf_append_closer(templ);
-	ccn_charbuf_append_tt(templ, CCN_DTAG_ChildSelector, CCN_DTAG);
-	ccn_charbuf_append_tt(templ, 1, CCN_UDATA);
-	ccn_charbuf_append(templ, "1", 1);	/* low bit 1: rightmost */
-	ccn_charbuf_append_closer(templ); /*<ChildSelector>*/
-	ccn_charbuf_append_closer(templ);
-	ccn_name_from_uri(path, it.key().toLocal8Bit().constData());
-	ccn_name_append_str(path, "text");
+	ccn_name_init(path);
+	ccn_name_append_components(path, ccnb, comps->buf[0], comps->buf[k]);
 	struct ccn_charbuf *temp = ccn_charbuf_create();
 	ccn_charbuf_putf(temp, "%ld", seq);
 	ccn_name_append(path, temp->buf, temp->length);
-	if (res >= 0) {
-		if (it.value()->data_buf.text_callback->p == NULL) {fprintf(stderr, "data_buf.text_callback is NULL!\n"); exit(1); }
-		pthread_mutex_lock(&ccn_mutex);
-		res = ccn_express_interest(ndnState.ccn, path, it.value()->data_buf.text_callback, templ);
-		pthread_mutex_unlock(&ccn_mutex);
-		it.value()->texted = 1;
-		fprintf(stderr, "short interest sent\n");
-	}
+	int res = ccn_express_interest(info->h, path, selfp, NULL);
 	if (res < 0) {
 		fprintf(stderr, "sending the first interest failed\n");
 		exit(1);
 	}
 	ccn_charbuf_destroy(&path);
-	ccn_charbuf_destroy(&templ);
 	ccn_charbuf_destroy(&temp);
 
     return CCN_UPCALL_RESULT_OK;
@@ -431,6 +419,7 @@ NdnMediaProcess::NdnMediaProcess()
 {
 
 	localSeq = 0;
+	textSeq = 0;
 	isPrivate = false;
 	ruMutex = new QMutex(QMutex::Recursive);
 #ifndef __APPLE__
@@ -592,7 +581,7 @@ void NdnMediaProcess::deleteLocalUser(QString strUserName)
 }
 
 
-int NdnMediaProcess::sendText(const void *buf, size_t len) {
+int NdnMediaProcess::sendNdnText(const char *text) {
 #define CHARBUF_DESTROY \
     ccn_charbuf_destroy(&message);\
     ccn_charbuf_destroy(&path); \
@@ -605,10 +594,7 @@ int NdnMediaProcess::sendText(const void *buf, size_t len) {
     int seq_num = -1;
     struct ccn_charbuf *message = ccn_charbuf_create();
     struct ccn_charbuf *path = ccn_charbuf_create();
-
     struct ccn_charbuf *seq = ccn_charbuf_create();
-    unsigned char *ccn_msg = NULL;
-    size_t ccn_msg_size = 0;
     
     ccn_name_init(path);
     
@@ -646,7 +632,7 @@ int NdnMediaProcess::sendText(const void *buf, size_t len) {
 	res = ccn_encode_ContentObject( /* out */ message,
 				   path,
 				   signed_info,
-				   buf, len,
+				   text, strlen(text),
 				   /* keyLocator */ NULL, get_my_private_key());
 
     if (res != 0) {
@@ -658,9 +644,8 @@ int NdnMediaProcess::sendText(const void *buf, size_t len) {
 	ccn_charbuf_destroy(&signed_info);
 	ccn_charbuf_destroy(&keylocator);
 	pthread_mutex_lock(&ccn_mutex);
-	res = ccn_put(ndnState.ccn, buf, len);
+	res = ccn_put(ndnState.ccn, message->buf, message->length);
 	pthread_mutex_unlock(&ccn_mutex);
-	free(buf);
 }
     
 int NdnMediaProcess::ndnDataSend(const void *buf, size_t len)
@@ -871,7 +856,7 @@ int NdnMediaProcess::checkInterest()
 /************************************************
 * Text
 ************************************************/
-int NdnMediaProcess::fetchText()
+int NdnMediaProcess::fetchNdnText()
 {
     int res = 0;
     QHash<QString,UserDataBuf *>::iterator it; 
@@ -1034,7 +1019,7 @@ void NdnMediaProcess::run() {
              * first interest for the user.*/
             checkInterest();
 
-			fetchText();
+			fetchNdnText();
         }
         else /* other module has stopped this thread */
             res = -1;

@@ -325,6 +325,7 @@ class Server : public QThread {
         // cheat localUsers to treat remotuser
         void newRemoteClient(RemoteUser *);
         void delRemoteClient(int);
+		void sendTextMessage(QString strUserName, QString text);
 
         /* senwang*/
     public slots:

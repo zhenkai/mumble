@@ -46,10 +46,6 @@
 
 #define UDP_PACKET_SIZE 1024
 
-// zhenkai
-void Server::sendNdnText(MumbleProto::TextMessage mptm) {
-}
-
 /* yangxu */
 void Server::newRemoteClient(RemoteUser *u) {
     MumbleProto::UserState mpus;
@@ -230,6 +226,8 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 
    connect(&ndnMediaPro.ndnState, SIGNAL(remoteMediaArrivalSig(QString)),
         this, SLOT(receiveRemoteData(QString)));
+
+   connect(&ndnMediaPro.ndnState, SIGNAL(textMsgArrival(QString, QString)), this, SLOT(sendTextMessage(QString, QString)));
 
 	int major, minor, patch;
 	QString release;
@@ -1725,8 +1723,8 @@ void Server::sendTextMessage(QString strUserName, QString text) {
 
 	MumbleProto::TextMessage msg;
 	msg.set_actor(remoteUser->uiSession);
-	msg.set_channel_id(0);
-	msg.set_message(text);
+	msg.add_channel_id(0);
+	msg.set_message(text.toStdString());
 	
     QHash<unsigned int, ServerUser *>::const_iterator i;
     for (i = qhUsers.constBegin(); i != qhUsers.constEnd(); i++ ) {

@@ -133,9 +133,13 @@ class NDNState:public QObject{
         emit remoteMediaArrivalSig(strUserName);
     };
 
+	void emitTextMsgArrival(QString strUserName, QString textMsg)
+	{ emit textMsgArrival(strUserName, textMsg);
+	};
+
     signals:
     void remoteMediaArrivalSig(QString); 
-	void textMsgArrival(const unsigned char *msg, int len);
+	void textMsgArrival(QString strUserName, QString textMsg);
     /* after receiving a media packet of remote users, this signal will be emitted to notify
      * other module to get it.
      */
@@ -161,6 +165,7 @@ class NdnMediaProcess:public QThread {
 	bool isPrivate;
 	unsigned char sessionKey[512/8];
 	long localSeq;
+	long textSeq;
 	QString localUsername;
 	UserDataBuf *localUdb;
 	// clock for media process 
@@ -187,7 +192,8 @@ class NdnMediaProcess:public QThread {
      * first interest for the user.
      */
     int checkInterest();
-	int fetchText();
+	int fetchNdnText();
+
 	void sync_tick();
 	void publish_local_seq();
 
@@ -215,6 +221,7 @@ class NdnMediaProcess:public QThread {
      * the data actually.
      */
     int sendLocalMedia(char *msg, int msg_len);
+	int sendNdnText(const char *text);
 
     /* get a media packet of some remote user, this function will get a oldest data packet from 
      * the remote user's buffer. the caller will not be blocked, because before calling this 
