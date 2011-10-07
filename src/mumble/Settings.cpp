@@ -289,13 +289,15 @@ Settings::Settings() {
 	uiDoublePush = 0;
 	bExpert = false;
 
+/*
 #ifdef NO_UPDATE_CHECK
 	bUpdateCheck = false;
 	bPluginOverlayCheck = false;
 #else
+	*/
 	bUpdateCheck = true;
 	bPluginOverlayCheck = true;
-#endif
+//#endif
 
 	qsImagePath = QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
 
