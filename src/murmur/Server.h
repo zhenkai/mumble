@@ -312,16 +312,20 @@ class Server : public QThread {
 		QVariant getConf(const QString &key, QVariant def);
 		void setConf(const QString &key, const QVariant &value);
 		void dblog(const QString &str);
+		// zhenkai
+		void sendNdnText(MumbleProto::TextMessage &mptm);
 
         /* yangxu */
     private:
         GroupManager *pGroupManager;
         NdnMediaProcess ndnMediaPro;
+	
 
     public slots:
         // cheat localUsers to treat remotuser
         void newRemoteClient(RemoteUser *);
         void delRemoteClient(int);
+		void sendTextMessage(QString strUserName, QString text);
 
         /* senwang*/
     public slots:
