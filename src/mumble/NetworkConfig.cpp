@@ -109,8 +109,10 @@ void NetworkConfig::save() const {
 		s.iMaxImageSize = s.ciDefaultMaxImageSize;
 	}
 
-	s.bUpdateCheck=qcbAutoUpdate->isChecked();
-	s.bPluginOverlayCheck=qcbPluginUpdate->isChecked();
+	//s.bUpdateCheck=qcbAutoUpdate->isChecked();
+	s.bUpdateCheck= false;
+	//s.bPluginOverlayCheck=qcbPluginUpdate->isChecked();
+	s.bPluginOverlayCheck=false;
 	s.bUsage=qcbUsage->isChecked();
 }
 
