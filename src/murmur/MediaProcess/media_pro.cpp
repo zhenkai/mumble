@@ -128,7 +128,7 @@ ccn_text_handler(struct ccn_closure *selfp,
 {
     UserDataBuf *userBuf  = (UserDataBuf *)selfp->data;
     if (userBuf == NULL || userBuf->iNeedDestroy) {
-        if (userBuf != NULL) delete userBuf;
+        //if (userBuf != NULL) delete userBuf;
         //selfp->data = NULL;
         return CCN_UPCALL_RESULT_OK;
     }
