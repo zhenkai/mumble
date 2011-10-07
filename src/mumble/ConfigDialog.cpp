@@ -47,6 +47,9 @@ ConfigDialog::ConfigDialog(QWidget *p) : QDialog(p) {
 		addPage(cwn(s), ++idx);
 	}
 
+	g.s.bExpert = false;
+	qcbExpert->setHidden(true);
+	qcbExpert->setEnabled(false);
 	qcbExpert->setChecked(g.s.bExpert);
 	on_qcbExpert_clicked(g.s.bExpert);
 

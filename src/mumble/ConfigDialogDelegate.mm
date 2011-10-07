@@ -148,6 +148,7 @@ static NSMutableDictionary *toolbarItemCache = nil;
 		[button setButtonType: NSSwitchButton];
 		[button setState: inExpertMode ? NSOnState : NSOffState];
 		[button setTitle: nil];
+		[button setEnabled: NO];
 		[item setView:button];
 		[item setMinSize: buttonSize];
 		[item setMaxSize: buttonSize];

@@ -64,6 +64,7 @@ ConfigDialogMac::ConfigDialogMac(QWidget *p) : QDialog(p) {
 		addPage(cwn(s), idx++);
 	}
 
+	g.s.bExpert = false;
 	updateExpert(g.s.bExpert);
 
 	QPushButton *okButton = dialogButtonBox->button(QDialogButtonBox::Ok);
@@ -260,6 +261,7 @@ void ConfigDialogMac::apply() {
 	NSWindow *window = qt_mac_window_for(this);
 	ConfigDialogDelegate *delegate = [[window toolbar] delegate];
 	g.s.bExpert = [delegate expertMode];
+	g.s.bExpert = false;
 
 	Audio::start();
 }
