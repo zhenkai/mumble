@@ -16,3 +16,11 @@ vc100.pdb
 *.sqlite
 ui_*
 plugin/
+*.bak
+*.orig
+*.o
+*.app/
+moc_*.cpp
+qrc_*.cpp
+Murmur.cpp
+Murmur.h
