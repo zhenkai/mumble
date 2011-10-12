@@ -2,6 +2,7 @@
 #include <QPixmap>
 #include <QTimer>
 #include <QDebug>
+#include <QTime>
 #include "videowindow.h"
 
 #define MAX_NAME_LEN 30
@@ -41,32 +42,17 @@ int VideoWindow::openCamera(int device) {
 }
 
 static QImage IplImage2QImage(const IplImage *iplImage) {
-	/*
 	int height = iplImage->height;
 	int width = iplImage->width;
+
 	if (iplImage->depth == IPL_DEPTH_8U && iplImage->nChannels == 3) {
 		const uchar *qImageBuffer = (const uchar *)iplImage->imageData;
-		QImage img(qImageBuffer, width, height, QImage::Format_RGB888);
+		QImage img(qImageBuffer, width, height, iplImage->widthStep, QImage::Format_RGB888);
 		return img.rgbSwapped();
 	} else {
 		qWarning() << "Can not convert image";
 		return QImage();
 	}
-	*/
-
-	CvSize size = cvSize(iplImage->width, iplImage->height);
-	IplImage *alpha = cvCreateImage(size, IPL_DEPTH_8U, 1);
-	IplImage *red = cvCreateImage(size, IPL_DEPTH_8U, 1);
-	IplImage *green = cvCreateImage(size, IPL_DEPTH_8U, 1);
-	IplImage *blue = cvCreateImage(size, IPL_DEPTH_8U, 1);
-	IplImage *target = cvCreateImage(size, IPL_DEPTH_8U, 4);
-
-	cvSet(alpha, cvScalarAll(255), 0);
-	cvSplit(iplImage, red, green, blue, NULL);
-	cvMerge(red, green, blue, alpha, target);
-	const uchar *data = (const uchar *)(target->imageData);
-	QImage img = QImage(data, iplImage->width, iplImage->height, iplImage->widthStep, QImage::Format_RGB32);
-	return img;
 }
 
 void VideoWindow::refreshImage() {
