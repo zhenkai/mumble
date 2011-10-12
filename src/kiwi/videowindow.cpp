@@ -46,7 +46,10 @@ static QImage IplImage2QImage(const IplImage *iplImage) {
 	int width = iplImage->width;
 
 	if (iplImage->depth == IPL_DEPTH_8U && iplImage->nChannels == 3) {
+		// Must be const to achieve faster QImage construction.
 		const uchar *qImageBuffer = (const uchar *)iplImage->imageData;
+		// Must specify byesPerLine; otherwise Qt assumes data is 32-bit aligned and each line of data in image is also 32-bit aligned.
+		// The default interpretation without bytesPerLine will produces 3 vauge images (red, green blue) instead of a clear one
 		QImage img(qImageBuffer, width, height, iplImage->widthStep, QImage::Format_RGB888);
 		return img.rgbSwapped();
 	} else {
