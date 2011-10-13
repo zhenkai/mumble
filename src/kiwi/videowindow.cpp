@@ -14,6 +14,8 @@ VideoWindow::VideoWindow(): QDialog(0) {
 	layout->addWidget(selfImage);
 	setLayout(layout);
 	openCamera(0);
+	openOutputFile("/tmp/kiwi.avi");
+	openInputFile("/tmp/kiwi.avi");
 
 	QTimer *refresh = new QTimer(this);
 	connect(refresh, SIGNAL(timeout()), this, SLOT(refreshImage()));
@@ -41,6 +43,24 @@ int VideoWindow::openCamera(int device) {
 	return 0;
 }
 
+int VideoWindow::openOutputFile(char *file) {
+	writer.open(file, CV_FOURCC('M','P', '4', '2'), 25, cvSize(640, 480));
+	if (!writer.isOpened()) {
+		QMessageBox::warning(this, "Can not write video stream", QString("Failed to write video stream to %1").arg(file));
+		return -1;
+	}
+	return 0;
+}
+
+int VideoWindow::openInputFile(char *file) {
+	reader.open(file);
+	if (!reader.isOpened()) {
+		QMessageBox::warning(this, "Can not read video stream", QString("Failed to read video stream from %1").arg(file));
+		return -1;
+	}
+	return 0;
+}
+
 static QImage IplImage2QImage(const IplImage *iplImage) {
 	int height = iplImage->height;
 	int width = iplImage->width;
@@ -51,9 +71,10 @@ static QImage IplImage2QImage(const IplImage *iplImage) {
 		// Must specify byesPerLine; otherwise Qt assumes data is 32-bit aligned and each line of data in image is also 32-bit aligned.
 		// The default interpretation without bytesPerLine will produces 3 vauge images (red, green blue) instead of a clear one
 		QImage img(qImageBuffer, width, height, iplImage->widthStep, QImage::Format_RGB888);
+		qWarning() << QString("Image size is %1").arg(iplImage->imageSize);
 		return img.rgbSwapped();
 	} else {
-		qWarning() << "Can not convert image";
+		qWarning() << QString("Can not convert image, nChannels is %1").arg(iplImage->nChannels);
 		return QImage();
 	}
 }
@@ -61,9 +82,18 @@ static QImage IplImage2QImage(const IplImage *iplImage) {
 void VideoWindow::refreshImage() {
 	cv::Mat frame;
 	cap >> frame;
-	IplImage iplImage = IplImage(frame);
+
+	writer << frame;
+	cv::Mat rFrame;
+	reader >> rFrame;
+
+	IplImage iplImage = IplImage(rFrame);
 	QImage image = IplImage2QImage(&iplImage);
+
 	selfImage->setImage(image);
+}
+
+static void encodeVideo() {
 }
 
 QNamedFrame::QNamedFrame() {

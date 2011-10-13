@@ -18,12 +18,16 @@ public:
 	VideoWindow();
 	~VideoWindow();
 	int openCamera(int device);
+	int openOutputFile(char *file);
+	int openInputFile(char *file);
 
 private slots:
 	void refreshImage();
 
 private:
 	cv::VideoCapture cap; 
+	cv::VideoWriter writer;
+	cv::VideoCapture reader;
 	QVBoxLayout *layout;
 	QNamedFrame *selfImage;
 };
