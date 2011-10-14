@@ -93,7 +93,36 @@ void VideoWindow::refreshImage() {
 	selfImage->setImage(image);
 }
 
-static void encodeVideo() {
+static void encodeVideo(const IplImage *iplImage) {
+
+	AVCodec *codec = avcodec_find_encoder(CODEC_ID_H264);
+	if (!codec) {
+		fprintf(stderr, "Codec not found\n");
+		exit(1);
+	}
+	
+	AVCodecContext *context = avcodec_alloc_context();
+	AVFrame *picture = avcodec_alloc_frame();
+
+	context->bit_rate = 400000;
+	context->width = 352;
+	context->height = 288;
+	context->time_base = (AVRational){1, 25};
+	// emit one intra frame every 10 frames (??)
+	context->gop_size = 10; 
+	context->max_b_frames = 1;
+	context->pix_fmt = PIX_FMT_BGR24;
+
+	if (avcodec_open(context, codec) < 0) {
+		fprintf(stderr, "Could not open codec\n");
+		exit(1);
+	}
+
+	int nBytes = 100000;
+	uchar *buffer = new uchar[nBytes];
+	avpicture_fill((AVPicture *)picture, iplImage->imageData, PIX_FMT_BGR24, 352, 288);
+	int outputSize = avcodec_encode_video(context, buffer, nBytes, picture);
+	// now the encoded stuff is in buffer with length outputSize
 }
 
 QNamedFrame::QNamedFrame() {
