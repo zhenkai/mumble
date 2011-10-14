@@ -1,8 +1,8 @@
 CONFIG += console link_pkgconfig
 TEMPLATE = app
 TARGET = kiwi
-HEADERS = videowindow.h 
-SOURCES =  main.cpp videowindow.cpp
+HEADERS = VideoWindow.h 
+SOURCES =  main.cpp VideoWindow.cpp
 RESOURCES = kiwi.qrc
 
 DIST *=  
