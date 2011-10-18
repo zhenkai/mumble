@@ -7,7 +7,7 @@ VideoStreamDecoder::VideoStreamDecoder(int bufSize, int fps, PixelFormat pixelFo
 	
 	initialized = false;
 
-	openCVReadyFrame = NULL;
+	openCVFrame = NULL;
 
 	if (bufSize <= 1) {
 		fprintf(stderr, "buffer size is too small\n");
@@ -26,7 +26,7 @@ VideoStreamDecoder::~VideoStreamDecoder() {
 		delete buffer;
 }
 
-AVFrame *VideoStreamDecoder::createFrame(int pixelFormat, int frameWidth, int frameHeight) {
+AVFrame *VideoStreamDecoder::createAVFrame(PixelFormat pixelFormat, int frameWidth, int frameHeight) {
 	AVFrame *frame = avcodec_alloc_frame();
 	if (!frame)
 		return NULL;
@@ -75,7 +75,7 @@ IplImage *VideoStreamDecoder::decodeVideoFrame(unsigned char *buf, int size) {
 	}
 	
 	if (openCVFrame == NULL) {
-		opevCVFrame = createAVFrame(openCVPixelFormt, codecContext->width, codecContext->height);
+		openCVFrame = createAVFrame(openCVPixelFormat, codecContext->width, codecContext->height);
 	}
 
 	if(decodedFrameSize > 0) {

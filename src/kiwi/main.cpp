@@ -1,6 +1,6 @@
 #include <QApplication>
 #include <QIcon>
-#include "videowindow.h"
+#include "VideoWindow.h"
 
 int main(int argc, char *argv[])
 {

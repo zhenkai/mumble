@@ -5,6 +5,8 @@
 #include <QLabel>
 
 #include <opencv2/opencv.hpp>
+#include "VideoStreamSource.h"
+#include "VideoStreamSink.h"
 
 #define MAX_USER_NUM 12
 
@@ -22,12 +24,11 @@ public:
 	int openInputFile(char *file);
 
 private slots:
-	void refreshImage();
+	void refreshImage(unsigned char *buf, size_t len);
 
 private:
-	cv::VideoCapture cap; 
-	cv::VideoWriter writer;
-	cv::VideoCapture reader;
+	VideoStreamSource *source;
+	VideoStreamSink *sink;
 	QVBoxLayout *layout;
 	QNamedFrame *selfImage;
 };

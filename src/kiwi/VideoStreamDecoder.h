@@ -3,8 +3,9 @@
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 
 /**
  * Video Decoder
@@ -30,7 +31,7 @@ public:
 
 private:
 	bool initDecoder();
-	AVFrame *createAVFrame(int pixelFormat, int frameWidth, int frameHeight);
+	AVFrame *createAVFrame(PixelFormat pixelFormat, int frameWidth, int frameHeight);
 
 private:
 	bool initialized;
@@ -40,7 +41,7 @@ private:
 	AVCodec *decodeCodec;
 	AVCodecContext *codecContext;
 	AVFrame *decodeFrame;
-	AVFrame *openCVReadyFrame;
+	AVFrame *openCVFrame;
 	PixelFormat openCVPixelFormat;
 };
 #endif

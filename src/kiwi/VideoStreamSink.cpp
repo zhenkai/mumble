@@ -5,6 +5,7 @@ VideoStreamSink::VideoStreamSink() {
 	decoder = new VideoStreamDecoder(BUF_SIZE);
 }
 
-IplImage *VideoStreamSink::getNextFrame() {
-	IplImage *decodedImage = decoder->decodeVideoFrame(unsigned char *buffer, int frameSize);
+IplImage *VideoStreamSink::getNextFrame(unsigned char *buf, int len) {
+	IplImage *decodedImage = decoder->decodeVideoFrame(buf, int len);
+	return decodedImage;
 }

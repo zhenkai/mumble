@@ -10,10 +10,10 @@ class VideoStreamSink: public QThread {
 public:
 	VideoStreamSink();
 	virtual ~VideoStreamSink();
-	IplImage *getNextFrame();
+	IplImage *getNextFrame(unsigned char *buf, int len);
 
 private:
 	VideoStreamDecoder *decoder;
-}
+};
 
 #endif
