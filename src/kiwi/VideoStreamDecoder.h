@@ -1,12 +1,23 @@
 #ifndef VIDEOSTREAMDECODER_H
 #define VIDEOSTREAMDECODER_H
 
+
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
+}
 
+#define DECODING_CODEC (CODEC_ID_H263)
+#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
+
+//#define DECODING_CODEC (CODEC_ID_H264)
+//#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
+
+//#define DECODING_CODEC (CODEC_ID_MJPEG)
+//#define RAW_STREAM_FORMAT (PIX_FMT_YUVJ420P)
 /**
  * Video Decoder
  * Decodes encoded data

@@ -13,13 +13,10 @@ VideoWindow::VideoWindow(): QDialog(0) {
 	selfImage->setName("/usr/local");
 	layout->addWidget(selfImage);
 	setLayout(layout);
-	openCamera(0);
-	openOutputFile("/tmp/kiwi.avi");
-	openInputFile("/tmp/kiwi.avi");
 	source = new VideoStreamSource();
 	sink = new VideoStreamSink();
 
-	connect(source, SIGNAL(frameProcessed(unsigned char *, size_t)), this, SLOT(refreshImage(unsigned char *buf, size_t len)));
+	connect(source, SIGNAL(frameProcessed(unsigned char *, size_t)), this, SLOT(refreshImage(unsigned char *, size_t)));
 //	QTimer *refresh = new QTimer(this);
 //	connect(refresh, SIGNAL(timeout()), this, SLOT(refreshImage()));
 //	refresh->start(25);
@@ -29,6 +26,9 @@ VideoWindow::~VideoWindow() {
 }
 
 static QImage IplImage2QImage(const IplImage *iplImage) {
+	if (iplImage == NULL)
+		return QImage();
+
 	int height = iplImage->height;
 	int width = iplImage->width;
 
@@ -38,7 +38,6 @@ static QImage IplImage2QImage(const IplImage *iplImage) {
 		// Must specify byesPerLine; otherwise Qt assumes data is 32-bit aligned and each line of data in image is also 32-bit aligned.
 		// The default interpretation without bytesPerLine will produces 3 vauge images (red, green blue) instead of a clear one
 		QImage img(qImageBuffer, width, height, iplImage->widthStep, QImage::Format_RGB888);
-		qWarning() << QString("Image size is %1").arg(iplImage->imageSize);
 		return img.rgbSwapped();
 	} else {
 		qWarning() << QString("Can not convert image, nChannels is %1").arg(iplImage->nChannels);
@@ -50,7 +49,7 @@ void VideoWindow::refreshImage(unsigned char *buf, size_t len) {
 	IplImage *decodedImage = sink->getNextFrame(buf, len);
 	QImage image = IplImage2QImage(decodedImage);
 	selfImage->setImage(image);
-	cvReleaseImage(&decodedImage);
+	//cvReleaseImage(&decodedImage);
 }
 
 

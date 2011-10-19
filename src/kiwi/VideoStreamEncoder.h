@@ -1,12 +1,27 @@
 #ifndef VIDEOSTREAMENCODER_H
 #define VIDEOSTREAMENCODER_H
+
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
+}
 
-#define ENCODING_STRING ("h264")
+#define ENCODING_STRING ("h263")
+#define ENCODING_CODEC (CODEC_ID_H263P)
+#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
+
+//#define ENCODING_STRING ("h264")
+//#define ENCODING_CODEC (CODEC_ID_H264)
+//#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
+
+//#define ENCODING_STRING ("mjpeg")
+//#define ENCODING_CODEC (CODEC_ID_MJPEG)
+//#define RAW_STREAM_FORMAT (PIX_FMT_YUVJ420P)
+
+#define STREAM_BIT_RATE 1000000
 
 /**
  * Encoder for video
@@ -29,7 +44,7 @@ public:
 
 private:
 	bool initEncoder();
-	AVFrame *createAVFrame(int pix_format);
+	AVFrame *createAVFrame(PixelFormat pix_format);
 	AVStream *createVideoStream(AVFormatContext *fmtContext);
 	bool openCodec(AVStream *stream);
 

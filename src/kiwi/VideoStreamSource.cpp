@@ -1,5 +1,5 @@
 #include "VideoStreamSource.h"
-#define BUF_SIZE 1000000
+#define BUF_SIZE 10000000
 #define FRAME_RATE 25
 
 CameraVideoInput::CameraVideoInput() {
@@ -9,7 +9,7 @@ CameraVideoInput::CameraVideoInput() {
 
 CameraVideoInput::~CameraVideoInput() {
 	if (cap != NULL) {
-		cvCaptureRelease(&cap);
+		cvReleaseCapture(&cap);
 		cap = NULL;
 		initialized = false;
 	}
@@ -25,16 +25,27 @@ bool CameraVideoInput::initCamera() {
 	initialized = true;
 }
 
-IplImage *getNextFrame() {
-	if (!initialzed)
+IplImage *CameraVideoInput::getNextFrame() {
+	if (!initialized)
 		initCamera();
 	
 	if (!cvGrabFrame(cap))
 		return NULL;
 
 	IplImage *capImage = cvRetrieveFrame(cap);
-	IplImage *retImage = cvCreateImage(cvGetSize(capImage), 8, 3);
-	cvCopy(capImage, retImage, 0);
+	int x = capImage->width;
+	int y = capImage->height;
+	int max = x > y ? x : y;
+	float scale = (float)((float) max / 640);
+	int newX = int (x/scale);
+	int newY = int (y/scale);
+	if (newX % 2 != 0)
+		newX++;
+	if (newY % 2 != 0)
+		newY++;
+	CvSize size = cvSize(newX, newY);
+	IplImage *retImage = cvCreateImage(size, 8, 3);
+	cvResize(capImage, retImage);
 	return retImage;
 }
 
@@ -57,7 +68,7 @@ VideoStreamSource::VideoStreamSource() {
 		return;
 	
 	initialized = true;
-	cvRelease(image);
+	cvReleaseImage(&image);
 	captureTimer = new QTimer(this);
 	connect(captureTimer, SIGNAL(timeout()), this, SLOT(processFrame()));
 	captureTimer->start(1000 / FRAME_RATE);
@@ -67,8 +78,8 @@ VideoStreamSource::VideoStreamSource() {
 void VideoStreamSource::processFrame() {
 	IplImage *currentFrame = cam->getNextFrame();
 	int frameSize = 0;
-	unsigned char *encodedFrame = encoder->encodeVideoFrame(currentFrame, & frameSize);
-	emit fameProcessed(encodedFrame, frameSize);
+	const unsigned char *encodedFrame = encoder->encodeVideoFrame(currentFrame, &frameSize);
+	emit frameProcessed((unsigned char *)encodedFrame, frameSize);
 	cvReleaseImage(&currentFrame);
 
 }

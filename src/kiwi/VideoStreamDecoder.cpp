@@ -46,7 +46,7 @@ AVFrame *VideoStreamDecoder::createAVFrame(PixelFormat pixelFormat, int frameWid
 bool VideoStreamDecoder::initDecoder() {
 	av_register_all();
 
-	decodeCodec = avcodec_find_decoder(CODEC_ID_H264);
+	decodeCodec = avcodec_find_decoder(DECODING_CODEC);
 
 	if(!decodeCodec) {
 		fprintf(stderr, "Can not find decode codec\n");
@@ -65,6 +65,9 @@ bool VideoStreamDecoder::initDecoder() {
 }
 
 IplImage *VideoStreamDecoder::decodeVideoFrame(unsigned char *buf, int size) {
+	if (size <= 1)
+		return NULL;
+
 	IplImage *image = NULL;
 	int decodedFrameSize = 0;
 
@@ -79,12 +82,17 @@ IplImage *VideoStreamDecoder::decodeVideoFrame(unsigned char *buf, int size) {
 	}
 
 	if(decodedFrameSize > 0) {
-		img_convert((AVPicture *)openCVFrame, openCVPixelFormat, (AVPicture *)decodeFrame, PIX_FMT_YUV420P, codecContext->width, codecContext->height);
+		struct SwsContext *imgConvertCtx;
+		int width = codecContext->width;
+		int height = codecContext->height;
+		imgConvertCtx = sws_getContext(width, height, (RAW_STREAM_FORMAT), width, height, openCVPixelFormat, SWS_BICUBIC, NULL, NULL, NULL);
+		sws_scale(imgConvertCtx, decodeFrame->data,  decodeFrame->linesize, 0, height, openCVFrame->data, openCVFrame->linesize);
+		//img_convert((AVPicture *)openCVFrame, openCVPixelFormat, (AVPicture *)decodeFrame, PIX_FMT_YUV420P, codecContext->width, codecContext->height);
 	}
 
 	image = cvCreateImage(cvSize(codecContext->width, codecContext->height), IPL_DEPTH_8U, 3);
 	memcpy(image->imageData, openCVFrame->data[0], image->imageSize);
-	image->widthStep = openCVFrame->lineSize[0];
+	image->widthStep = openCVFrame->linesize[0];
 
 	return image;
 }

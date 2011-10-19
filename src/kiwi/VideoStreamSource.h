@@ -28,6 +28,7 @@ class VideoStreamSource: public QThread{
 	Q_OBJECT
 public:
 	void run();	
+	VideoStreamSource();
 
 signals:
 	void frameProcessed(unsigned char *buf, size_t len);

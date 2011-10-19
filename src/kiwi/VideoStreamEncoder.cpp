@@ -4,7 +4,7 @@ VideoStreamEncoder::VideoStreamEncoder(size_t bufSize, int videoWidth, int video
 	this->bufSize = bufSize;
 	this->videoWidth = videoWidth;
 	this->videoHeight = videoHeight;
-	this->fps = fps;
+	this->fps = 10;
 	this->openCVPixelFormat = pixelFormat;
 
 	initialized = false;
@@ -34,7 +34,7 @@ bool VideoStreamEncoder::openCodec(AVStream *stream) {
 	return true;
 }
 
-AVFrame *VideoStreamEncoder::createAVFrame(int pixel_format) {
+AVFrame *VideoStreamEncoder::createAVFrame(PixelFormat pixel_format) {
 	AVFrame *frame = avcodec_alloc_frame();
 	if (!frame)
 		return NULL;
@@ -58,16 +58,16 @@ AVStream *VideoStreamEncoder::createVideoStream(AVFormatContext *fmtContext) {
 	}
 
 	AVCodecContext *codecContext = stream->codec;
-	codecContext->codec_id = (CodecID) (CODEC_ID_H264);
+	codecContext->codec_id = (CodecID) (ENCODING_CODEC);
 	codecContext->codec_type = CODEC_TYPE_VIDEO;
-	codecContext->bit_rate = 400000;
+	codecContext->bit_rate = STREAM_BIT_RATE;
 	codecContext->width = videoWidth;
 	codecContext->height = videoHeight;
 	codecContext->time_base.den = fps;
 	codecContext->time_base.num = 1;
 	// question: why do we need to send intra frame periodically?
-	codecContext->gop_size = 12;
-	codecContext->pix_fmt = PIX_FMT_YUV420P;
+	codecContext->gop_size = fps;
+	codecContext->pix_fmt = RAW_STREAM_FORMAT;
 
 	return stream;
 }
@@ -75,20 +75,20 @@ AVStream *VideoStreamEncoder::createVideoStream(AVFormatContext *fmtContext) {
 bool VideoStreamEncoder::initEncoder() {
 	av_register_all();
 	outputFormat = guess_format(ENCODING_STRING, NULL, NULL);
-	if (!outoutFormat) {
+	if (!outputFormat) {
 		fprintf(stderr, "Could not find suitable output format for %s\n", ENCODING_STRING);
 		return false;
 	}
-	outputFormat->video_codec = CODEC_ID_H264;
+	outputFormat->video_codec = ENCODING_CODEC;
 	fmtContext = av_alloc_format_context();
 	if (!fmtContext) {
 		fprintf(stderr, "Can not alloc format context\n");
 		return false;
 	}
 
-	fmtContxt->oformat = outputFormat;
+	fmtContext->oformat = outputFormat;
 
-	videoStream = createVideoStream(fmtContext, outputFormat->video_codec);
+	videoStream = createVideoStream(fmtContext);
 	if (!videoStream)
 		return false;
 	
@@ -127,9 +127,14 @@ const unsigned char *VideoStreamEncoder::encodeVideoFrame(IplImage *image, int *
 	// without using memcpy. This is supposed to speed things up.
 	openCVFrame->data[0] = (uint8_t *)image->imageData;
 	
-	img_convert((AVPicture *)readToEncodeFrame, codecContext->pix_fmt, (AVPicture *)openCVFrame, openCVPixelFormt, codecContext->width, codecContext->height);
+	struct SwsContext *imgConvertCtx;
+	int width = codecContext->width;
+	int height = codecContext->height;
+	imgConvertCtx = sws_getContext(width, height, openCVPixelFormat, width, height, codecContext->pix_fmt, SWS_FAST_BILINEAR, NULL, NULL, NULL);
+	sws_scale(imgConvertCtx, openCVFrame->data, openCVFrame->linesize, 0, height, readyToEncodeFrame->data, readyToEncodeFrame->linesize);
+	//img_convert((AVPicture *)readToEncodeFrame, codecContext->pix_fmt, (AVPicture *)openCVFrame, openCVPixelFormt, codecContext->width, codecContext->height);
 
-	*outSize = avcodec_encode_video(codecContext, buffer, bufSize, readToEncodeFrame);
-	
+	*outSize = avcodec_encode_video(codecContext, buffer, bufSize, readyToEncodeFrame);
+	fprintf(stderr, "Encoded Frame size: %d\n", *outSize);
 	return buffer;
 }

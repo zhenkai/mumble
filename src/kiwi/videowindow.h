@@ -4,7 +4,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
-#include <opencv2/opencv.hpp>
 #include "VideoStreamSource.h"
 #include "VideoStreamSink.h"
 
@@ -19,11 +18,8 @@ class VideoWindow: public QDialog
 public:
 	VideoWindow();
 	~VideoWindow();
-	int openCamera(int device);
-	int openOutputFile(char *file);
-	int openInputFile(char *file);
 
-private slots:
+public slots:
 	void refreshImage(unsigned char *buf, size_t len);
 
 private:
