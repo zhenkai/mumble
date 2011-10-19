@@ -21,7 +21,7 @@ extern "C" {
 //#define ENCODING_CODEC (CODEC_ID_MJPEG)
 //#define RAW_STREAM_FORMAT (PIX_FMT_YUVJ420P)
 
-#define STREAM_BIT_RATE 1000000
+#define STREAM_BIT_RATE 512000
 
 /**
  * Encoder for video

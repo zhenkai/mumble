@@ -4,7 +4,7 @@ VideoStreamEncoder::VideoStreamEncoder(size_t bufSize, int videoWidth, int video
 	this->bufSize = bufSize;
 	this->videoWidth = videoWidth;
 	this->videoHeight = videoHeight;
-	this->fps = 10;
+	this->fps = fps;
 	this->openCVPixelFormat = pixelFormat;
 
 	initialized = false;
@@ -65,8 +65,7 @@ AVStream *VideoStreamEncoder::createVideoStream(AVFormatContext *fmtContext) {
 	codecContext->height = videoHeight;
 	codecContext->time_base.den = fps;
 	codecContext->time_base.num = 1;
-	// question: why do we need to send intra frame periodically?
-	codecContext->gop_size = fps;
+	codecContext->gop_size = 10;
 	codecContext->pix_fmt = RAW_STREAM_FORMAT;
 
 	return stream;
