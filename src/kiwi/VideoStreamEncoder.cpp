@@ -65,7 +65,7 @@ AVStream *VideoStreamEncoder::createVideoStream(AVFormatContext *fmtContext) {
 	codecContext->height = videoHeight;
 	codecContext->time_base.den = fps;
 	codecContext->time_base.num = 1;
-	codecContext->gop_size = 10;
+	codecContext->gop_size = GROUP_OF_PICTURES;
 	codecContext->pix_fmt = RAW_STREAM_FORMAT;
 
 	return stream;

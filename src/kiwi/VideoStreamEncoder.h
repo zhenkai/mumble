@@ -9,9 +9,13 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#define ENCODING_STRING ("h263")
-#define ENCODING_CODEC (CODEC_ID_H263P)
+#define ENCODING_STRING ("mpeg")
+#define ENCODING_CODEC (CODEC_ID_MPEG4)
 #define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
+
+//#define ENCODING_STRING ("h263")
+//#define ENCODING_CODEC (CODEC_ID_H263P)
+//#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
 
 //#define ENCODING_STRING ("h264")
 //#define ENCODING_CODEC (CODEC_ID_H264)
@@ -22,6 +26,8 @@ extern "C" {
 //#define RAW_STREAM_FORMAT (PIX_FMT_YUVJ420P)
 
 #define STREAM_BIT_RATE 512000
+#define FRAME_PER_SECOND 25 
+#define GROUP_OF_PICTURES 25
 
 /**
  * Encoder for video
@@ -30,7 +36,7 @@ extern "C" {
 class VideoStreamEncoder{
 public:
 	VideoStreamEncoder(size_t bufSize, int videoWidth, int videoHeight, 
-					   int fps = 25, PixelFormat pixelFormat = PIX_FMT_BGR24);
+					   int fps = FRAME_PER_SECOND, PixelFormat pixelFormat = PIX_FMT_BGR24);
 	virtual ~VideoStreamEncoder();
 
 	/**

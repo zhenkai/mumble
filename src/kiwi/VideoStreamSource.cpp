@@ -1,6 +1,6 @@
 #include "VideoStreamSource.h"
 #define BUF_SIZE 10000000
-#define FRAME_RATE 25
+#define FRAME_PER_SECOND 25 
 
 CameraVideoInput::CameraVideoInput() {
 	initialized = false;
@@ -62,7 +62,7 @@ VideoStreamSource::VideoStreamSource() {
 	if (image == NULL)
 		return;
 	
-	encoder = new VideoStreamEncoder(BUF_SIZE, image->width, image->height, FRAME_RATE);
+	encoder = new VideoStreamEncoder(BUF_SIZE, image->width, image->height, FRAME_PER_SECOND);
 
 	if (encoder == NULL)
 		return;
@@ -71,7 +71,7 @@ VideoStreamSource::VideoStreamSource() {
 	cvReleaseImage(&image);
 	captureTimer = new QTimer(this);
 	connect(captureTimer, SIGNAL(timeout()), this, SLOT(processFrame()));
-	captureTimer->start(1000 / FRAME_RATE);
+	captureTimer->start(1000 / FRAME_PER_SECOND);
 
 }
 

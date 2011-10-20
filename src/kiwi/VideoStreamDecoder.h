@@ -10,8 +10,13 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#define DECODING_CODEC (CODEC_ID_H263)
+#define FRAME_PER_SECOND 25 
+
+#define DECODING_CODEC (CODEC_ID_MPEG4)
 #define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
+
+//#define DECODING_CODEC (CODEC_ID_H263)
+//#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
 
 //#define DECODING_CODEC (CODEC_ID_H264)
 //#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
@@ -29,7 +34,7 @@ public:
 	 * @param fps: frame per second
 	 * @param pixelFormat: the pixel format of opencv IplImage; usually it's BGR24
 	 */
-	 VideoStreamDecoder(int bufSize, int fps = 25, PixelFormat pixelFormat = PIX_FMT_BGR24);
+	 VideoStreamDecoder(int bufSize, int fps = FRAME_PER_SECOND, PixelFormat pixelFormat = PIX_FMT_BGR24);
 	 virtual ~VideoStreamDecoder();
 
 	 /**
