@@ -1,4 +1,5 @@
 #include "VideoStreamEncoder.h"
+#include <QTime>
 
 VideoStreamEncoder::VideoStreamEncoder(size_t bufSize, int videoWidth, int videoHeight, int fps, PixelFormat pixelFormat){
 	this->bufSize = bufSize;
@@ -68,6 +69,11 @@ AVStream *VideoStreamEncoder::createVideoStream(AVFormatContext *fmtContext) {
 	codecContext->gop_size = GROUP_OF_PICTURES;
 	codecContext->pix_fmt = RAW_STREAM_FORMAT;
 
+	if (ENCODING_CODEC == CODEC_ID_H264) {
+		codecContext->profile = FF_PROFILE_H264_CONSTRAINED_BASELINE;
+		codecContext->level = 1;
+	}
+
 	return stream;
 }
 
@@ -133,7 +139,18 @@ const unsigned char *VideoStreamEncoder::encodeVideoFrame(IplImage *image, int *
 	sws_scale(imgConvertCtx, openCVFrame->data, openCVFrame->linesize, 0, height, readyToEncodeFrame->data, readyToEncodeFrame->linesize);
 	//img_convert((AVPicture *)readToEncodeFrame, codecContext->pix_fmt, (AVPicture *)openCVFrame, openCVPixelFormt, codecContext->width, codecContext->height);
 
+	// for some reason, you have to set strict monotonic pts mantually, or otherwise H264 won't work at work
+	if (ENCODING_CODEC == CODEC_ID_H264) {
+		static long frameNum = 0;
+		long pts = 90 * frameNum;
+		frameNum += 40;
+		readyToEncodeFrame->pts = pts;
+	}
+
+	QTime s = QTime::currentTime();
 	*outSize = avcodec_encode_video(codecContext, buffer, bufSize, readyToEncodeFrame);
-	fprintf(stderr, "Encoded Frame size: %d\n", *outSize);
+	QTime e = QTime::currentTime();
+	int t = s.msecsTo(e);
+	fprintf(stderr, "Encoded Frame size: %d, cost %d ms\n", *outSize, t);
 	return buffer;
 }
