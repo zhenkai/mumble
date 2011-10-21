@@ -151,6 +151,5 @@ const unsigned char *VideoStreamEncoder::encodeVideoFrame(IplImage *image, int *
 	*outSize = avcodec_encode_video(codecContext, buffer, bufSize, readyToEncodeFrame);
 	QTime e = QTime::currentTime();
 	int t = s.msecsTo(e);
-	fprintf(stderr, "Encoded Frame size: %d, cost %d ms\n", *outSize, t);
 	return buffer;
 }

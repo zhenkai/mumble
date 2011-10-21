@@ -3,7 +3,7 @@
 #include <QDialog>
 #include <QGridLayout>
 #include <QLabel>
-#include <QMap>
+#include <QHash>
 
 #include "VideoStreamSource.h"
 #include "VideoStreamSink.h"
@@ -36,20 +36,22 @@ private:
 	VideoStreamSource *source;
 	VideoStreamSink *sink;
 	QGridLayout *layout;
-	QMap<QString, QNamedFrame *> displays;
-	QNamedFrame *last;
+	QHash<QString, QNamedFrame *> displays;
 };
 
 class QNamedFrame : public QWidget {
 	private:
-		QLabel *nameLabel;
 		QLabel *imageLabel;
 		QVBoxLayout *layout;
+		int pos;
+		QString name;
 	public:
 		QNamedFrame();
 		~QNamedFrame();
 		void setName(QString name);
 		void setImage(QImage image);
+		void setPosition(int pos) {this->pos = pos;}
+		int getPosition() { return pos;}
 };
 
 
