@@ -5,7 +5,7 @@ NdnHandler::NdnHandler() {
 	createKeylocator();
 	h = ccn_create();
 	if (h == NULL || ccn_connect(h, NULL) == -1) {
-		fprintf("Failed to connect to ccnd.\n");
+		fprintf(stderr, "Failed to connect to ccnd.\n");
 		abort();
 	}
 }
@@ -27,9 +27,7 @@ void NdnHandler::initKeystore() {
 	keystore = ccn_keystore_create();
 	struct ccn_charbuf *temp = ccn_charbuf_create();
 	ccn_charbuf_putf(temp, "%s/.ccnx/.ccnx_keystore", getenv("HOME"));
-	int res = ccn_keystore_init(keystore,
-								ccn_charbuf_as_string(temp);
-								(char *)"Th1s1sn0t8g00dp8ssw0rd.");
+	int res = ccn_keystore_init(keystore, ccn_charbuf_as_string(temp), (char *)"Th1s1sn0t8g00dp8ssw0rd.");
 	if (res != 0) {
 		fprintf(stderr, "Failed to initialized keystore %s\n", ccn_charbuf_as_string(temp));
 		abort();
@@ -41,7 +39,7 @@ void NdnHandler::createKeylocator() {
 	keylocator = ccn_charbuf_create();
 	ccn_charbuf_append_tt(keylocator, CCN_DTAG_KeyLocator, CCN_DTAG);
 	ccn_charbuf_append_tt(keylocator, CCN_DTAG_Key, CCN_DTAG);
-	res = ccn_append_pubkey_blob(keylocator, ccn_keystore_public_key(keystore));
+	int res = ccn_append_pubkey_blob(keylocator, ccn_keystore_public_key(keystore));
 	if (res < 0) {
 		ccn_charbuf_destroy(&keylocator);
 	}else {

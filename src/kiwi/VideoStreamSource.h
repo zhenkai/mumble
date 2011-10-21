@@ -10,7 +10,8 @@ extern "C" {
 #include <ccn/uri.h>
 }
 
-#include <VideoStreamEncoder.h>
+#include "VideoStreamEncoder.h"
+#include "NdnHandler.h"
 
 class CameraVideoInput{
 public:
@@ -29,6 +30,7 @@ class VideoStreamSource: public QThread{
 public:
 	void run();	
 	VideoStreamSource();
+	~VideoStreamSource();
 	void setNamePrefix(QString prefix) {namePrefix = prefix;}
 
 signals:
@@ -39,11 +41,12 @@ private slots:
 	void processFrame();
 
 private:
-	void generateNdnContent();
+	void generateNdnContent(const unsigned char *buffer, int len);
 
 private:
 	CameraVideoInput *cam;
 	VideoStreamEncoder *encoder;
+	NdnHandler *nh;
 	QTimer *captureTimer;
 	struct ccn_closure *publish;	
 	long seq;

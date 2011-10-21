@@ -7,6 +7,8 @@ extern "C" {
 #include <ccn/keystore.h>
 #include <ccn/signing.h>
 #include <ccn/uri.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef __cplusplus
 }
 
