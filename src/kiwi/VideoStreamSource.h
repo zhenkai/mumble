@@ -29,6 +29,7 @@ class VideoStreamSource: public QThread{
 public:
 	void run();	
 	VideoStreamSource();
+	void setNamePrefix(QString prefix) {namePrefix = prefix;}
 
 signals:
 	void frameProcessed(unsigned char *buf, size_t len);
@@ -38,11 +39,15 @@ private slots:
 	void processFrame();
 
 private:
+	void generateNdnContent();
+
+private:
 	CameraVideoInput *cam;
 	VideoStreamEncoder *encoder;
 	QTimer *captureTimer;
 	struct ccn_closure *publish;	
 	long seq;
 	bool initialized;
+	QString namePrefix;
 };
 #endif
