@@ -36,11 +36,11 @@ QImage VideoWindow::IplImage2QImage(const IplImage *iplImage) {
 	int scaleHeight;
 	switch (displayNum) {
 	case 1:  
-	case 2: scaleHeight = 640; break;
+	case 2: scaleHeight = 480; break;
 	case 3: 
 	case 4:
 	case 5:
-	case 6: scaleHeight = 400; break;
+	case 6: scaleHeight = 320; break;
 	default: scaleHeight = 270; 
 	}
 
@@ -70,17 +70,17 @@ void VideoWindow::refreshImage(unsigned char *buf, size_t len) {
 	}
 	cvReleaseImage(&decodedImage);
 	count ++;
-	if (count == 250) {
+	if (count == 200) {
 		alterDisplayNumber("4", 1);
 		alterDisplayNumber("5", 1);
 	}
-	if (count == 500) {
+	if (count == 400) {
 		alterDisplayNumber("2", 0);
 	}
-	if (count == 750) {
+	if (count == 600) {
 		alterDisplayNumber("5", 0);
 	}
-	if (count == 1000) {
+	if (count == 800) {
 		alterDisplayNumber("1", 0);
 		alterDisplayNumber("4", 0);
 	}
@@ -142,6 +142,8 @@ void VideoWindow::alterDisplayNumber(QString name, int addOrDel) {
 			}
 		}
 	}
+
+	adjustSize();
 }
 
 QNamedFrame::QNamedFrame() {
