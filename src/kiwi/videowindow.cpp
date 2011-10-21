@@ -167,8 +167,8 @@ void QNamedFrame::setName(QString name) {
 
 void QNamedFrame::setImage(QImage image) {
 	QPainter *painter = new QPainter(&image);
-	painter->setPen(Qt::red);
-	painter->setFont(QFont("Vernada", 20));
+	painter->setPen(Qt::magenta);
+	painter->setFont(QFont("Helvetica", 20));
 	painter->drawText(image.rect(), Qt::AlignLeft | Qt::AlignTop, name);
 	imageLabel->setPixmap(QPixmap::fromImage(image));
 	delete painter;
