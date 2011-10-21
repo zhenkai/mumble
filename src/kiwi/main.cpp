@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-//	Q_INIT_RESOURCE(kiwi);
+	Q_INIT_RESOURCE(kiwi);
 	QApplication app(argc, argv);
 	
 #ifdef __APPLE__

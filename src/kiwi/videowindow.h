@@ -1,13 +1,19 @@
 #ifndef VIDEOWINDOW_H
 #define VIDEOWINDOW_H
 #include <QDialog>
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
+#include <QMap>
 
 #include "VideoStreamSource.h"
 #include "VideoStreamSink.h"
 
-#define MAX_USER_NUM 12
+#define MAX_USER_NUM 9
+
+struct coordinates {
+	int row;
+	int col;
+};
 
 class QNamedFrame;
 
@@ -21,12 +27,17 @@ public:
 
 public slots:
 	void refreshImage(unsigned char *buf, size_t len);
+	void alterDisplayNumber(QString name, int addOrDel);
 
+private:
+	QImage IplImage2QImage(const IplImage *iplImage);
+	
 private:
 	VideoStreamSource *source;
 	VideoStreamSink *sink;
-	QVBoxLayout *layout;
-	QNamedFrame *selfImage;
+	QGridLayout *layout;
+	QMap<QString, QNamedFrame *> displays;
+	QNamedFrame *last;
 };
 
 class QNamedFrame : public QWidget {
@@ -40,5 +51,6 @@ class QNamedFrame : public QWidget {
 		void setName(QString name);
 		void setImage(QImage image);
 };
+
 
 #endif

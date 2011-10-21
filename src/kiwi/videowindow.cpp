@@ -7,25 +7,23 @@
 
 #define MAX_NAME_LEN 30
 
+/***********************************
+ * displays at most 9 videos for now
+ ***********************************/
+
 VideoWindow::VideoWindow(): QDialog(0) {
-	layout = new QVBoxLayout(this);
-	selfImage = new QNamedFrame();
-	selfImage->setName("/usr/local");
-	layout->addWidget(selfImage);
-	setLayout(layout);
+	last = NULL;
+	layout = new QGridLayout(this, 3, 3);
 	source = new VideoStreamSource();
 	sink = new VideoStreamSink();
-
 	connect(source, SIGNAL(frameProcessed(unsigned char *, size_t)), this, SLOT(refreshImage(unsigned char *, size_t)));
-//	QTimer *refresh = new QTimer(this);
-//	connect(refresh, SIGNAL(timeout()), this, SLOT(refreshImage()));
-//	refresh->start(25);
+
 }
 
 VideoWindow::~VideoWindow() {
 }
 
-static QImage IplImage2QImage(const IplImage *iplImage) {
+QImage VideoWindow::IplImage2QImage(const IplImage *iplImage) {
 	if (iplImage == NULL)
 		return QImage();
 
@@ -49,9 +47,52 @@ void VideoWindow::refreshImage(unsigned char *buf, size_t len) {
 	IplImage *decodedImage = sink->getNextFrame(buf, len);
 	QImage image = IplImage2QImage(decodedImage);
 	selfImage->setImage(image);
-	//cvReleaseImage(&decodedImage);
+	cvReleaseImage(&decodedImage);
 }
 
+/**************
+ * 1 | 2 | 5 |
+ * 3 | 4 | 6 |
+ * 7 | 8 | 9 |
+ *************/
+static struct coordinates displayTable[9] = {{0, 0}, {0, 1}, {1, 0}, {1, 1} \
+	{0, 2}, {1, 2}, {2, 0}, {2, 1}, {2, 2}};
+
+void VideoWindow::alterDisplayNumber(QString name, int addOrDel) {
+	// add
+	if (addOrDel > 0) {
+		if (displays.contains(name)	) {
+			QWarning() << "User " + name + " already exists. No display added.\n";
+			return;
+		}
+		QNamedFrame *disp = new QNamedFrame();
+		disp->setName(name);
+		displays.insert(name, disp);
+		int displayNum = displays.size();
+		struct coordinates co = displayTable[displayNum - 1];
+		layout->addWidget(disp, co.row, co.col);
+		last = disp;
+	}
+	// del
+	else {
+		if (!displays.contains(name)) {
+			QWarning() << "User " + name + " does not exist. No display deleted.\n";
+			return;
+		}
+		else {
+			QNamedFrame *disp = displays[name];
+			if (disp != NULL) {
+				struct coordinates co = disp->getCoordinates();
+				layout->removeWidget(disp);
+				layout->removeWidget(last);
+				layout->addWidget(last, co.row, co.col);
+				delete disp;
+			}
+			displays.remove(name);
+		}
+	}
+
+}
 
 QNamedFrame::QNamedFrame() {
 	nameLabel = new QLabel;
@@ -78,3 +119,4 @@ void QNamedFrame::setName(QString name) {
 void QNamedFrame::setImage(QImage image) {
 	imageLabel->setPixmap(QPixmap::fromImage(image));
 }
+

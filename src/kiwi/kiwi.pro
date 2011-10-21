@@ -8,6 +8,6 @@ RESOURCES = kiwi.qrc
 DIST *=  
 
 PKGCONFIG = opencv libavcodec libavformat libswscale libavutil
-ICON = 
+ICON = kiwi.icns
 
 
