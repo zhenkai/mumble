@@ -3,6 +3,7 @@
 #define FRAME_PER_SECOND 25 
 #define MAX_EDGE_LENGTH 640
 #define FRESHNESS 2
+#define BROADCAST_PREFIX ("/ndn/broadcast")
 
 CameraVideoInput::CameraVideoInput() {
 	initialized = false;
@@ -71,6 +72,8 @@ VideoStreamSource::VideoStreamSource() {
 	
 	nh = new NdnHandler();
 
+	readNdnParams();
+
 	initialized = true;
 	cvReleaseImage(&image);
 	captureTimer = new QTimer(this);
@@ -100,6 +103,52 @@ void VideoStreamSource::processFrame() {
 	generateNdnContent(encodedFrame, frameSize);
 
 	seq++;
+}
+
+void VideoStreamSource::readNdnParams() {
+	QDomDocument settings;
+	QString configFileName = QDir::homePath() + "/.actd/.config";
+	QFile config(configFileName);
+	if (!config.exists()) {
+		fprintf(stderr, "Config file does not exist\n");
+		abort();
+	}
+	if (!config.open(QIODevice::ReadOnly)) {
+		fprintf(stderr, "Can not open config file\n");
+		abort();
+	}
+	if (!settings.setContent(&config)) {
+		config.close();
+		fprintf(stderr, "Can not parse config file\n");
+		abort();
+	}
+
+	QDomElement docElem = settings.documentElement();
+	QDomNode n = docElem.firstChild();
+	while (!n.isNull()) {
+		if (n.nodeName() == "prefix") {
+			namePrefix = n.toElement().text();
+		}
+		else if (n.nodeName() == "confName") {
+			confName = n.toElement().text();
+		}
+		n = n.nextSibling();
+	}
+
+	if (namePrefix == "" || confName == "") {
+		fprintf(stderr, "Null name prefix or conference name\n");
+		abort();
+	}
+}
+
+void VideoStreamSource::registerInterest() {
+	publishInfo = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
+	publishInfo->p = &publishInfoCallback;
+	struct ccn_charbuf *path = ccn_charbuf_create();
+	ccn_name_from_uri(path, (const char *)BROADCAST_PREFIX);
+	ccn_name_append_str(path, confName.toLocal8Bit().constData());
+	ccn_name_append_str(path, "video-list");
+	ccn_set_interest_filter(nh->h, path, publish);
 }
 
 void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len) {
@@ -136,5 +185,7 @@ void VideoStreamSource::run() {
 		usleep(100);
 	}
 }
+
+enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info) {
 
 

@@ -42,15 +42,20 @@ private slots:
 
 private:
 	void generateNdnContent(const unsigned char *buffer, int len);
+	void readNdnParams();
+	void registerInterest();
 
 private:
 	CameraVideoInput *cam;
 	VideoStreamEncoder *encoder;
 	NdnHandler *nh;
 	QTimer *captureTimer;
-	struct ccn_closure *publish;	
+	struct ccn_closure *publishInfo;	
 	long seq;
 	bool initialized;
 	QString namePrefix;
+	QString confName;
 };
+
+static enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info);
 #endif
