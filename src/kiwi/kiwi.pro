@@ -1,4 +1,4 @@
-CONFIG += console link_pkgconfig
+CONFIG += console link_pkgconfig 
 TEMPLATE = app
 TARGET = kiwi
 HEADERS = VideoWindow.h VideoStreamEncoder.h VideoStreamDecoder.h VideoStreamSource.h VideoStreamSink.h NdnHandler.h
@@ -12,5 +12,5 @@ INCLUDEPATH *= /usr/local/include
 LIBS *= -lccn -lssl -lcrypto
 PKGCONFIG = opencv libavcodec libavformat libswscale libavutil
 ICON = kiwi.icns
-
+QT += xml
 

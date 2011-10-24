@@ -1,4 +1,6 @@
 #include "VideoStreamSource.h"
+#include <QtXml>
+#include <QMessageBox>
 #define BUF_SIZE 10000000
 #define FRAME_PER_SECOND 25 
 #define MAX_EDGE_LENGTH 640
@@ -75,7 +77,7 @@ VideoStreamSource::VideoStreamSource() {
 
 	readNdnParams();
 
-	sa = new SourceAnnouncer(confName);
+	sa = new SourceAnnouncer(confName, namePrefix);
 
 	initialized = true;
 	cvReleaseImage(&image);
@@ -179,14 +181,14 @@ void VideoStreamSource::run() {
 	}
 }
 
-void SourceAnnouncer::SourceAnnouncer(QString confName, QString prefix) {
-	gSournceAnnouncer = this;
+SourceAnnouncer::SourceAnnouncer(QString confName, QString prefix) {
+	gSourceAnnouncer = this;
 	leaving = false;
 	this->confName = confName;
 	this->prefix = prefix;
 	username = getenv("KIWI_USERNAME");
-	if (username.empty()) {
-		QMessageBox::warning(this, "Kiwi", "Environment variable \"KIWI_USERNAME\" not set. Program terminating.");
+	if (username.isEmpty()) {
+		QMessageBox::warning(0, "Kiwi", "Environment variable \"KIWI_USERNAME\" not set. Program terminating.");
 		std::exit(0);
 	}
 	nh = new NdnHandler();
@@ -207,7 +209,7 @@ void SourceAnnouncer::registerInterest() {
 	ccn_name_from_uri(path, (const char *)BROADCAST_PREFIX);
 	ccn_name_append_str(path, confName.toLocal8Bit().constData());
 	ccn_name_append_str(path, "video-list");
-	ccn_set_interest_filter(nh->h, path, publish);
+	ccn_set_interest_filter(nh->h, path, publishInfo);
 }
 
 void SourceAnnouncer::generateSourceInfo() {
@@ -248,14 +250,14 @@ void SourceAnnouncer::generateSourceInfo() {
 	ccn_put(nh->h, content->buf, content->length);
 	
 	ccn_charbuf_destroy(&signed_info);
-	ccn_charbuf_destroy(&name);
-	ccn_charbuf_destroy(*content);
+	ccn_charbuf_destroy(&path);
+	ccn_charbuf_destroy(&content);
 
 	delete buffer;
 
 	// reset announce timer
-	announceTimer.stop();
-	announceTimer.start();
+	announceTimer->stop();
+	announceTimer->start();
 }
 
 enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info) {
@@ -264,7 +266,7 @@ enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upca
 	{
 		struct ccn_parsed_interest *pi = info->pi;
 		struct ccn_indexbuf *comps = info->interest_comps;
-		const unsigned char *buf = info->ccnb;
+		const unsigned char *buf = info->interest_ccnb;
 		int AnswerOriginKind = ccn_fetch_tagged_nonNegativeInteger(CCN_DTAG_AnswerOriginKind, buf, 
 									pi->offset[CCN_PI_B_AnswerOriginKind],
 									pi->offset[CCN_PI_E_AnswerOriginKind]);

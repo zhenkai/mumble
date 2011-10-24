@@ -1,7 +1,6 @@
 #ifndef NDNHANDLER_H
 #define NDNHANDLER_H
 extern "C" {
-#endif
 #include <ccn/ccn.h>
 #include <ccn/charbuf.h>
 #include <ccn/keystore.h>
@@ -9,7 +8,6 @@ extern "C" {
 #include <ccn/uri.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __cplusplus
 }
 
 class NdnHandler {

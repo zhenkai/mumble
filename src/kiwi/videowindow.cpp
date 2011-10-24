@@ -60,6 +60,7 @@ QImage VideoWindow::IplImage2QImage(const IplImage *iplImage) {
 
 
 void VideoWindow::refreshImage(unsigned char *buf, size_t len) {
+	/*
 	static int count = 0;
 	IplImage *decodedImage = sink->getNextFrame(buf, len);
 	QImage image = IplImage2QImage(decodedImage);
@@ -84,6 +85,7 @@ void VideoWindow::refreshImage(unsigned char *buf, size_t len) {
 		alterDisplayNumber("1", 0);
 		alterDisplayNumber("4", 0);
 	}
+	*/
 
 }
 

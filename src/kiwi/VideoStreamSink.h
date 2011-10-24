@@ -50,7 +50,7 @@ public:
 	void refreshReceived();
 	bool getNeedExclude() {return needExclude; }
 signals:
-	void alivenessTimeout();
+	void alivenessTimeout(QString);
 private slots:
 	void excludeNotNeeded();
 	void noLongerActive();

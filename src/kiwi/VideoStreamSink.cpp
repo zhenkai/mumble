@@ -31,7 +31,7 @@ SourceList::~SourceList() {
 		delete nh;
 }
 
-void MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
+MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
 	needExclude = false;
 	namePrefix = prefix;
 	this->username = username;
@@ -59,5 +59,5 @@ void MediaSource::excludeNotNeeded() {
 }
 
 void MediaSource::noLongerActive() {
-	emit alivenessTimeout(nameprefix + username);	
+	emit alivenessTimeout(namePrefix + username);	
 }

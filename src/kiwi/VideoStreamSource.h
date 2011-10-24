@@ -5,7 +5,9 @@
 #include <QTimer>
 #include <QThread>
 #include <QString>
-#include <QBypeArray>
+#include <QByteArray>
+#include <QDir>
+#include <QFile>
 extern "C" {
 #include <ccn/ccn.h>
 #include <ccn/keystore.h>
@@ -62,11 +64,12 @@ private:
 };
 
 
-class SourceAnnouncer {
+class SourceAnnouncer: public QThread {
+	Q_OBJECT
 public:
 	SourceAnnouncer(QString confName, QString prefix);
 
-private slots:
+public slots:
 	void generateSourceInfo();
 private:
 	void registerInterest();
