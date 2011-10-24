@@ -3,7 +3,8 @@
 #define FRAME_PER_SECOND 25 
 #define MAX_EDGE_LENGTH 640
 #define FRESHNESS 2
-#define BROADCAST_PREFIX ("/ndn/broadcast")
+#define ANNOUNCE_INTERVAL 598 
+#define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 
 CameraVideoInput::CameraVideoInput() {
 	initialized = false;
@@ -74,6 +75,8 @@ VideoStreamSource::VideoStreamSource() {
 
 	readNdnParams();
 
+	sa = new SourceAnnouncer(confName);
+
 	initialized = true;
 	cvReleaseImage(&image);
 	captureTimer = new QTimer(this);
@@ -141,16 +144,6 @@ void VideoStreamSource::readNdnParams() {
 	}
 }
 
-void VideoStreamSource::registerInterest() {
-	publishInfo = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
-	publishInfo->p = &publishInfoCallback;
-	struct ccn_charbuf *path = ccn_charbuf_create();
-	ccn_name_from_uri(path, (const char *)BROADCAST_PREFIX);
-	ccn_name_append_str(path, confName.toLocal8Bit().constData());
-	ccn_name_append_str(path, "video-list");
-	ccn_set_interest_filter(nh->h, path, publish);
-}
-
 void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len) {
 	struct ccn_charbuf *signed_info = ccn_charbuf_create();
 	int res = ccn_signed_info_create(signed_info, nh->getPublicKeyDigest(), nh->getPublicKeyDigestLength(), NULL, CCN_CONTENT_DATA, FRESHNESS, NULL, nh->keylocator);
@@ -186,6 +179,107 @@ void VideoStreamSource::run() {
 	}
 }
 
+void SourceAnnouncer::SourceAnnouncer(QString confName, QString prefix) {
+	gSournceAnnouncer = this;
+	leaving = false;
+	this->confName = confName;
+	this->prefix = prefix;
+	username = getenv("KIWI_USERNAME");
+	if (username.empty()) {
+		QMessageBox::warning(this, "Kiwi", "Environment variable \"KIWI_USERNAME\" not set. Program terminating.");
+		std::exit(0);
+	}
+	nh = new NdnHandler();
+	registerInterest();
+	announceTimer = new QTimer(this);
+	announceTimer->setInterval(ANNOUNCE_INTERVAL * 1000);
+	announceTimer->setSingleShot(true);
+	connect(announceTimer, SIGNAL(timeout()), this, SLOT(generateSourceInfo()));
+	generateSourceInfo();
+
+	start();
+}
+
+void SourceAnnouncer::registerInterest() {
+	publishInfo = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
+	publishInfo->p = &publishInfoCallback;
+	struct ccn_charbuf *path = ccn_charbuf_create();
+	ccn_name_from_uri(path, (const char *)BROADCAST_PREFIX);
+	ccn_name_append_str(path, confName.toLocal8Bit().constData());
+	ccn_name_append_str(path, "video-list");
+	ccn_set_interest_filter(nh->h, path, publish);
+}
+
+void SourceAnnouncer::generateSourceInfo() {
+	struct ccn_charbuf *path = ccn_charbuf_create();
+	ccn_name_from_uri(path, (const char *)BROADCAST_PREFIX);
+	ccn_name_append_str(path, confName.toLocal8Bit().constData());
+	ccn_name_append_str(path, "video-list");
+	ccn_name_append_str(path, username.toLocal8Bit().constData());
+	
+	QString qsInfo; 
+	qsInfo.append("<user><username>");
+	qsInfo.append(username);
+	qsInfo.append("</username>");
+	if (!leaving) {
+		qsInfo.append("<prefix>");
+		qsInfo.append(prefix);
+		qsInfo.append("</prefix>");
+	} else {
+		qsInfo.append("<leave>true</leave>");
+	}
+	qsInfo.append("</user>");
+
+	QByteArray qba = qsInfo.toLocal8Bit();
+	char *buffer = new char[qba.size() + 1];
+	memcpy(buffer, qba.constData(), qba.size());
+	buffer[qba.size()] = '\0';
+
+	struct ccn_charbuf *content = ccn_charbuf_create();
+	
+	struct ccn_charbuf *signed_info = ccn_charbuf_create();
+	int res = ccn_signed_info_create(signed_info, nh->getPublicKeyDigest(), nh->getPublicKeyDigestLength(), NULL, CCN_CONTENT_DATA, FRESHNESS, NULL, nh->keylocator);
+	if (res < 0) {
+		fprintf(stderr, "Failed to create signed_info\n");
+		abort();
+	}
+	
+	res = ccn_encode_ContentObject(content, path, signed_info, buffer, strlen(buffer), NULL, nh->getPrivateKey());
+	ccn_put(nh->h, content->buf, content->length);
+	
+	ccn_charbuf_destroy(&signed_info);
+	ccn_charbuf_destroy(&name);
+	ccn_charbuf_destroy(*content);
+
+	delete buffer;
+
+	// reset announce timer
+	announceTimer.stop();
+	announceTimer.start();
+}
+
 enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info) {
+	switch(kind) {
+	case CCN_UPCALL_INTEREST:
+	{
+		struct ccn_parsed_interest *pi = info->pi;
+		struct ccn_indexbuf *comps = info->interest_comps;
+		const unsigned char *buf = info->ccnb;
+		int AnswerOriginKind = ccn_fetch_tagged_nonNegativeInteger(CCN_DTAG_AnswerOriginKind, buf, 
+									pi->offset[CCN_PI_B_AnswerOriginKind],
+									pi->offset[CCN_PI_E_AnswerOriginKind]);
+		// accept stale data
+		if (AnswerOriginKind == 4) {
+			// only response to interests that accept stale data (from the newcomers)
+			// if we receive such interests, it means that our (stale) sourceinfo is not cached anymore
+			gSourceAnnouncer->generateSourceInfo();
+		}
+		break;
+	}
+	default:
+		break;
+	}
+	return (CCN_UPCALL_RESULT_OK);
+}
 
 

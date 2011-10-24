@@ -4,6 +4,8 @@
 #include <opencv/highgui.h>
 #include <QTimer>
 #include <QThread>
+#include <QString>
+#include <QBypeArray>
 extern "C" {
 #include <ccn/ccn.h>
 #include <ccn/keystore.h>
@@ -12,6 +14,8 @@ extern "C" {
 
 #include "VideoStreamEncoder.h"
 #include "NdnHandler.h"
+
+class SourceAnnouncer;
 
 class CameraVideoInput{
 public:
@@ -43,19 +47,39 @@ private slots:
 private:
 	void generateNdnContent(const unsigned char *buffer, int len);
 	void readNdnParams();
-	void registerInterest();
+
 
 private:
 	CameraVideoInput *cam;
 	VideoStreamEncoder *encoder;
 	NdnHandler *nh;
+	SourceAnnouncer *sa;
 	QTimer *captureTimer;
-	struct ccn_closure *publishInfo;	
 	long seq;
 	bool initialized;
 	QString namePrefix;
 	QString confName;
 };
 
+
+class SourceAnnouncer {
+public:
+	SourceAnnouncer(QString confName, QString prefix);
+
+private slots:
+	void generateSourceInfo();
+private:
+	void registerInterest();
+private:
+	QString confName;
+	QString username;
+	QString prefix;
+	struct ccn_closure *publishInfo;	
+	NdnHandler *nh;
+	QTimer *announceTimer;
+	bool leaving;
+};
+
 static enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info);
+static SourceAnnouncer *gSourceAnnouncer;
 #endif
