@@ -13,6 +13,7 @@ class SourceList: public QThread {
 public:
 	SourceList();
 	virtual ~SourceList();
+	void readNdnParams();
 	void run();
 	friend class MediaFetcher;
 
@@ -22,6 +23,7 @@ public slots:
 	void alivenessTimerExpired(QString);
 private:
 	NdnHandler *nh;
+	QString confName;
 	QHash<QString, MediaSource *> list;
 };
 
