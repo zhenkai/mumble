@@ -44,6 +44,9 @@ void RemoteUser::refreshReceived() {
 }
 
 bool RemoteUser::needRefresh() {
+	if (left)
+		return false;
+
 	QDateTime now = QDateTime::currentDateTime();
 	if (timestamp.secsTo(now) > REFRESH_INTERVAL) {
 		return true;
@@ -52,8 +55,10 @@ bool RemoteUser::needRefresh() {
 }
 
 bool RemoteUser::isStaled() {
+	/*
 	if (left)
 		return true;
+	*/
 
 	QDateTime now = QDateTime::currentDateTime();
 	if (timestamp.isNull()) {
