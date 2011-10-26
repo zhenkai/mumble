@@ -87,17 +87,23 @@ VideoStreamSource::VideoStreamSource() {
 	connect(captureTimer, SIGNAL(timeout()), this, SLOT(processFrame()));
 	captureTimer->start(1000 / FRAME_PER_SECOND);
 
+	bRunning = true;
 	start();
 
 }
 
 VideoStreamSource::~VideoStreamSource() {
+	bRunning = false;
+	if (isRunning())
+		wait();
 	if (cam != NULL)
 		delete cam;
 	if (encoder != NULL)
 		delete encoder;
-	if (nh != NULL)
+	if (nh != NULL) {
 		delete nh;
+		nh = NULL;
+	}
 }
 
 void VideoStreamSource::processFrame() {
@@ -105,9 +111,9 @@ void VideoStreamSource::processFrame() {
 	int frameSize = 0;
 	// do not free encodedFrame, as it is a pointer to the internal buffer of encoder
 	const unsigned char *encodedFrame = encoder->encodeVideoFrame(currentFrame, &frameSize);
-	emit frameProcessed((unsigned char *)encodedFrame, frameSize);
+	IplImage *localDisplayFrame = cvCloneImage(currentFrame);
+	emit imageCaptured("Myself", localDisplayFrame);
 	cvReleaseImage(&currentFrame);
-
 	generateNdnContent(encodedFrame, frameSize);
 
 	seq++;
@@ -186,8 +192,9 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 }
 
 void VideoStreamSource::run() {
-	while(true) {
-		int res = ccn_run(nh->h, 0);
+	int res = 0;
+	while(res >= 0 && bRunning) {
+		res = ccn_run(nh->h, 0);
 		usleep(100);
 	}
 }
@@ -195,6 +202,7 @@ void VideoStreamSource::run() {
 SourceAnnouncer::SourceAnnouncer(QString confName, QString prefix) {
 	gSourceAnnouncer = this;
 	leaving = false;
+
 	this->confName = confName;
 	this->prefix = prefix;
 	username = getenv("KIWI_USERNAME");
@@ -210,7 +218,21 @@ SourceAnnouncer::SourceAnnouncer(QString confName, QString prefix) {
 	connect(announceTimer, SIGNAL(timeout()), this, SLOT(generateSourceInfo()));
 	generateSourceInfo();
 
+	bRunning = true;
 	start();
+}
+
+SourceAnnouncer::~SourceAnnouncer() {
+	bRunning = false;
+	if (isRunning())
+		wait();
+
+	if (nh != NULL) {
+		delete nh;
+		nh = NULL;
+	}
+	if (publishInfo != NULL)
+		free(publishInfo);
 }
 
 void SourceAnnouncer::registerInterest() {
@@ -269,6 +291,14 @@ void SourceAnnouncer::generateSourceInfo() {
 	// reset announce timer
 	announceTimer->stop();
 	announceTimer->start();
+}
+
+void SourceAnnouncer::run() {
+	int res = 0;
+	while(res >= 0 && bRunning) {
+		res = ccn_run(nh->h, 0);
+		usleep(100);
+	}
 }
 
 enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info) {

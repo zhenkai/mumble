@@ -18,9 +18,23 @@ VideoWindow::VideoWindow(): QDialog(0) {
 	sink = new VideoStreamSink();
 	connect(sink, SIGNAL(imageDecoded(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
 	connect(sink, SIGNAL(sourceNumChanged(QString, int)), this, SLOT(alterDisplayNumber(QString, int)));
+	connect(source, SIGNAL(imageCaptured(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
+	alterDisplayNumber("Myself", 1);
 }
 
 VideoWindow::~VideoWindow() {
+	if (source != NULL)
+		delete source;
+	if (sink != NULL)
+		delete sink;
+
+	QHash<QString, QNamedFrame*>::const_iterator it = displays.constBegin();
+	for(; it != displays.constEnd(); it++) {
+		QNamedFrame *nf = NULL;
+		nf = it.value();
+		if (nf != NULL)
+			delete nf;
+	}
 }
 
 QImage VideoWindow::IplImage2QImage(const IplImage *iplImage) {
@@ -147,7 +161,7 @@ void QNamedFrame::setName(QString name) {
 
 void QNamedFrame::setImage(QImage image) {
 	QPainter *painter = new QPainter(&image);
-	painter->setPen(Qt::magenta);
+	painter->setPen(Qt::black);
 	painter->setFont(QFont("Helvetica", 20));
 	painter->drawText(image.rect(), Qt::AlignLeft | Qt::AlignTop, name);
 	imageLabel->setPixmap(QPixmap::fromImage(image));

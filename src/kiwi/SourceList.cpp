@@ -12,14 +12,29 @@ SourceList::SourceList() {
 	acceptStaleData = true;
 	discoverClosure = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
 	discoverClosure->p = &handle_source_info_content;
+	enumerate();
+	bRunning = true;
 	start();
 }
 
 SourceList::~SourceList() {
-	if (nh != NULL)
+	bRunning = false;
+	if (isRunning())
+		wait();
+	if (nh != NULL) {
 		delete nh;
+		nh = NULL;
+	}
 	if (discoverClosure != NULL)
 		free(discoverClosure);
+	
+	QHash<QString, MediaSource *>::const_iterator it = list.constBegin();
+	for(; it != list.constEnd(); it++) {
+		MediaSource *ms = NULL;
+		ms = it.value();
+		if (ms != NULL)
+			delete ms;
+	}
 }
 
 void SourceList::readNdnParams() {
@@ -256,6 +271,11 @@ int SourceList::removeMediaSource(QString username) {
 }
 
 void SourceList::run() {
+	int res = 0;
+	while(res >= 0 && bRunning) {
+		res = ccn_run(nh->h, 0);
+		usleep(20);
+	}
 }
 
 MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {

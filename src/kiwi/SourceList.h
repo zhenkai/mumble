@@ -42,6 +42,7 @@ private:
 	QHash<QString, MediaSource *> list;
 	struct ccn_closure *discoverClosure;
 	bool acceptStaleData;
+	bool bRunning;
 };
 
 class MediaSource: public QObject {

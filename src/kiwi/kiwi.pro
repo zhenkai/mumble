@@ -7,7 +7,7 @@ RESOURCES = kiwi.qrc
 
 DIST *= kiwi.icns kiwi.svg
 
-QMAKE_LIBDIR *= /usr/local/lib
+QMAKE_LIBDIR *= /usr/local/lib /usr/lib
 INCLUDEPATH *= /usr/local/include
 LIBS *= -lccn -lssl -lcrypto
 PKGCONFIG = opencv libavcodec libavformat libswscale libavutil

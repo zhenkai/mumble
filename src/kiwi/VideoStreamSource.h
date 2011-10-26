@@ -40,7 +40,7 @@ public:
 	void setNamePrefix(QString prefix) {namePrefix = prefix;}
 
 signals:
-	void frameProcessed(unsigned char *buf, size_t len);
+	void imageCaptured(QString, IplImage *);
 
 
 private slots:
@@ -62,6 +62,7 @@ private:
 	QString namePrefix;
 	QString confName;
 	QString username;
+	bool bRunning;
 };
 
 
@@ -69,6 +70,8 @@ class SourceAnnouncer: public QThread {
 	Q_OBJECT
 public:
 	SourceAnnouncer(QString confName, QString prefix);
+	~SourceAnnouncer();
+	void run();
 
 public slots:
 	void generateSourceInfo();
@@ -82,6 +85,7 @@ private:
 	NdnHandler *nh;
 	QTimer *announceTimer;
 	bool leaving;
+	bool bRunning;
 };
 
 

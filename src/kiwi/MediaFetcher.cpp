@@ -19,15 +19,27 @@ MediaFetcher::MediaFetcher (SourceList *sourceList) {
 	fetchTimer->setInterval(1000 / FPS);
 	connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetch()));
 	fetchTimer->start();
+	bRunning = true;
 	start();
 }
 
 MediaFetcher::~MediaFetcher() {
-	if (nh != NULL)
+	bRunning = false;
+	if (isRunning())
+		wait();
+	if (nh != NULL) {
 		delete nh;
+		nh = NULL;
+	}
 }
 
 void MediaFetcher::run() {
+	int res = 0;
+	while(res >= 0 && bRunning) {
+		initStream();
+		res = ccn_run(nh->h, 0);
+		usleep(20);
+	}
 }
 
 void MediaFetcher::initStream()

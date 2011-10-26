@@ -28,6 +28,7 @@ private:
 	SourceList *sourceList;
 	QTimer *fetchTimer;
 	bool staleOk;
+	bool bRunning;
 };
 
 
