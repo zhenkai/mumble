@@ -7,6 +7,8 @@
 #define FRESHNESS 2
 #define ANNOUNCE_INTERVAL 598 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
+static enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info);
+static SourceAnnouncer *gSourceAnnouncer;
 
 CameraVideoInput::CameraVideoInput() {
 	initialized = false;
@@ -101,6 +103,7 @@ VideoStreamSource::~VideoStreamSource() {
 void VideoStreamSource::processFrame() {
 	IplImage *currentFrame = cam->getNextFrame();
 	int frameSize = 0;
+	// do not free encodedFrame, as it is a pointer to the internal buffer of encoder
 	const unsigned char *encodedFrame = encoder->encodeVideoFrame(currentFrame, &frameSize);
 	emit frameProcessed((unsigned char *)encodedFrame, frameSize);
 	cvReleaseImage(&currentFrame);
@@ -144,6 +147,13 @@ void VideoStreamSource::readNdnParams() {
 		fprintf(stderr, "Null name prefix or conference name\n");
 		abort();
 	}
+
+	username = getenv("KIWI_USERNAME");
+	if (username.isEmpty()) {
+		QMessageBox::warning(0, "Kiwi", "Environment variable \"KIWI_USERNAME\" not set. Program terminating.");
+		std::exit(0);
+	}
+
 }
 
 void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len) {
@@ -156,6 +166,7 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 	
 	struct ccn_charbuf *path = ccn_charbuf_create();
 	ccn_name_from_uri(path, namePrefix.toStdString().c_str());
+	ccn_name_from_uri(path, username.toStdString().c_str());
 	ccn_name_append_str(path, "video");
 	struct ccn_charbuf *seqBuf = ccn_charbuf_create();
 	ccn_charbuf_putf(seqBuf, "%ld", seq);

@@ -64,7 +64,7 @@ bool VideoStreamDecoder::initDecoder() {
 	return true;
 }
 
-IplImage *VideoStreamDecoder::decodeVideoFrame(unsigned char *buf, int size) {
+IplImage *VideoStreamDecoder::decodeVideoFrame(const unsigned char *buf, int size) {
 	if (size <= 1)
 		return NULL;
 

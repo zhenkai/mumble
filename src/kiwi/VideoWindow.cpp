@@ -16,10 +16,8 @@ VideoWindow::VideoWindow(): QDialog(0) {
 	layout = new QGridLayout(this);
 	source = new VideoStreamSource();
 	sink = new VideoStreamSink();
-	connect(source, SIGNAL(frameProcessed(unsigned char *, size_t)), this, SLOT(refreshImage(unsigned char *, size_t)));
-	alterDisplayNumber("1", 1);
-	alterDisplayNumber("2", 1);
-	alterDisplayNumber("3", 1);
+	connect(sink, SIGNAL(imageDecoded(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
+	connect(sink, SIGNAL(sourceNumChanged(QString, int)), this, SLOT(alterDisplayNumber(QString, int)));
 }
 
 VideoWindow::~VideoWindow() {
@@ -59,34 +57,14 @@ QImage VideoWindow::IplImage2QImage(const IplImage *iplImage) {
 
 
 
-void VideoWindow::refreshImage(unsigned char *buf, size_t len) {
-	/*
-	static int count = 0;
-	IplImage *decodedImage = sink->getNextFrame(buf, len);
-	QImage image = IplImage2QImage(decodedImage);
-	QHash<QString, QNamedFrame *>::const_iterator i = displays.constBegin();
-	while (i != displays.constEnd()) {
-		i.value()->setImage(image);
-		i++;
-	}
-	cvReleaseImage(&decodedImage);
-	count ++;
-	if (count == 200) {
-		alterDisplayNumber("4", 1);
-		alterDisplayNumber("5", 1);
-	}
-	if (count == 400) {
-		alterDisplayNumber("2", 0);
-	}
-	if (count == 600) {
-		alterDisplayNumber("5", 0);
-	}
-	if (count == 800) {
-		alterDisplayNumber("1", 0);
-		alterDisplayNumber("4", 0);
-	}
-	*/
+void VideoWindow::refreshImage(QString name, IplImage *iplImage) {
+	QImage image = IplImage2QImage(iplImage);
+	QNamedFrame *nf = NULL;
+	nf = displays[name];
+	if (nf != NULL) 
+		nf->setImage(image);
 
+	cvReleaseImage(&iplImage);
 }
 
 /**************

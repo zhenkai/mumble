@@ -26,7 +26,7 @@ public:
 	~VideoWindow();
 
 public slots:
-	void refreshImage(unsigned char *buf, size_t len);
+	void refreshImage(QString name, IplImage *image);
 	void alterDisplayNumber(QString name, int addOrDel);
 
 private:

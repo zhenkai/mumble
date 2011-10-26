@@ -1,6 +1,10 @@
 #include "SourceList.h"
 #define BROADCAST_PREFIX ("/ndn/broadcast/confernece")
 
+static SourceList *gSourceList;
+static enum ccn_upcall_res handle_source_info_content(struct ccn_closure *selfp,
+												   enum ccn_upcall_kind kind,
+												   struct ccn_upcall_info *info);
 SourceList::SourceList() {
 	gSourceList = this;
 	readNdnParams();
@@ -51,13 +55,13 @@ void SourceList::readNdnParams() {
 	}
 }
 
-void SourceList::alivenessTimerExpired(QString fullName) {
-	MediaSource *ms = list[fullName];	
+void SourceList::alivenessTimerExpired(QString username) {
+	MediaSource *ms = list[username];	
 	if (ms != NULL) {
 		delete ms;
 	}
-	list.remove(fullName);
-	emit mediaSourceLeft(fullName);
+	list.remove(username);
+	emit mediaSourceLeft(username);
 }
 
 
@@ -235,7 +239,7 @@ int SourceList::addMediaSource(QString username, QString prefix) {
 	
 	MediaSource *ms = new MediaSource(this, username, prefix);
 	list.insert(username, ms);
-    emit mediaSourceAdded(username + prefix); 
+    emit mediaSourceAdded(username); 
     return 0;
 }
 
@@ -246,7 +250,7 @@ int SourceList::removeMediaSource(QString username) {
 	
 	list.remove(username);
 
-	emit mediaSourceLeft(username + ms->getPrefix());
+	emit mediaSourceLeft(username);
 	
 	delete ms;
 }
@@ -256,6 +260,8 @@ void SourceList::run() {
 
 MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
 	needExclude = false;
+	streaming = false;
+	consecutiveTimeouts = 0;
 	namePrefix = prefix;
 	this->username = username;
 	freshnessTimer = new QTimer(this);
@@ -267,6 +273,17 @@ MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
 	connect(freshnessTimer, SIGNAL(timeout()), this, SLOT(excludeNotNeeded()));
 	connect(alivenessTimer, SIGNAL(timeout()), this, SLOT(noLongerActive()));
 	connect(this, SIGNAL(alivenessTimeout(QString)), parent, SLOT(alivenessTimerExpired(QString)));
+	fetchClosure = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
+	fetchClosure->data = this;
+	fetchClosure->p = NULL;
+	fetchPipelineClosure = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
+	fetchPipelineClosure->data = this;
+	fetchPipelineClosure->p = NULL;
+}
+
+MediaSource::~MediaSource() {
+	if (fetchClosure != NULL)
+		free(fetchClosure);
 }
 
 void MediaSource::refreshReceived() {
@@ -282,7 +299,7 @@ void MediaSource::excludeNotNeeded() {
 }
 
 void MediaSource::noLongerActive() {
-	emit alivenessTimeout(namePrefix + username);	
+	emit alivenessTimeout(username);	
 }
 
 static enum ccn_upcall_res handle_source_info_content(struct ccn_closure *selfp,

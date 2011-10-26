@@ -15,10 +15,15 @@ class VideoStreamSink: public QObject {
 public:
 	VideoStreamSink();
 	virtual ~VideoStreamSink();
-	//IplImage *getNextFrame(unsigned char *buf, int len);
 
+private slots:
+	void decodeImage(QString, const unsigned char *buf, int len);
+	void sourceLeft(QString);
+	void sourceAdded(QString);
+	
 signals:
-	void nextFrameFetched(IplImage *decodedImage, QString name);
+	void sourceNumChanged(QString, int);
+	void imageDecoded(QString, IplImage *);
 
 private:
 	// decode fetched media

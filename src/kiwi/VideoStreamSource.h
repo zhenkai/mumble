@@ -61,6 +61,7 @@ private:
 	bool initialized;
 	QString namePrefix;
 	QString confName;
+	QString username;
 };
 
 
@@ -83,6 +84,5 @@ private:
 	bool leaving;
 };
 
-static enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info);
-static SourceAnnouncer *gSourceAnnouncer;
+
 #endif

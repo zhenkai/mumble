@@ -43,7 +43,7 @@ public:
 	  * @param size: buffer size of encoded data
 	  * @return: an IplImage, which is the next image in the decoded video stream.
 	  */
-	  IplImage *decodeVideoFrame(unsigned char *buf, int size);
+	  IplImage *decodeVideoFrame(const unsigned char *buf, int size);
 
 private:
 	bool initDecoder();

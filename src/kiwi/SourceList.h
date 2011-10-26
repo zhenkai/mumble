@@ -32,8 +32,8 @@ private:
 	void expressEnumInterest(struct ccn_charbuf *interest, QList<QString> &toExclude);
 
 signals:
-	void mediaSourceLeft(QString fullName);
-	void mediaSourceAdded(QString fullName);
+	void mediaSourceLeft(QString);
+	void mediaSourceAdded(QString);
 public slots:
 	void alivenessTimerExpired(QString);
 private:
@@ -48,11 +48,21 @@ class MediaSource: public QObject {
 	Q_OBJECT
 public:
 	MediaSource(QObject *parent, QString prefix, QString username);
+	~MediaSource();
 	void refreshReceived();
+	bool isStreaming() { return streaming; }
 	bool getNeedExclude() {return needExclude; }
 	QString getUsername() {return username; }
 	QString getPrefix() {return namePrefix;}
 	void setPrefix(QString prefix) {namePrefix = prefix; }
+	void setStreaming(bool streaming) {this->streaming = streaming;}
+	void incSeq() {seq ++;}
+	void setSeq(long seq) {this->seq = seq;}
+	long getSeq() {return seq;}
+	void incTimeouts(){consecutiveTimeouts++;}
+	void resetTimeouts() {consecutiveTimeouts = 0;}
+	int getTimeouts() {return consecutiveTimeouts;}
+	friend class MediaFetcher;
 signals:
 	void alivenessTimeout(QString);
 private slots:
@@ -65,10 +75,11 @@ private:
 	bool needExclude;
 	QTimer *freshnessTimer;
 	QTimer *alivenessTimer;
+	struct ccn_closure *fetchClosure;
+	struct ccn_closure *fetchPipelineClosure;
+	bool streaming;
+	int consecutiveTimeouts;
 };
 
-static SourceList *gSourceList;
-static enum ccn_upcall_res handle_source_info_content(struct ccn_closure *selfp,
-												   enum ccn_upcall_kind kind,
-												   struct ccn_upcall_info *info);
+
 #endif
