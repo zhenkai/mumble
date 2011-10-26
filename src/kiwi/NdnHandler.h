@@ -6,6 +6,7 @@ extern "C" {
 #include <ccn/keystore.h>
 #include <ccn/signing.h>
 #include <ccn/uri.h>
+#include <ccn/bloom.h>
 #include <stdio.h>
 #include <stdlib.h>
 }
@@ -19,9 +20,13 @@ public:
 	const struct ccn_pkey *getPrivateKey();
 	const unsigned char *getPublicKeyDigest();
 	ssize_t getPublicKeyDigestLength();
+public:
+	static int nameCompare(const void *a, const void *b);
+	static void excludeAll(struct ccn_charbuf *c);
 
 	struct ccn *h;
 	struct ccn_keystore *keystore;
 	struct ccn_charbuf *keylocator;
+
 };
 #endif

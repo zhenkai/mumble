@@ -59,3 +59,31 @@ const unsigned char *NdnHandler::getPublicKeyDigest() {
 const struct ccn_pkey *NdnHandler::getPrivateKey() {
 	return ccn_keystore_private_key(keystore);
 }
+
+/*
+ * Comparison operator for sorting the excl list with qsort.
+ * For convenience, the items in the excl array are
+ * charbufs containing ccnb-encoded Names of one component each.
+ * (This is not the most efficient representation.)
+ */
+int /* for qsort */
+NdnHandler::nameCompare(const void *a, const void *b)
+{
+    const struct ccn_charbuf *aa = *(const struct ccn_charbuf **)a;
+    const struct ccn_charbuf *bb = *(const struct ccn_charbuf **)b;
+    int ans = ccn_compare_names(aa->buf, aa->length, bb->buf, bb->length);
+    if (ans == 0)
+        fprintf(stderr, "wassat? %d\n", __LINE__);
+    return (ans);
+}
+
+void NdnHandler::excludeAll(struct ccn_charbuf *c)
+{
+    unsigned char bf_all[9] = { 3, 1, 'A', 0, 0, 0, 0, 0, 0xFF };
+    const struct ccn_bloom_wire *b = ccn_bloom_validate_wire(bf_all, sizeof(bf_all));
+    if (b == NULL) abort();
+    ccn_charbuf_append_tt(c, CCN_DTAG_Bloom, CCN_DTAG);
+    ccn_charbuf_append_tt(c, sizeof(bf_all), CCN_BLOB);
+    ccn_charbuf_append(c, bf_all, sizeof(bf_all));
+    ccn_charbuf_append_closer(c);
+}

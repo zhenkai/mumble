@@ -11,10 +11,10 @@ VideoStreamSink::VideoStreamSink() {
 VideoStreamSink::~VideoStreamSink() {
 	if (decoder != NULL)
 		delete decoder;
-	if (nh != NULL)
-		delete nh;
 	if (sourceList != NULL)
 		delete sourceList;
+	if (fetcher != NULL)
+		delete fetcher;
 }
 
 //IplImage *VideoStreamSink::getNextFrame(unsigned char *buf, int len) {

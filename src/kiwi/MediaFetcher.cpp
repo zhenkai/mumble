@@ -7,7 +7,7 @@ MediaFetcher::MediaFetcher (SourceList *sourceList) {
 	staleOk = true;
 	fetchTimer = new QTimer(this);
 	fetchTimer->setInterval(40);
-	connect(fetchTimer, timeout(), this, fetch());
+	connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetch()));
 	fetchTimer->start();
 	start();
 }

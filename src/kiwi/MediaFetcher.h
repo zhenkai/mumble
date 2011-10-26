@@ -3,6 +3,8 @@
 #include <QThread>
 #include <QTimer>
 #include <QHash>
+#include "NdnHandler.h"
+#include "SourceList.h"
 
 class MediaFetcher: public QThread {
 	Q_OBJECT
