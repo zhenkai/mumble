@@ -112,7 +112,7 @@ void VideoStreamSource::processFrame() {
 	// do not free encodedFrame, as it is a pointer to the internal buffer of encoder
 	const unsigned char *encodedFrame = encoder->encodeVideoFrame(currentFrame, &frameSize);
 	IplImage *localDisplayFrame = cvCloneImage(currentFrame);
-	emit imageCaptured("Myself", localDisplayFrame);
+	emit imageCaptured("Me", localDisplayFrame);
 	cvReleaseImage(&currentFrame);
 	generateNdnContent(encodedFrame, frameSize);
 

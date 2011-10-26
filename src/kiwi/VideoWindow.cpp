@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QTime>
 #include <QPainter>
+#include <QRectF>
 #include "VideoWindow.h"
 
 #define MAX_NAME_LEN 30
@@ -19,7 +20,7 @@ VideoWindow::VideoWindow(): QDialog(0) {
 	connect(sink, SIGNAL(imageDecoded(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
 	connect(sink, SIGNAL(sourceNumChanged(QString, int)), this, SLOT(alterDisplayNumber(QString, int)));
 	connect(source, SIGNAL(imageCaptured(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
-	alterDisplayNumber("Myself", 1);
+	alterDisplayNumber("Me", 1);
 }
 
 VideoWindow::~VideoWindow() {
@@ -96,6 +97,7 @@ void VideoWindow::alterDisplayNumber(QString name, int addOrDel) {
 			qWarning() << "User " + name + " already exists. No display added.\n";
 			return;
 		}
+		qWarning() << "User " + name + " added.\n";
 		QNamedFrame *disp = new QNamedFrame();
 		disp->setName(name);
 		displays.insert(name, disp);
@@ -161,8 +163,11 @@ void QNamedFrame::setName(QString name) {
 
 void QNamedFrame::setImage(QImage image) {
 	QPainter *painter = new QPainter(&image);
-	painter->setPen(Qt::black);
-	painter->setFont(QFont("Helvetica", 20));
+	painter->setPen(Qt::red);
+	painter->setFont(QFont("Helvetica", 16));
+	QRectF br;
+	painter->drawText(image.rect(), Qt::AlignLeft | Qt::AlignTop, name, &br);
+	painter->fillRect(br.x(), br.y(), br.width() + 3, br.height(), Qt::lightGray);
 	painter->drawText(image.rect(), Qt::AlignLeft | Qt::AlignTop, name);
 	imageLabel->setPixmap(QPixmap::fromImage(image));
 	delete painter;
