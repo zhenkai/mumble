@@ -40,7 +40,7 @@ public:
 	void setNamePrefix(QString prefix) {namePrefix = prefix;}
 
 signals:
-	void imageCaptured(QString, IplImage *);
+	void imageCaptured(QString, const unsigned char *, int);
 
 
 private slots:

@@ -19,7 +19,7 @@ VideoWindow::VideoWindow(): QDialog(0) {
 	sink = new VideoStreamSink();
 	connect(sink, SIGNAL(imageDecoded(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
 	connect(sink, SIGNAL(sourceNumChanged(QString, int)), this, SLOT(alterDisplayNumber(QString, int)));
-	connect(source, SIGNAL(imageCaptured(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
+	connect(source, SIGNAL(imageCaptured(QString, const unsigned char *, int)), sink, SLOT(decodeImage(QString, const unsigned char *, int)));
 	alterDisplayNumber("Me", 1);
 }
 
@@ -70,16 +70,18 @@ QImage VideoWindow::IplImage2QImage(const IplImage *iplImage) {
 	}
 }
 
-
-
 void VideoWindow::refreshImage(QString name, IplImage *iplImage) {
+	if (iplImage == NULL)
+		return;
+
 	QImage image = IplImage2QImage(iplImage);
 	QNamedFrame *nf = NULL;
 	nf = displays[name];
 	if (nf != NULL) 
 		nf->setImage(image);
 
-	cvReleaseImage(&iplImage);
+	if (iplImage != NULL)
+		cvReleaseImage(&iplImage);
 }
 
 /**************

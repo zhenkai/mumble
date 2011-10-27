@@ -9,13 +9,13 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#define ENCODING_STRING ("mpeg")
-#define ENCODING_CODEC (CODEC_ID_MPEG4)
-#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
-
-//#define ENCODING_STRING ("h263")
-//#define ENCODING_CODEC (CODEC_ID_H263P)
+//#define ENCODING_STRING ("mpeg")
+//#define ENCODING_CODEC (CODEC_ID_MPEG4)
 //#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
+
+#define ENCODING_STRING ("h263")
+#define ENCODING_CODEC (CODEC_ID_H263P)
+#define RAW_STREAM_FORMAT (PIX_FMT_YUV420P)
 
 //#define ENCODING_STRING ("h264")
 //#define ENCODING_CODEC (CODEC_ID_H264)
