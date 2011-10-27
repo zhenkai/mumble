@@ -105,7 +105,7 @@ void MediaFetcher::fetch() {
 		if (ms != NULL && ms->isStreaming()) {
 			ms->incSeq();
 			struct ccn_charbuf *pathbuf = ccn_charbuf_create();
-			QString fullName = ms->getPrefix() + ms->getUsername();
+			QString fullName = ms->getPrefix() + "/" + ms->getUsername();
 			ccn_name_from_uri(pathbuf, fullName.toLocal8Bit().constData());
 			ccn_name_append_str(pathbuf, "video");
 			struct ccn_charbuf *temp = ccn_charbuf_create();

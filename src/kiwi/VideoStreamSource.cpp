@@ -172,7 +172,7 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 	
 	struct ccn_charbuf *path = ccn_charbuf_create();
 	ccn_name_from_uri(path, namePrefix.toStdString().c_str());
-	ccn_name_from_uri(path, username.toStdString().c_str());
+	ccn_name_append_str(path, username.toStdString().c_str());
 	ccn_name_append_str(path, "video");
 	struct ccn_charbuf *seqBuf = ccn_charbuf_create();
 	ccn_charbuf_putf(seqBuf, "%ld", seq);
