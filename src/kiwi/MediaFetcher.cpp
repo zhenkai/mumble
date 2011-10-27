@@ -79,6 +79,7 @@ void MediaFetcher::initStream()
             ccn_charbuf_append_closer(templ); /*<ChildSelector>*/
             ccn_charbuf_append_closer(templ);
 			QString fullName = ms->getPrefix() + "/" + ms->getUsername();
+			// e.g. /ndn/ucla.edu/kiwi/video
 			ccn_name_from_uri(path, fullName.toLocal8Bit().constData());
 			ccn_name_append_str(path, "video");
 			if (ms->fetchClosure->p == NULL) 
@@ -106,6 +107,7 @@ void MediaFetcher::fetch() {
 			ms->incSeq();
 			struct ccn_charbuf *pathbuf = ccn_charbuf_create();
 			QString fullName = ms->getPrefix() + "/" + ms->getUsername();
+			// e.g. /ndn/ucla.edu/kiwi/video/2
 			ccn_name_from_uri(pathbuf, fullName.toLocal8Bit().constData());
 			ccn_name_append_str(pathbuf, "video");
 			struct ccn_charbuf *temp = ccn_charbuf_create();

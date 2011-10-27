@@ -83,6 +83,7 @@ void SourceList::alivenessTimerExpired(QString username) {
 void SourceList::enumerate() {
     ccn_charbuf *path = NULL;
     path = ccn_charbuf_create();
+	// e.g. /ndn/broadcast/conference/asfd/video-list
 	ccn_name_from_uri(path, BROADCAST_PREFIX);
     ccn_name_append_str(path, confName.toLocal8Bit().constData());
 	ccn_name_append_str(path, "video-list");

@@ -170,6 +170,7 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 		abort();
 	}
 	
+	//   e.g. /ndn/ucla.edu/kiwi/video/2
 	struct ccn_charbuf *path = ccn_charbuf_create();
 	ccn_name_from_uri(path, namePrefix.toStdString().c_str());
 	ccn_name_append_str(path, username.toStdString().c_str());
@@ -246,6 +247,7 @@ void SourceAnnouncer::registerInterest() {
 }
 
 void SourceAnnouncer::generateSourceInfo() {
+	// e.g. /ndn/broadcast/conference/asfd/video-list/kiwi
 	struct ccn_charbuf *path = ccn_charbuf_create();
 	ccn_name_from_uri(path, (const char *)BROADCAST_PREFIX);
 	ccn_name_append_str(path, confName.toLocal8Bit().constData());
