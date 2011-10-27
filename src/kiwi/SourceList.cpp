@@ -1,5 +1,5 @@
 #include "SourceList.h"
-#define BROADCAST_PREFIX ("/ndn/broadcast/confernece")
+#define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 
 static SourceList *gSourceList;
 static enum ccn_upcall_res handle_source_info_content(struct ccn_closure *selfp,
@@ -97,6 +97,11 @@ void SourceList::enumerate() {
 		}
 		++it;
     }
+
+/*
+	QString username = getenv("KIWI_USERNAME");
+	toExclude.append(username);
+	*/
 
 	expressEnumInterest(path, toExclude);
 }
@@ -252,7 +257,7 @@ int SourceList::addMediaSource(QString username, QString prefix) {
 		return 0;
 	}
 	
-	MediaSource *ms = new MediaSource(this, username, prefix);
+	MediaSource *ms = new MediaSource(this, prefix, username);
 	list.insert(username, ms);
     emit mediaSourceAdded(username); 
     return 0;

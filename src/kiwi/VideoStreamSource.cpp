@@ -3,7 +3,7 @@
 #include <QMessageBox>
 #define BUF_SIZE 10000000
 #define FRAME_PER_SECOND 25 
-#define MAX_EDGE_LENGTH 640
+#define MAX_EDGE_LENGTH 640 
 #define FRESHNESS 2
 #define ANNOUNCE_INTERVAL 598 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")

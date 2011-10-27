@@ -18,7 +18,7 @@ private:
 	void initStream();
 
 signals:
-	void contentArrived(QString, const unsigned char *content, size_t len);
+	void contentArrived(QString, const unsigned char *content, int len);
 
 private slots:
 	void fetch();

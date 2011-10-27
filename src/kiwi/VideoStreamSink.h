@@ -17,7 +17,7 @@ public:
 	virtual ~VideoStreamSink();
 
 private slots:
-	void decodeImage(QString, const unsigned char *buf, size_t len);
+	void decodeImage(QString, const unsigned char *buf, int len);
 	void sourceLeft(QString);
 	void sourceAdded(QString);
 	

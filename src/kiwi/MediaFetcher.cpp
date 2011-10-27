@@ -1,7 +1,13 @@
 #include "MediaFetcher.h"
 #include "SourceList.h"
+#include <poll.h>
+#include <pthread.h>
 #define FPS 25
 static MediaFetcher *gMediaFetcher;
+static struct pollfd pfds[1];
+static pthread_mutex_t mutex;
+static pthread_mutexattr_t ccn_attr;
+
 static enum ccn_upcall_res handleMediaContent(struct ccn_closure *selfp,
 											  enum ccn_upcall_kind kind,
 											  struct ccn_upcall_info *info);
@@ -19,6 +25,14 @@ MediaFetcher::MediaFetcher (SourceList *sourceList) {
 	fetchTimer->setInterval(1000 / FPS);
 	connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetch()));
 	fetchTimer->start();
+
+	pfds[0].fd = ccn_get_connection_fd(nh->h);
+	pfds[0].events = POLLIN;
+
+	pthread_mutexattr_init(&ccn_attr);
+	pthread_mutexattr_settype(&ccn_attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &ccn_attr);
+
 	bRunning = true;
 	start();
 }
@@ -35,9 +49,15 @@ MediaFetcher::~MediaFetcher() {
 
 void MediaFetcher::run() {
 	int res = 0;
+	res = ccn_run(nh->h, 0);
 	while(res >= 0 && bRunning) {
 		initStream();
-		res = ccn_run(nh->h, 0);
+		int ret = poll(pfds, 1, 10);
+		if (ret >= 0) {
+			pthread_mutex_lock(&mutex);
+			res = ccn_run(nh->h, 0);
+			pthread_mutex_unlock(&mutex);
+		}
 		usleep(20);
 	}
 }
@@ -58,15 +78,18 @@ void MediaFetcher::initStream()
             ccn_charbuf_append(templ, "1", 1);	/* low bit 1: rightmost */
             ccn_charbuf_append_closer(templ); /*<ChildSelector>*/
             ccn_charbuf_append_closer(templ);
-			QString fullName = ms->getPrefix() + ms->getUsername();
+			QString fullName = ms->getPrefix() + "/" + ms->getUsername();
 			ccn_name_from_uri(path, fullName.toLocal8Bit().constData());
 			ccn_name_append_str(path, "video");
 			if (ms->fetchClosure->p == NULL) 
 				ms->fetchClosure->p = &handleMediaContent;
+
+			pthread_mutex_lock(&mutex);
 			int res = ccn_express_interest(nh->h, path, ms->fetchClosure, templ);
 			if (res < 0) {
 				fprintf(stderr, "Express short interest failed\n");
 			}
+			pthread_mutex_unlock(&mutex);
 			ms->setStreaming(true);
             ccn_charbuf_destroy(&path);
             ccn_charbuf_destroy(&templ);
@@ -90,10 +113,12 @@ void MediaFetcher::fetch() {
 			ccn_name_append(pathbuf, temp->buf, temp->length);
 			if (ms->fetchPipelineClosure->p == NULL)
 				ms->fetchPipelineClosure->p = &handlePipeMediaContent;
+			pthread_mutex_lock(&mutex);
 			int res = ccn_express_interest(nh->h, pathbuf, ms->fetchPipelineClosure, NULL);
 			if (res < 0) {
 				fprintf(stderr, "Sending interest failed at normal processor\n");
 			}
+			pthread_mutex_unlock(&mutex);
 			ccn_charbuf_destroy(&pathbuf);
 			ccn_charbuf_destroy(&temp);
 		}
@@ -148,10 +173,12 @@ void MediaFetcher::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *i
 		ccn_name_append(pathbuf, temp->buf, temp->length);
 		if (ms->fetchPipelineClosure->p == NULL)
 			ms->fetchPipelineClosure->p = &handlePipeMediaContent;
+		pthread_mutex_lock(&mutex);
 		int res = ccn_express_interest(info->h, pathbuf, ms->fetchPipelineClosure, NULL);
 		if (res < 0) {
 			fprintf(stderr, "Sending interest failed at normal processor\n");
 		}
+		pthread_mutex_unlock(&mutex);
 		ccn_charbuf_destroy(&pathbuf);
 		ccn_charbuf_destroy(&temp);
 	}

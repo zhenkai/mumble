@@ -37,6 +37,7 @@ signals:
 public slots:
 	void alivenessTimerExpired(QString);
 private:
+	QString username;
 	NdnHandler *nh;
 	QString confName;
 	QHash<QString, MediaSource *> list;

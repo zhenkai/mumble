@@ -6,7 +6,7 @@ VideoStreamSink::VideoStreamSink() {
 	decoder = new VideoStreamDecoder(BUF_SIZE);
 	sourceList = new SourceList();
 	fetcher = new MediaFetcher(sourceList);
-	connect(fetcher, SIGNAL(contentArrived(QString, const unsigned char *, size_t)), this, SLOT(decodeImage(QString, const unsigned char *, size_t)));
+	connect(fetcher, SIGNAL(contentArrived(QString, const unsigned char *, int)), this, SLOT(decodeImage(QString, const unsigned char *, int)));
 	connect(sourceList, SIGNAL(mediaSourceLeft(QString)), this, SLOT(sourceLeft(QString)));
 	connect(sourceList, SIGNAL(mediaSourceAdded(QString)), this, SLOT(sourceAdded(QString)));
 }
@@ -20,7 +20,7 @@ VideoStreamSink::~VideoStreamSink() {
 		delete fetcher;
 }
 
-void VideoStreamSink::decodeImage(QString name, const unsigned char *buf, size_t len) {
+void VideoStreamSink::decodeImage(QString name, const unsigned char *buf, int len) {
 	IplImage *decodedImage = decoder->decodeVideoFrame(buf, len);
 	emit imageDecoded(name, decodedImage);
 }
