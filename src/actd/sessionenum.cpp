@@ -372,6 +372,10 @@ void SessionEnum::fetchRemainingBlocks(struct ccn_closure *selfp, struct ccn_upc
 	data->seq ++;
 
 	if (isFinalBlock(info)) {
+		const unsigned char *cb = info->content_ccnb;
+		struct ccn_indexbuf *cc = info->content_comps;
+		QString cname = ccn_name_comp_to_str(cb, cc, 4);
+		unfinishedFetches.remove(cname);
 		const unsigned char *content = data->value;
 		if (data->privateConf) {
 			handleEnumPrivateContent(content, data->len, info);
@@ -767,6 +771,7 @@ void SessionEnum::decodeAnnouncement(struct ccn_upcall_info *info, bool privateC
 		else {
 			handleEnumContent(content, len);
 		}
+
 		return;
 	}
 
@@ -794,6 +799,14 @@ void SessionEnum::decodeAnnouncement(struct ccn_upcall_info *info, bool privateC
 	ccn_charbuf_destroy(&name);
 	ccn_charbuf_destroy(&seq);
 
+	// add to a hash that contains unfinished fetches (to include in exclude filter to avoid fetching the first part again)
+	// /ndn/broadcast/conference/conference-list/conf-name
+	//  0		 1         2          3            4
+    QString cname = ccn_name_comp_to_str(cb, cc, 4);
+	if (cname == "")
+		debug("Content with short name /ndn/broadcast/conference/conference-list received! Panic!");
+	
+	unfinishedFetches.insert(cname, true);
 }
 
 void SessionEnum::handleEnumContent(const unsigned char *value, size_t len) {
@@ -1438,6 +1451,13 @@ void SessionEnum::enumeratePubConf() {
 		if (a == NULL) 
 			critical("SessionEnum::enumrate");
 		toExclude.append(a->getConfName());
+	}
+
+	// exclude unfinished fetches
+	QHash<QString, bool>::const_iterator it = unfinishedFetches.constBegin();
+	while(it != unfinishedFetches.constEnd()) {
+		toExclude.append(it.key());
+		it++;
 	}
 
 	expressEnumInterest(interest, toExclude, false);
