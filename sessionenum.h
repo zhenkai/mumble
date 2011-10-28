@@ -27,6 +27,7 @@ extern "C" {
 #include <QObject>
 #include <QTimer>
 #include <QUuid>
+#include <QHash>
 
 class SessionEnum: public QThread {
 	Q_OBJECT
@@ -86,6 +87,7 @@ private:
 	QList<Announcement *> myPrivateConferences;
 	QList<FetchedAnnouncement *> pubConferences;
 	QList<FetchedAnnouncement *> priConferences;
+	QHash<QString, bool> unfinishedFetches;
 	bool bRunning;
 	struct ccn *ccn;
 	struct ccn_closure *to_announce;
