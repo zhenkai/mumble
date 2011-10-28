@@ -1,6 +1,10 @@
 #include "SourceList.h"
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 
+static struct pollfd pfds[1];
+static pthread_mutex_t mutex;
+static pthread_mutexattr_t ccn_attr;
+
 static SourceList *gSourceList;
 static enum ccn_upcall_res handle_source_info_content(struct ccn_closure *selfp,
 												   enum ccn_upcall_kind kind,
@@ -9,6 +13,12 @@ SourceList::SourceList() {
 	gSourceList = this;
 	readNdnParams();
 	nh = new NdnHandler();
+	pfds[0].fd = ccn_get_connection_fd(nh->h);
+	pfds[0].events = POLLIN;
+
+	pthread_mutexattr_init(&ccn_attr);
+	pthread_mutexattr_settype(&ccn_attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &ccn_attr);
 	acceptStaleData = true;
 	discoverClosure = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
 	discoverClosure->p = &handle_source_info_content;
@@ -278,9 +288,15 @@ int SourceList::removeMediaSource(QString username) {
 
 void SourceList::run() {
 	int res = 0;
+	res = ccn_run(nh->h, 0);
 	while(res >= 0 && bRunning) {
 		res = ccn_run(nh->h, 0);
-		usleep(20);
+		int ret = poll(pfds, 1, 10);
+		if (ret >= 0) {
+			pthread_mutex_lock(&mutex);
+			res = ccn_run(nh->h, 0);
+			pthread_mutex_unlock(&mutex);
+		}
 	}
 }
 

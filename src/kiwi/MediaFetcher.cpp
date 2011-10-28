@@ -58,7 +58,6 @@ void MediaFetcher::run() {
 			res = ccn_run(nh->h, 0);
 			pthread_mutex_unlock(&mutex);
 		}
-		usleep(20);
 	}
 }
 
