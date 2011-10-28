@@ -9,8 +9,6 @@
 #include <QtXml>
 #include <pthread.h>
 #include <poll.h>
-#define FRESHNESS 2
-#define ALIVE_PERIOD 600
 
 class MediaSource;
 class MediaFetcher;

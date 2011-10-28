@@ -1,12 +1,9 @@
 #include "VideoStreamSource.h"
 #include <QtXml>
 #include <QMessageBox>
-#define BUF_SIZE 10000000
-#define FRAME_PER_SECOND 25 
-#define MAX_EDGE_LENGTH 640 
-#define FRESHNESS 2
-#define ANNOUNCE_INTERVAL 598 
-#define BROADCAST_PREFIX ("/ndn/broadcast/conference")
+#include "Params.h"
+
+
 static enum ccn_upcall_res publishInfoCallback(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info);
 static SourceAnnouncer *gSourceAnnouncer;
 
@@ -196,7 +193,7 @@ void VideoStreamSource::run() {
 	int res = 0;
 	while(res >= 0 && bRunning) {
 		res = ccn_run(nh->h, 0);
-		usleep(100);
+		usleep(1000000 / FRAME_PER_SECOND);
 	}
 }
 
@@ -299,7 +296,7 @@ void SourceAnnouncer::run() {
 	int res = 0;
 	while(res >= 0 && bRunning) {
 		res = ccn_run(nh->h, 0);
-		usleep(100);
+		usleep(100000);
 	}
 }
 

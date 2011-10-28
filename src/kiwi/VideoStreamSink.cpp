@@ -1,6 +1,5 @@
 #include "VideoStreamSink.h"
-#define BUF_SIZE 10000000
-#define BROADCAST_PREFIX ("/ndn/broadcast/conference")
+#include "Params.h"
 
 VideoStreamSink::VideoStreamSink() {
 	decoder = new VideoStreamDecoder(BUF_SIZE);

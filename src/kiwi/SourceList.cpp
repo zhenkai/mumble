@@ -1,5 +1,5 @@
 #include "SourceList.h"
-#define BROADCAST_PREFIX ("/ndn/broadcast/conference")
+#include "Params.h"
 
 static struct pollfd pfds[1];
 static pthread_mutex_t mutex;
@@ -109,10 +109,8 @@ void SourceList::enumerate() {
 		++it;
     }
 
-/*
 	QString username = getenv("KIWI_USERNAME");
 	toExclude.append(username);
-	*/
 
 	expressEnumInterest(path, toExclude);
 }

@@ -1,8 +1,8 @@
 #include "MediaFetcher.h"
+#include "Params.h"
 #include "SourceList.h"
 #include <poll.h>
 #include <pthread.h>
-#define FPS 25
 static MediaFetcher *gMediaFetcher;
 static struct pollfd pfds[1];
 static pthread_mutex_t mutex;
@@ -22,7 +22,7 @@ MediaFetcher::MediaFetcher (SourceList *sourceList) {
 	nh = new NdnHandler();
 	staleOk = true;
 	fetchTimer = new QTimer(this);
-	fetchTimer->setInterval(1000 / FPS);
+	fetchTimer->setInterval(1000 / FRAME_PER_SECOND);
 	connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetch()));
 	fetchTimer->start();
 

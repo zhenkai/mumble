@@ -1,4 +1,5 @@
 #include "VideoStreamEncoder.h"
+#include "Params.h"
 #include <QTime>
 
 VideoStreamEncoder::VideoStreamEncoder(size_t bufSize, int videoWidth, int videoHeight, int fps, PixelFormat pixelFormat){

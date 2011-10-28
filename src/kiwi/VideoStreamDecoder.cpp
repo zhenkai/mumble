@@ -1,4 +1,5 @@
 #include "VideoStreamDecoder.h"
+#include "Params.h"
 
 VideoStreamDecoder::VideoStreamDecoder(int bufSize, int fps, PixelFormat pixelFormat) {
 	this->bufSize = bufSize;
