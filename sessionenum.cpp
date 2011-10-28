@@ -339,6 +339,9 @@ static enum ccn_upcall_res fetched_block(struct ccn_closure *selfp,
 		return (CCN_UPCALL_RESULT_OK);
 	
 	case CCN_UPCALL_INTEREST_TIMED_OUT:
+		selfp->intdata ++;
+		if (selfp->intdata > 5)
+			return (CCN_UPCALL_RESULT_OK);
 		return (CCN_UPCALL_RESULT_REEXPRESS);
 
 	case CCN_UPCALL_CONTENT: {
@@ -375,6 +378,7 @@ void SessionEnum::fetchRemainingBlocks(struct ccn_closure *selfp, struct ccn_upc
 		const unsigned char *cb = info->content_ccnb;
 		struct ccn_indexbuf *cc = info->content_comps;
 		QString cname = ccn_name_comp_to_str(cb, cc, 4);
+
 		unfinishedFetches.remove(cname);
 		const unsigned char *content = data->value;
 		if (data->privateConf) {
@@ -784,6 +788,7 @@ void SessionEnum::decodeAnnouncement(struct ccn_upcall_info *info, bool privateC
 	data->privateConf = privateConf;
 	fetch_remaining_closure->data = data;
 	fetch_remaining_closure->p = &fetched_block;
+	fetch_remaining_closure->intdata = 0;
 	const unsigned char *cb = info->content_ccnb;
 	struct ccn_indexbuf *cc = info->content_comps;
 	struct ccn_charbuf *name = ccn_charbuf_create();
@@ -807,6 +812,7 @@ void SessionEnum::decodeAnnouncement(struct ccn_upcall_info *info, bool privateC
 		debug("Content with short name /ndn/broadcast/conference/conference-list received! Panic!");
 	
 	unfinishedFetches.insert(cname, true);
+	// TODO: should be removed after a period of time even if the thing is never fully fetched
 }
 
 void SessionEnum::handleEnumContent(const unsigned char *value, size_t len) {
@@ -823,7 +829,8 @@ void SessionEnum::handleEnumContent(const unsigned char *value, size_t len) {
 		QByteArray buffer((const char *)value);
 		QDomDocument doc;
 		if (!doc.setContent(buffer)) {
-			critical("failed to convert content to xml");
+			debug("failed to convert content to xml");
+			return;
 		}
 		
 		Announcement *a = new Announcement();
@@ -832,8 +839,10 @@ void SessionEnum::handleEnumContent(const unsigned char *value, size_t len) {
 		a->setIsPrivate(false);
 		a->setDigest(hash);
 
-		if (a->getConfName().isEmpty())
-			critical("Fetched Conference Name is empty");
+		if (a->getConfName().isEmpty()) {
+			debug("Fetched Conference Name is empty");
+			return;	
+		}
 
 		addToConferences(a, true);
 		if (value != NULL)
@@ -853,7 +862,8 @@ void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t le
 		QByteArray bundle((char *)value, (int)len);
 		QDomDocument doc;
 		if (!doc.setContent(bundle)) {
-			critical("failed to convert content to xml");
+			debug("failed to convert content to xml");
+			return;
 		}
 		bool eligible = false;
 		Announcement *a = NULL;
@@ -917,8 +927,10 @@ void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t le
 				size_t session_key_len = 0;
 				int res = symDecrypt(a->conferenceKey, (unsigned char *)qbaIV.data(), (unsigned char *)enc_sk, qbaEncSK.size(), (unsigned char **)&session_key,
 						   &session_key_len, AES_BLOCK_SIZE);
-				if (res != 0) 
-					critical("can not decrypt sessionkey");
+				if (res != 0)  {
+					debug("can not decrypt sessionkey");
+					return;
+				}
 
 				memcpy(a->audioSessionKey, session_key, session_key_len);
 				if (session_key) {
@@ -935,14 +947,17 @@ void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t le
 				QByteArray qbaEncDesc = QByteArray::fromBase64(encDesc.toLocal8Bit());
 				char *enc_desc = qbaEncDesc.data();
 				int res = symDecrypt(a->conferenceKey, NULL, (unsigned char *)enc_desc, qbaEncDesc.size(), (unsigned char **)&desc, &desc_len, AES_BLOCK_SIZE);
-				if (res != 0) 
-					critical("can not decrypt desc");
+				if (res != 0)  {
+					debug("can not decrypt desc");
+					return;
+				}
 
 				QByteArray buffer((const char *)desc);
 
 				QDomDocument descDoc;
 				if (!descDoc.setContent(buffer)) {
-					critical("failed to convert content to xml");
+					debug("failed to convert content to xml");
+					return;
 				}
 				
 				descDoc >> a;
@@ -952,23 +967,27 @@ void SessionEnum::handleEnumPrivateContent(const unsigned char *value, size_t le
 				}
 			}
 			else {
-				critical("Unknown xml attribute");
+				debug("Unknown xml attribute");
+				return;
 			}
 			node = node.nextSibling();
 		}
 		// /ndn/broadcast/conference/private-list/opaque-name	
 		char *opaqueName = NULL;
 		opaqueName = ccn_name_comp_to_str(info->content_ccnb, info->content_comps, 4);
-		if (opaqueName == NULL)
-			critical("can not get opaque name!");
+		if (opaqueName == NULL) {
+			debug("can not get opaque name!");
+			return;
+		}
 
 		a->setOpaqueName(opaqueName);
 
 		a->setIsPrivate(true);
 		a->setDigest(hash);
 
-		if (a->getConfName().isEmpty())
-			critical("Fetched Conference Name is empty");
+		if (a->getConfName().isEmpty()) {
+			debug("Fetched Conference Name is empty");
+		}
 
 
 		addToConferences(a, false);

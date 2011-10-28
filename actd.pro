@@ -17,7 +17,7 @@ SOURCES = mainwindow.cpp \
 RESOURCES = actd.qrc
 DIST *= actd.icns images/audio.png images/logo1.png images/priv.png images/watermark1.png images/watermark2.png images/video.png images/setting.png actd.xpm actd.svg
 
-QMAKE_LIBDIR *= /usr/local/lib
+QMAKE_LIBDIR *= /usr/local/lib /usr/lib
 INCLUDEPATH *= /usr/local/include
 LIBS *= -lccn -lssl -lcrypto
 ICON = actd.icns
