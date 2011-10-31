@@ -81,6 +81,8 @@ private:
 	struct ccn_closure *fetchPipelineClosure;
 	bool streaming;
 	int consecutiveTimeouts;
+	QHash<long, unsigned char *> frameBuffers;
+
 };
 
 
