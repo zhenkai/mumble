@@ -37,5 +37,6 @@
 #define ALIVE_PERIOD 600
 #define ANNOUNCE_INTERVAL 598 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
+#define MAX_PACKET_SIZE 1000
 
 #endif

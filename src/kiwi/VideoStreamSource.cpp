@@ -1,6 +1,9 @@
 #include "VideoStreamSource.h"
 #include <QtXml>
 #include <QMessageBox>
+#include <QDataStream>
+#include <QByteArray>
+#include <QIODevice>
 #include "Params.h"
 
 
@@ -56,6 +59,7 @@ IplImage *CameraVideoInput::getNextFrame() {
 
 VideoStreamSource::VideoStreamSource() {
 	seq = 0;
+	frameNum = 0;
 	initialized = false;
 	cam = NULL;
 	encoder = NULL;
@@ -113,7 +117,6 @@ void VideoStreamSource::processFrame() {
 	generateNdnContent(encodedFrame, frameSize);
 	emit imageCaptured("Me", encodedFrame, frameSize);
 
-	seq++;
 }
 
 void VideoStreamSource::readNdnParams() {
@@ -168,25 +171,61 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 	}
 	
 	//   e.g. /ndn/ucla.edu/kiwi/video/2
-	struct ccn_charbuf *path = ccn_charbuf_create();
-	ccn_name_from_uri(path, namePrefix.toStdString().c_str());
-	ccn_name_append_str(path, username.toStdString().c_str());
-	ccn_name_append_str(path, "video");
-	struct ccn_charbuf *seqBuf = ccn_charbuf_create();
-	ccn_charbuf_putf(seqBuf, "%ld", seq);
-	ccn_name_append(path, seqBuf->buf, seqBuf->length);
-	struct ccn_charbuf *content = ccn_charbuf_create();
-	res = ccn_encode_ContentObject(content, path, signed_info, buffer, len, NULL, nh->getPrivateKey());
-	if (res) {
-		fprintf(stderr, "Failed to create video content\n");
-		abort();
-	}
-	ccn_put(nh->h, content->buf, content->length);
+	/********************* 
+	Packet header
+	quint16    quint64    quint8     bool
+	+---------+---------+----------+-------+
+	|data len |frameNum | frameSeq |E-o-F  |
+	+---------+---------+----------+-------+
+	*********************************/
+	int frameSeq = 0;
+	const unsigned char *data = buffer;
 
-	ccn_charbuf_destroy(&path);
-	ccn_charbuf_destroy(&seqBuf);
-	ccn_charbuf_destroy(&signed_info);
-	ccn_charbuf_destroy(&content);
+	while (len > 0) {
+		struct ccn_charbuf *path = ccn_charbuf_create();
+		ccn_name_from_uri(path, namePrefix.toStdString().c_str());
+		ccn_name_append_str(path, username.toStdString().c_str());
+		ccn_name_append_str(path, "video");
+		struct ccn_charbuf *seqBuf = ccn_charbuf_create();
+		ccn_charbuf_putf(seqBuf, "%ld", seq++);
+		ccn_name_append(path, seqBuf->buf, seqBuf->length);
+		int dataLen;
+		bool EoF;
+		if (len > MAX_PACKET_SIZE) {
+			dataLen = MAX_PACKET_SIZE;
+			EoF = false;
+		} else {
+			dataLen = len;
+			EoF = true;
+		}
+		len -= dataLen;
+
+		QByteArray qba;
+		QDataStream qds(&qba, QIODevice::WriteOnly);
+		qds << (quint16) dataLen;
+		qds << (quint64) frameNum;
+		qds << (quint64) frameSeq;
+		qds << EoF;
+
+		QByteArray packetData((const char *)data, dataLen);
+		qds << packetData;
+
+		struct ccn_charbuf *content = ccn_charbuf_create();
+		res = ccn_encode_ContentObject(content, path, signed_info, qba.constData(), qba.size(), NULL, nh->getPrivateKey());
+		if (res) {
+			fprintf(stderr, "Failed to create video content\n");
+			abort();
+		}
+		ccn_put(nh->h, content->buf, content->length);
+		data += dataLen;
+		frameSeq++;
+		ccn_charbuf_destroy(&path);
+		ccn_charbuf_destroy(&seqBuf);
+		ccn_charbuf_destroy(&signed_info);
+		ccn_charbuf_destroy(&content);
+	}
+	frameNum++;
+
 }
 
 void VideoStreamSource::run() {

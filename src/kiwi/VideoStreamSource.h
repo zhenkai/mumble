@@ -58,6 +58,7 @@ private:
 	SourceAnnouncer *sa;
 	QTimer *captureTimer;
 	long seq;
+	long frameNum;
 	bool initialized;
 	QString namePrefix;
 	QString confName;
