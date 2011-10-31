@@ -217,7 +217,9 @@ void MediaFetcher::processContent(struct ccn_closure *selfp, struct ccn_upcall_i
 	// no fragmentation
 	if (frameSeq == 0 && EoF) {
 		username = ms->getUsername();
-		emit contentArrived(username, (const unsigned char*)packetData.constData(), packetData.size());
+		unsigned char *buf = (unsigned char *)calloc(1, sizeof(char) * dataLen);
+		memcpy(buf, packetData.constData(), dataLen);
+		emit contentArrived(username, buf, dataLen);
 	}
 	else {
 		if (!EoF) {
