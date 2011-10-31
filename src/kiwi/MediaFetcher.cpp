@@ -22,7 +22,7 @@ MediaFetcher::MediaFetcher (SourceList *sourceList) {
 	nh = new NdnHandler();
 	staleOk = true;
 	fetchTimer = new QTimer(this);
-	fetchTimer->setInterval(1000 / FRAME_PER_SECOND);
+	fetchTimer->setInterval(CHECK_INTERVAL);
 	connect(fetchTimer, SIGNAL(timeout()), this, SLOT(fetch()));
 	fetchTimer->start();
 
@@ -103,25 +103,27 @@ void MediaFetcher::fetch() {
 		QString userName = it.key();
 		MediaSource *ms = it.value();
 		if (ms != NULL && ms->isStreaming()) {
-			ms->incSeq();
-			struct ccn_charbuf *pathbuf = ccn_charbuf_create();
-			QString fullName = ms->getPrefix() + "/" + ms->getUsername();
-			// e.g. /ndn/ucla.edu/kiwi/video/2
-			ccn_name_from_uri(pathbuf, fullName.toLocal8Bit().constData());
-			ccn_name_append_str(pathbuf, "video");
-			struct ccn_charbuf *temp = ccn_charbuf_create();
-			ccn_charbuf_putf(temp, "%ld", ms->getSeq());
-			ccn_name_append(pathbuf, temp->buf, temp->length);
-			if (ms->fetchPipelineClosure->p == NULL)
-				ms->fetchPipelineClosure->p = &handlePipeMediaContent;
-			pthread_mutex_lock(&mutex);
-			int res = ccn_express_interest(nh->h, pathbuf, ms->fetchPipelineClosure, NULL);
-			if (res < 0) {
-				fprintf(stderr, "Sending interest failed at normal processor\n");
+			if (ms->needSendInterest()){
+				ms->incSeq();
+				struct ccn_charbuf *pathbuf = ccn_charbuf_create();
+				QString fullName = ms->getPrefix() + "/" + ms->getUsername();
+				// e.g. /ndn/ucla.edu/kiwi/video/2
+				ccn_name_from_uri(pathbuf, fullName.toLocal8Bit().constData());
+				ccn_name_append_str(pathbuf, "video");
+				struct ccn_charbuf *temp = ccn_charbuf_create();
+				ccn_charbuf_putf(temp, "%ld", ms->getSeq());
+				ccn_name_append(pathbuf, temp->buf, temp->length);
+				if (ms->fetchPipelineClosure->p == NULL)
+					ms->fetchPipelineClosure->p = &handlePipeMediaContent;
+				pthread_mutex_lock(&mutex);
+				int res = ccn_express_interest(nh->h, pathbuf, ms->fetchPipelineClosure, NULL);
+				if (res < 0) {
+					fprintf(stderr, "Sending interest failed at normal processor\n");
+				}
+				pthread_mutex_unlock(&mutex);
+				ccn_charbuf_destroy(&pathbuf);
+				ccn_charbuf_destroy(&temp);
 			}
-			pthread_mutex_unlock(&mutex);
-			ccn_charbuf_destroy(&pathbuf);
-			ccn_charbuf_destroy(&temp);
 		}
 		it++;	
 	}
@@ -158,13 +160,14 @@ void MediaFetcher::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *i
 	if (seq >= 0) {
 		ms->setSeq(seq);
 		ms->setStreaming(true);
+		ms->largestSeenSeq = seq;
 	}
 	else {
 		return;
 	}
 	
 	// send hint-ahead interests
-	for (int i = 0; i < 10; i ++) {
+	for (int i = 0; i < PENDING_INTEREST_NUM; i ++) {
 		ms->incSeq();
 		struct ccn_charbuf *pathbuf = ccn_charbuf_create();
 		ccn_name_init(pathbuf);
@@ -187,6 +190,33 @@ void MediaFetcher::initPipe(struct ccn_closure *selfp, struct ccn_upcall_info *i
 
 void MediaFetcher::processContent(struct ccn_closure *selfp, struct ccn_upcall_info *info) {
 	MediaSource *ms = (MediaSource *)selfp->data;
+
+	const unsigned char *ccnb = info->content_ccnb;
+	size_t ccnb_size = info->pco->offset[CCN_PCO_E];
+	struct ccn_indexbuf *comps = info->content_comps;
+
+	long seq;
+	const unsigned char *seqptr = NULL;
+	char *endptr = NULL;
+	size_t seq_size = 0;
+	int k = comps->n - 2;
+
+
+	seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
+			comps->buf[k], comps->buf[k + 1],
+			&seqptr, &seq_size);
+	if (seq >= 0) {
+		seq = strtol((const char *)seqptr, &endptr, 10);
+		if (endptr != ((const char *)seqptr) + seq_size)
+			seq = -1;
+	}
+	if (seq >= 0) {
+		if (seq > ms->largestSeenSeq)
+			ms->largestSeenSeq = seq;
+	}
+	else
+		return;
+	////////////
 
 	const unsigned char *content = NULL;
 	size_t len = 0;

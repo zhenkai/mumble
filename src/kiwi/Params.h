@@ -38,5 +38,7 @@
 #define ANNOUNCE_INTERVAL 598 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 #define MAX_PACKET_SIZE 1000
+#define PENDING_INTEREST_NUM ((STREAM_BIT_RATE) / (MAX_PACKET_SIZE) / 8)
+#define CHECK_INTERVAL 10
 
 #endif

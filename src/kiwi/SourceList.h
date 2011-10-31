@@ -59,6 +59,7 @@ public:
 	~MediaSource();
 	void refreshReceived();
 	bool isStreaming() { return streaming; }
+	bool needSendInterest(); 
 	bool getNeedExclude() {return needExclude; }
 	QString getUsername() {return username; }
 	QString getPrefix() {return namePrefix;}
@@ -88,6 +89,7 @@ private:
 	bool streaming;
 	int consecutiveTimeouts;
 	QHash<long, struct buffer_t *> frameBuffers;
+	long largestSeenSeq;
 
 };
 

@@ -299,6 +299,8 @@ void SourceList::run() {
 }
 
 MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
+	largestSeenSeq = 0;
+	seq = 0;
 	needExclude = false;
 	streaming = false;
 	consecutiveTimeouts = 0;
@@ -340,6 +342,10 @@ void MediaSource::excludeNotNeeded() {
 
 void MediaSource::noLongerActive() {
 	emit alivenessTimeout(username);	
+}
+
+bool MediaSource::needSendInterest() {
+	return (largestSeenSeq + PENDING_INTEREST_NUM > seq);
 }
 
 static enum ccn_upcall_res handle_source_info_content(struct ccn_closure *selfp,
