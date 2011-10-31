@@ -192,8 +192,60 @@ void MediaFetcher::processContent(struct ccn_closure *selfp, struct ccn_upcall_i
 	size_t len = 0;
 
 	ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E], info->pco, &content, &len);
-	QString username = ms->getUsername();
-	emit contentArrived(username, content, len);
+
+	QByteArray qba((const char *)content, len);
+
+	QDataStream qds(qba);
+	quint16 dataLen;
+	quint64 frameNum;
+	quint64 frameSeq; 
+	bool EoF;
+	QByteArray packetData;
+
+	qds >> dataLen;
+	qds >> frameNum;
+	qds >> frameSeq;
+	qds >> EoF;
+	qds >> packetData;
+
+	if (dataLen != packetData.size()) {
+		fprintf(stderr, "binary encoding/decoding error! dataLen = %d, packetData.size() = %d.\n", dataLen, packetData.size());
+		abort();
+	}
+
+	QString username;
+	// no fragmentation
+	if (frameSeq == 0 && EoF) {
+		username = ms->getUsername();
+		emit contentArrived(username, (const unsigned char*)packetData.constData(), packetData.size());
+	}
+	else {
+		if (!EoF) {
+			if (!ms->frameBuffers.contains((long)frameNum)) {
+				struct buffer_t *buffer = (struct buffer_t *)calloc(1, sizeof (struct buffer_t));
+				buffer->buf = (unsigned char *)calloc(1, MAX_PACKET_SIZE * 50);
+				buffer->size = 0;
+				buffer->targetSize = -1;
+				ms->frameBuffers[(long)frameNum] = buffer;
+			}
+		}
+		struct buffer_t *buffer = ms->frameBuffers[(long)frameNum];
+		memcpy(buffer->buf + (int)frameSeq * MAX_PACKET_SIZE, packetData.constData(), dataLen);
+		buffer->size += dataLen;
+		if (EoF) {
+			buffer->targetSize = (int)frameSeq * MAX_PACKET_SIZE + dataLen;
+		}
+		// all pieces collected
+		if (buffer->targetSize == buffer->size) {
+			username = ms->getUsername();
+			unsigned char *buf = (unsigned char *)calloc(1, sizeof(char) * buffer->size);
+			memcpy(buf, buffer->buf, buffer->size);
+			emit contentArrived(username, buf, buffer->size);
+			free(buffer->buf);
+			free(buffer);
+			ms->frameBuffers.remove((long)frameNum);
+		}
+	}
 }
 
 enum ccn_upcall_res handleMediaContent(struct ccn_closure *selfp,

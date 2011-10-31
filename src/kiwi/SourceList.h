@@ -46,6 +46,12 @@ private:
 	bool bRunning;
 };
 
+struct buffer_t{
+	unsigned char *buf;
+	int size;
+	int targetSize;
+};
+
 class MediaSource: public QObject {
 	Q_OBJECT
 public:
@@ -81,7 +87,7 @@ private:
 	struct ccn_closure *fetchPipelineClosure;
 	bool streaming;
 	int consecutiveTimeouts;
-	QHash<long, unsigned char *> frameBuffers;
+	QHash<long, struct buffer_t *> frameBuffers;
 
 };
 

@@ -204,7 +204,7 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 		QDataStream qds(&qba, QIODevice::WriteOnly);
 		qds << (quint16) dataLen;
 		qds << (quint64) frameNum;
-		qds << (quint64) frameSeq;
+		qds << (quint16) frameSeq;
 		qds << EoF;
 
 		QByteArray packetData((const char *)data, dataLen);

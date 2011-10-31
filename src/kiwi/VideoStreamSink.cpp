@@ -22,6 +22,7 @@ VideoStreamSink::~VideoStreamSink() {
 void VideoStreamSink::decodeImage(QString name, const unsigned char *buf, int len) {
 	IplImage *decodedImage = decoder->decodeVideoFrame(buf, len);
 	emit imageDecoded(name, decodedImage);
+	free((void *)buf);
 }
 
 void VideoStreamSink::sourceLeft(QString name) {
