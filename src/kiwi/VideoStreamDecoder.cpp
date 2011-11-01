@@ -72,7 +72,14 @@ IplImage *VideoStreamDecoder::decodeVideoFrame(const unsigned char *buf, int siz
 	IplImage *image = NULL;
 	int decodedFrameSize = 0;
 
-	int res = avcodec_decode_video(codecContext, decodeFrame, &decodedFrameSize, buf, size);
+	// use the new API instead
+	AVPacket avpkt;
+	av_init_packet(&avpkt);
+	avpkt.data = (uint8_t *)buf;
+	avpkt.size = size;
+	avpkt.flags = AV_PKT_FLAG_KEY;
+	int res = avcodec_decode_video2(codecContext, decodeFrame, &decodedFrameSize, &avpkt);
+	//int res = avcodec_decode_video(codecContext, decodeFrame, &decodedFrameSize, buf, size);
 	if (res < 0) {
 		fprintf(stderr, "Can not decode buffer\n");
 		return NULL;
