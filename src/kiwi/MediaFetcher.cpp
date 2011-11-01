@@ -97,6 +97,22 @@ void MediaFetcher::initStream()
     }
 }
 
+/*****************************************************
+ * The key point is to maintain a certain number of outstanding Interests.
+ * Check in a frequency higher than the data packets generation freqency,
+ * and if the outstanding Interests number is smaller than the threshold,
+ * then send a new Interest. Even though the Interests maybe consumed in
+ * a faster rate for a short time period (e.g. when a large frame is generated),
+ * overall, we can always keep up with Interests generation to make the pipe
+ * almost full. 
+ * This, combined with the consecutive timeouts detections,
+ * should make our MediaFetcher work with producer of various data packet
+ * generation rate (i.e. not strict requirement on data packet generation rate
+ * as it is in the audio fetching method TODO: update the audio fetching method),
+ * as long as the checking frequency is reasonably higher than the data packets
+ * generation frequency (a little higher is better to handle the bursty 
+ * data packets generation pattern.
+ *****************************************************/
 void MediaFetcher::fetch() {
 	QHash<QString, MediaSource *>::const_iterator it = sourceList->list.constBegin(); 	
 	while (it != sourceList->list.constEnd()) {
