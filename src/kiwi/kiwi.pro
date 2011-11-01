@@ -5,6 +5,10 @@ HEADERS = VideoWindow.h VideoStreamEncoder.h VideoStreamDecoder.h VideoStreamSou
 SOURCES =  main.cpp VideoWindow.cpp VideoStreamDecoder.cpp VideoStreamEncoder.cpp VideoStreamSource.cpp VideoStreamSink.cpp NdnHandler.cpp MediaFetcher.cpp SourceList.cpp
 RESOURCES = kiwi.qrc
 
+unix:!mac{
+	QMAKE_CXXFLAGS += -D__STDC_CONSTANT_MACROS
+}
+
 DIST *= kiwi.icns kiwi.svg
 
 QMAKE_LIBDIR *= /usr/local/lib /usr/lib
