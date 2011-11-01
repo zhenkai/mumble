@@ -271,6 +271,10 @@ SourceAnnouncer::SourceAnnouncer(QString confName, QString prefix) {
 }
 
 SourceAnnouncer::~SourceAnnouncer() {
+	leaving = true;
+	generateSourceInfo();
+	usleep(11000);
+	
 	bRunning = false;
 	if (isRunning())
 		wait();
@@ -346,7 +350,7 @@ void SourceAnnouncer::run() {
 	int res = 0;
 	while(res >= 0 && bRunning) {
 		res = ccn_run(nh->h, 0);
-		usleep(100000);
+		usleep(10000);
 	}
 }
 
