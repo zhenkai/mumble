@@ -165,7 +165,7 @@ void VideoStreamSource::readNdnParams() {
 
 }
 
-static FILE *fp = NULL;
+//static FILE *fp = NULL;
 
 void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len) {
 
@@ -180,9 +180,11 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 	int frameSeq = 0;
 	const unsigned char *data = buffer;
 
+/*
 	if (fp == NULL) {
 		fp = fopen("/tmp/rec", "w");
 	}
+	*/
 
 	while (len > 0) {
 		struct ccn_charbuf *signed_info = ccn_charbuf_create();
@@ -217,8 +219,8 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 		qds << EoF;
 		qds.writeRawData((const char *)data, dataLen);
 
-		QTime now = QTime::currentTime();
-		fprintf(fp, "%s: send %d bytes (%ld, %d)\n", now.toString("hh:mm:ss.zzz").toStdString().c_str(), dataLen,frameNum, frameSeq);
+		//QTime now = QTime::currentTime();
+		//fprintf(fp, "%s: send %d bytes (%ld, %d)\n", now.toString("hh:mm:ss.zzz").toStdString().c_str(), dataLen,frameNum, frameSeq);
 		struct ccn_charbuf *content = ccn_charbuf_create();
 		res = ccn_encode_ContentObject(content, path, signed_info, qba.constData(), qba.size(), NULL, nh->getPrivateKey());
 		if (res) {
