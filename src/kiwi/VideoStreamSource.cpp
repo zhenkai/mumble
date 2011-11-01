@@ -115,7 +115,9 @@ void VideoStreamSource::processFrame() {
 
 	cvReleaseImage(&currentFrame);
 	generateNdnContent(encodedFrame, frameSize);
-	emit imageCaptured("Me", encodedFrame, frameSize);
+	unsigned char *buf = (unsigned char *)calloc(1, sizeof(char) * frameSize);
+	memcpy(buf, encodedFrame, frameSize);
+	emit imageCaptured("Me", buf, frameSize);
 
 }
 
@@ -163,13 +165,7 @@ void VideoStreamSource::readNdnParams() {
 }
 
 void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len) {
-	struct ccn_charbuf *signed_info = ccn_charbuf_create();
-	int res = ccn_signed_info_create(signed_info, nh->getPublicKeyDigest(), nh->getPublicKeyDigestLength(), NULL, CCN_CONTENT_DATA, FRESHNESS, NULL, nh->keylocator);
-	if (res < 0) {
-		fprintf(stderr, "Failed to create signed_info\n");
-		abort();
-	}
-	
+
 	//   e.g. /ndn/ucla.edu/kiwi/video/2
 	/********************* 
 	Packet header
@@ -182,6 +178,12 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 	const unsigned char *data = buffer;
 
 	while (len > 0) {
+		struct ccn_charbuf *signed_info = ccn_charbuf_create();
+		int res = ccn_signed_info_create(signed_info, nh->getPublicKeyDigest(), nh->getPublicKeyDigestLength(), NULL, CCN_CONTENT_DATA, FRESHNESS, NULL, nh->keylocator);
+		if (res < 0) {
+			fprintf(stderr, "Failed to create signed_info\n");
+			abort();
+		}
 		struct ccn_charbuf *path = ccn_charbuf_create();
 		ccn_name_from_uri(path, namePrefix.toStdString().c_str());
 		ccn_name_append_str(path, username.toStdString().c_str());
@@ -206,9 +208,7 @@ void VideoStreamSource::generateNdnContent(const unsigned char *buffer, int len)
 		qds << (quint64) frameNum;
 		qds << (quint16) frameSeq;
 		qds << EoF;
-
-		QByteArray packetData((const char *)data, dataLen);
-		qds << packetData;
+		qds.writeRawData((const char *)data, dataLen);
 
 		struct ccn_charbuf *content = ccn_charbuf_create();
 		res = ccn_encode_ContentObject(content, path, signed_info, qba.constData(), qba.size(), NULL, nh->getPrivateKey());
