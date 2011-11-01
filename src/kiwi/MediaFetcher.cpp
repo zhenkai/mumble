@@ -230,7 +230,7 @@ void MediaFetcher::processContent(struct ccn_closure *selfp, struct ccn_upcall_i
 	quint64 frameNum;
 	quint16 frameSeq; 
 	bool EoF;
-	char array[1000];
+	char array[MAX_PACKET_SIZE];
 
 	qds >> dataLen;
 	qds >> frameNum;
