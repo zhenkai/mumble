@@ -61,7 +61,7 @@ AVStream *VideoStreamEncoder::createVideoStream(AVFormatContext *fmtContext) {
 
 	AVCodecContext *codecContext = stream->codec;
 	codecContext->codec_id = (CodecID) (ENCODING_CODEC);
-	codecContext->codec_type = CODEC_TYPE_VIDEO;
+	codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
 	codecContext->bit_rate = STREAM_BIT_RATE;
 	codecContext->width = videoWidth;
 	codecContext->height = videoHeight;
@@ -80,13 +80,13 @@ AVStream *VideoStreamEncoder::createVideoStream(AVFormatContext *fmtContext) {
 
 bool VideoStreamEncoder::initEncoder() {
 	av_register_all();
-	outputFormat = guess_format(ENCODING_STRING, NULL, NULL);
+	outputFormat = av_guess_format(ENCODING_STRING, NULL, NULL);
 	if (!outputFormat) {
 		fprintf(stderr, "Could not find suitable output format for %s\n", ENCODING_STRING);
 		return false;
 	}
 	outputFormat->video_codec = ENCODING_CODEC;
-	fmtContext = av_alloc_format_context();
+	fmtContext = avformat_alloc_context();
 	if (!fmtContext) {
 		fprintf(stderr, "Can not alloc format context\n");
 		return false;
