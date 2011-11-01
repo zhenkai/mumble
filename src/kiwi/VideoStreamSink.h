@@ -17,7 +17,6 @@ public:
 	virtual ~VideoStreamSink();
 
 private slots:
-	void decodeImage(QString, const unsigned char *buf, int len);
 	void sourceLeft(QString);
 	void sourceAdded(QString);
 	
@@ -25,12 +24,13 @@ signals:
 	void sourceNumChanged(QString, int);
 	void imageDecoded(QString, IplImage *);
 
+
 private:
-	// decode fetched media
-	VideoStreamDecoder *decoder;
-	// knows where to fetch media
-	SourceList *sourceList;
+
 	// fetch media from list
 	MediaFetcher *fetcher;
+public:
+	// knows where to fetch media
+	SourceList *sourceList;
 };
 #endif

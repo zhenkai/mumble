@@ -266,7 +266,8 @@ void MediaFetcher::processContent(struct ccn_closure *selfp, struct ccn_upcall_i
 		username = ms->getUsername();
 		unsigned char *buf = (unsigned char *)calloc(1, sizeof(char) * dataLen);
 		memcpy(buf, array, dataLen);
-		emit contentArrived(username, buf, dataLen);
+		//emit contentArrived(username, buf, dataLen);
+		ms->decodeImage(buf, dataLen);
 	}
 	else {
 		if (!ms->frameBuffers.contains((long)frameNum)) {
@@ -287,7 +288,8 @@ void MediaFetcher::processContent(struct ccn_closure *selfp, struct ccn_upcall_i
 			username = ms->getUsername();
 			unsigned char *buf = (unsigned char *)calloc(1, sizeof(char) * buffer->size);
 			memcpy(buf, buffer->buf, buffer->size);
-			emit contentArrived(username, buf, buffer->size);
+		//	emit contentArrived(username, buf, buffer->size);
+			ms->decodeImage(buf, buffer->size);
 			free(buffer->buf);
 			free(buffer);
 			ms->frameBuffers.remove((long)frameNum);

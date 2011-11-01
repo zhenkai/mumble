@@ -9,6 +9,9 @@
 #include <QtXml>
 #include <pthread.h>
 #include <poll.h>
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+#include "VideoStreamDecoder.h"
 
 class MediaSource;
 class MediaFetcher;
@@ -34,8 +37,10 @@ private:
 signals:
 	void mediaSourceLeft(QString);
 	void mediaSourceAdded(QString);
+	void mediaSourceImageDecoded(QString, IplImage *);
 public slots:
 	void alivenessTimerExpired(QString);
+	void imageDecoded(QString, IplImage *);
 private:
 	QString username;
 	NdnHandler *nh;
@@ -71,13 +76,16 @@ public:
 	void incTimeouts(){consecutiveTimeouts++;}
 	void resetTimeouts() {consecutiveTimeouts = 0;}
 	int getTimeouts() {return consecutiveTimeouts;}
+	void decodeImage(const unsigned char *buf, int len);
 	friend class MediaFetcher;
 signals:
 	void alivenessTimeout(QString);
+	void imageDecoded(QString, IplImage *);
 private slots:
 	void excludeNotNeeded();
 	void noLongerActive();
 private:
+	VideoStreamDecoder *decoder;
 	QString namePrefix;
 	QString username;
 	long seq;

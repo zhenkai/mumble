@@ -89,6 +89,10 @@ void SourceList::alivenessTimerExpired(QString username) {
 	emit mediaSourceLeft(username);
 }
 
+void SourceList::imageDecoded(QString name, IplImage *image) {
+	emit mediaSourceImageDecoded(name, image);
+}
+
 
 void SourceList::enumerate() {
     ccn_charbuf *path = NULL;
@@ -299,6 +303,7 @@ void SourceList::run() {
 }
 
 MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
+	decoder = new VideoStreamDecoder(BUF_SIZE);
 	largestSeenSeq = 0;
 	seq = 0;
 	needExclude = false;
@@ -315,6 +320,7 @@ MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
 	connect(freshnessTimer, SIGNAL(timeout()), this, SLOT(excludeNotNeeded()));
 	connect(alivenessTimer, SIGNAL(timeout()), this, SLOT(noLongerActive()));
 	connect(this, SIGNAL(alivenessTimeout(QString)), parent, SLOT(alivenessTimerExpired(QString)));
+	connect(this, SIGNAL(imageDecoded(QString, IplImage *)), parent, SLOT(imageDecoded(QString, IplImage *)));
 	fetchClosure = (struct ccn_closure *)calloc(1, sizeof(struct ccn_closure));
 	fetchClosure->data = this;
 	fetchClosure->p = NULL;
@@ -326,6 +332,8 @@ MediaSource::MediaSource(QObject *parent, QString prefix, QString username) {
 MediaSource::~MediaSource() {
 	if (fetchClosure != NULL)
 		free(fetchClosure);
+	if (decoder != NULL)
+		delete decoder;
 }
 
 void MediaSource::refreshReceived() {
@@ -346,6 +354,12 @@ void MediaSource::noLongerActive() {
 
 bool MediaSource::needSendInterest() {
 	return (largestSeenSeq + PENDING_INTEREST_NUM > seq);
+}
+
+void MediaSource::decodeImage(const unsigned char *buf, int len) {
+	IplImage *decodedImage = decoder->decodeVideoFrame(buf, len);
+	emit imageDecoded(username, decodedImage);
+	free((void *)buf);
 }
 
 static enum ccn_upcall_res handle_source_info_content(struct ccn_closure *selfp,
