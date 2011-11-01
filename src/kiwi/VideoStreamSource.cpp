@@ -113,12 +113,12 @@ void VideoStreamSource::processFrame() {
 	int frameSize = 0;
 	// do not free encodedFrame, as it is a pointer to the internal buffer of encoder
 	const unsigned char *encodedFrame = encoder->encodeVideoFrame(currentFrame, &frameSize);
-
-	cvReleaseImage(&currentFrame);
+	emit imageCaptured("Me", currentFrame);
+	//cvReleaseImage(&currentFrame);
 	generateNdnContent(encodedFrame, frameSize);
-	unsigned char *buf = (unsigned char *)calloc(1, sizeof(char) * frameSize);
-	memcpy(buf, encodedFrame, frameSize);
-	emit imageCaptured("Me", buf, frameSize);
+	//unsigned char *buf = (unsigned char *)calloc(1, sizeof(char) * frameSize);
+	//memcpy(buf, encodedFrame, frameSize);
+	//emit imageCaptured("Me", buf, frameSize);
 
 }
 

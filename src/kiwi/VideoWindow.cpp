@@ -19,7 +19,8 @@ VideoWindow::VideoWindow(): QDialog(0) {
 	sink = new VideoStreamSink();
 	connect(sink, SIGNAL(imageDecoded(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
 	connect(sink, SIGNAL(sourceNumChanged(QString, int)), this, SLOT(alterDisplayNumber(QString, int)));
-	connect(source, SIGNAL(imageCaptured(QString, const unsigned char *, int)), sink, SLOT(decodeImage(QString, const unsigned char *, int)));
+//	connect(source, SIGNAL(imageCaptured(QString, const unsigned char *, int)), sink, SLOT(decodeImage(QString, const unsigned char *, int)));
+	connect(source, SIGNAL(imageCaptured(QString, IplImage *)), this, SLOT(refreshImage(QString, IplImage *)));
 	alterDisplayNumber("Me", 1);
 }
 
