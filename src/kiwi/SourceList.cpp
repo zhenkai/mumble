@@ -113,10 +113,8 @@ void SourceList::enumerate() {
 		++it;
     }
 
-/*
 	QString username = getenv("KIWI_USERNAME");
 	toExclude.append(username);
-	*/
 
 	expressEnumInterest(path, toExclude);
 }
