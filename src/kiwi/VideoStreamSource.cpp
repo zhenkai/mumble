@@ -106,6 +106,9 @@ VideoStreamSource::~VideoStreamSource() {
 		delete nh;
 		nh = NULL;
 	}
+
+	if (sa != NULL)
+		delete sa;
 }
 
 void VideoStreamSource::processFrame() {
@@ -315,6 +318,7 @@ void SourceAnnouncer::generateSourceInfo() {
 		qsInfo.append("</prefix>");
 	} else {
 		qsInfo.append("<leave>true</leave>");
+		fprintf(stderr, "generating leave message\n");
 	}
 	qsInfo.append("</user>");
 
@@ -334,6 +338,9 @@ void SourceAnnouncer::generateSourceInfo() {
 	
 	res = ccn_encode_ContentObject(content, path, signed_info, buffer, strlen(buffer), NULL, nh->getPrivateKey());
 	ccn_put(nh->h, content->buf, content->length);
+	if (leaving) {
+		fprintf(stderr, "leave data outputed to ccnd\n");
+	}
 	
 	ccn_charbuf_destroy(&signed_info);
 	ccn_charbuf_destroy(&path);
