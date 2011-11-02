@@ -250,8 +250,10 @@ int SourceList::parseSourceInfoContent(const unsigned char *value, size_t len) {
 	if (!leaving && qPrefix == "")
 		return -1;
 	
-	if (leaving) 
+	if (leaving)  {
+		fprintf(stderr, "leaving message from %s received\n", username.toStdString().c_str());
 		removeMediaSource(username);
+	}
 	else
 		addMediaSource(username, qPrefix);
 

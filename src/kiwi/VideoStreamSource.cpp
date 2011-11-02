@@ -276,7 +276,7 @@ SourceAnnouncer::SourceAnnouncer(QString confName, QString prefix) {
 SourceAnnouncer::~SourceAnnouncer() {
 	leaving = true;
 	generateSourceInfo();
-	usleep(11000);
+	ccn_run(nh->h, 1);
 	
 	bRunning = false;
 	if (isRunning())
