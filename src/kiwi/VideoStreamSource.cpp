@@ -330,7 +330,13 @@ void SourceAnnouncer::generateSourceInfo() {
 	struct ccn_charbuf *content = ccn_charbuf_create();
 	
 	struct ccn_charbuf *signed_info = ccn_charbuf_create();
-	int res = ccn_signed_info_create(signed_info, nh->getPublicKeyDigest(), nh->getPublicKeyDigestLength(), NULL, CCN_CONTENT_DATA, FRESHNESS, NULL, nh->keylocator);
+	int freshness = 0;
+	if (leaving) {
+		freshness = FRESHNESS * 60;
+	} else
+		freshness = FRESHNESS;
+
+	int res = ccn_signed_info_create(signed_info, nh->getPublicKeyDigest(), nh->getPublicKeyDigestLength(), NULL, CCN_CONTENT_DATA, freshness, NULL, nh->keylocator);
 	if (res < 0) {
 		fprintf(stderr, "Failed to create signed_info\n");
 		abort();
