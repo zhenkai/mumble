@@ -22,13 +22,14 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 	pubConfList = new QTreeWidget;
 	pubConfList->setEnabled(false);
 	pubConfList->setRootIsDecorated(false);
-	pubConfList->setHeaderLabels(QStringList() << tr("")<<tr("")<<tr("")<<tr("Conference Name")<<tr("Organizer")<<tr("Contact"));
+	pubConfList->setHeaderLabels(QStringList() << tr("")<<tr("")<<tr("")<<tr("")<<tr("Conference Name")<<tr("Organizer")<<tr("Contact"));
 	
 	pubConfList->setColumnWidth(0, 25);
 	pubConfList->setColumnWidth(1, 25);
 	pubConfList->setColumnWidth(2, 25);
-	pubConfList->setColumnWidth(3, 200);
-	pubConfList->setColumnWidth(4, 150);
+	pubConfList->setColumnWidth(3, 25);
+	pubConfList->setColumnWidth(4, 200);
+	pubConfList->setColumnWidth(5, 150);
 
 	confDesc = new QTextEdit;
 	confDesc->setReadOnly(true);
@@ -374,7 +375,7 @@ void MainWindow::addConferenceToList(Announcement *announce) {
 
 	itemToAnnouncement.insert(item, announce);
 	
-	item->setText(3, announce->getConfName());
+	item->setText(4, announce->getConfName());
 	QString oDesc = announce->getDesc();
 	QString date = announce->getDate().toString("ddd MMM d"); 
 	QString start = announce->getTime().toString("h:mm AP"); 
@@ -383,10 +384,10 @@ void MainWindow::addConferenceToList(Announcement *announce) {
 	
 	QString desc = QString("Date: %1\nTime: %2\nDuration: %3 Hours %4 Minutes\n-------------------------------\n%5").arg(date).arg(start).arg(hours).arg(minutes).arg(oDesc);
 
-	item->setData(3, Qt::UserRole, desc);
+	item->setData(4, Qt::UserRole, desc);
 	
-	item->setText(4, announce->getOrganizer());
-	item->setText(5, announce->getEmail());
+	item->setText(5, announce->getOrganizer());
+	item->setText(6, announce->getEmail());
 
 
 	if (announce->getOwner() ) {
@@ -409,7 +410,10 @@ void MainWindow::addConferenceToList(Announcement *announce) {
 		QPixmap video(":/images/video.png");
 		item->setIcon(2, video);
 	}
-
+	if (announce->getText()) {
+		QPixmap text(":/images/text.png");
+		item->setIcon(3, text);
+	}
 
 	pubConfList->addTopLevelItem(item);
 	if (!pubConfList->currentItem()) {

@@ -36,9 +36,12 @@ void ConfWizard::accept() {
 	a->setOrganizer(organizer);
 	QString email = field("email").toString();
 	a->setEmail(email);
-	a->setAudio(true);
+	bool audio = field("audio").toBool();
+	a->setAudio(audio);
 	bool video = field("video").toBool();
 	a->setVideo(video);
+	bool text = field("text").toBool();
+	a->setText(text);
 	QString desc = field("confDesc").toString();
 	a->setDesc(desc);
 	QDate date = field("date").toDateTime().date();
@@ -163,6 +166,8 @@ ConfigPage::ConfigPage(QWidget *parent)
 	emailLabel->setBuddy(emailLineEdit);
 
 	videoCheckBox = new QCheckBox(tr("Enable Video"));
+	audioCheckBox = new QCheckBox(tr("Enable Audio"));
+	textCheckBox = new QCheckBox(tr("Enable Text"));
 	privateConfBox = new QCheckBox(tr("Private Conference"));
 
 	descLabel = new QLabel(tr("Conference &Description"));
@@ -202,6 +207,8 @@ ConfigPage::ConfigPage(QWidget *parent)
 	registerField("organizer*", organizerLineEdit); // mandatory
 	registerField("email", emailLineEdit);
 	registerField("video", videoCheckBox);
+	registerField("audio", audioCheckBox);
+	registerField("text", textCheckBox);
 	registerField("confDesc", descTextEdit, "plainText");
 	registerField("date", date);
 	registerField("time", time);
@@ -217,13 +224,15 @@ ConfigPage::ConfigPage(QWidget *parent)
 	layout->addWidget(emailLabel, 2, 0);
 	layout->addWidget(emailLineEdit, 2, 1);
 	layout->addWidget(videoCheckBox, 3, 0);
-	layout->addWidget(privateConfBox, 3, 1);
-	layout->addWidget(dateLabel, 4, 0);
-	layout->addLayout(dtLayout, 4, 1);
-	layout->addWidget(durationLabel, 5, 0);
-	layout->addLayout(durationLayout, 5, 1);
-	layout->addWidget(descLabel, 6, 0, 1, 2);
-	layout->addWidget(descTextEdit, 7, 0, 3, 2);
+	layout->addWidget(audioCheckBox, 3, 1);
+	layout->addWidget(textCheckBox, 4, 0);
+	layout->addWidget(privateConfBox, 4, 1);
+	layout->addWidget(dateLabel, 5, 0);
+	layout->addLayout(dtLayout, 5, 1);
+	layout->addWidget(durationLabel, 6, 0);
+	layout->addLayout(durationLayout, 6, 1);
+	layout->addWidget(descLabel, 7, 0, 1, 2);
+	layout->addWidget(descTextEdit, 8, 0, 3, 2);
 
 	setLayout(layout);
 
