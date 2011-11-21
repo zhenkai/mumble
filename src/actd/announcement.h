@@ -27,6 +27,7 @@ class Announcement
 		bool own;
 		bool audio;
 		bool video;
+		bool text;
 		QString desc;
 		QDate date;
 		QTime time;
@@ -49,6 +50,7 @@ class Announcement
 		QString getUuid() {return uuid; }
 		bool getAudio() { return audio; }
 		bool getVideo() { return video; }
+		bool getText() { return text; }
 		bool getOwner() { return own; }
 		QString getDesc() { return desc; }
 		QDate getDate() { return date; }
@@ -69,6 +71,7 @@ class Announcement
 		void setOwner(bool own) { this->own = own; }
 		void setAudio(bool audio) { this->audio = audio; }
 		void setVideo(bool video) { this->video = video; }
+		void setText(bool text) { this->text = text; }
 		void setDesc(QString desc) { this->desc = desc; }
 		void setDate(QDate date) { this->date = date; }
 		void setTime(QTime time) { this->time = time; }

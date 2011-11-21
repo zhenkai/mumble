@@ -63,6 +63,8 @@ private:
 	QLineEdit *organizerLineEdit;
 	QLineEdit *emailLineEdit;
 	QCheckBox *videoCheckBox;
+	QCheckBox *audioCheckBox;
+	QCheckBox *textCheckBox;
 	QCheckBox *privateConfBox;
 	QTextEdit *descTextEdit;
 	QDateTimeEdit *date;
