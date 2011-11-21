@@ -74,11 +74,13 @@ private:
 	QString prefix;
 	QString audioPath;
 	QString mumblePath;
+	QString kiwiPath;
 	
 	SessionEnum * sd;
 
 	QProcess *audioProcess;
 	QProcess *mumbleProcess;
+	QProcess *kiwiProcess;
 
 	QString binaryPath;
 

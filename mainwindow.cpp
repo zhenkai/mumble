@@ -97,6 +97,7 @@ MainWindow::MainWindow(char *argv[], QWidget *parent)
 
 	audioProcess = NULL;
 	mumbleProcess = NULL;
+	kiwiProcess = NULL;
 	
 }
 
@@ -210,12 +211,7 @@ void MainWindow::joinConference() {
 	}
 
 	QString confName = current->text(3);
-	bool audio = true;
-	bool video = false;
-	if (video) {
-		// no video yet; do nothing
-	}
-	if (audio) {
+	if (true) {
 
 
 		QString qsConfig = "<config><prefix>" + prefix + "</prefix><confName>";
@@ -261,29 +257,54 @@ void MainWindow::joinConference() {
 		config.flush();
 		config.close();
 
-		audioProcess = new QProcess(this);
-		mumbleProcess = new QProcess(this);
+		if (a->getAudio()) {
+			audioProcess = new QProcess(this);
+			mumbleProcess = new QProcess(this);
+
 #ifdef QT_NO_DEBUG
 #ifdef __APPLE__
-		audioPath = binaryPath + "/" + "ndn-murmurd";
-		mumblePath = binaryPath + "/" + "Mumble";
+			audioPath = binaryPath + "/" + "ndn-murmurd";
+			mumblePath = binaryPath + "/" + "Mumble";
+			kiwiPath = binaryPath + "/" + "kiwi";
 #else
-		audioPath = "ndn-murmurd";
-		mumblePath = "ndn-mumble";
+			audioPath = "ndn-murmurd";
+			mumblePath = "ndn-mumble";
+			kiwiPath = "kiwi";
 #endif
 #else // QT_NO_DEBUG
 #ifdef __APPLE__
-		audioPath = binaryPath + "/../../../" + "ndn-murmurd";
-		mumblePath = binaryPath + "/../../../Mumble.app/Contents/MacOS/" + "Mumble";
+			audioPath = binaryPath + "/../../../" + "ndn-murmurd";
+			mumblePath = binaryPath + "/../../../Mumble.app/Contents/MacOS/" + "Mumble";
+			kiwiPath = binaryPath + "/../../../kiwi.app/Contents/MacOS/kiwi";
 #else
-		audioPath = binaryPath + "/ndn-murmurd";
-		mumblePath = binaryPath + "/ndn-mumble";
+			audioPath = binaryPath + "/ndn-murmurd";
+			mumblePath = binaryPath + "/ndn-mumble";
+			kiwiPath = binaryPath + "kiwi";
 #endif
 #endif // QT_NO_DEBUG
 
 		
-		audioProcess->start(audioPath);
-		mumbleProcess->start(mumblePath);
+			audioProcess->start(audioPath);
+			mumbleProcess->start(mumblePath);
+
+		}
+		if (a->getVideo()) {
+			kiwiProcess = new QProcess(this);
+#ifdef QT_NO_DEBUG
+#ifdef __APPLE__
+			kiwiPath = binaryPath + "/" + "kiwi";
+#else
+			kiwiPath = "kiwi";
+#endif
+#else // QT_NO_DEBUG
+#ifdef __APPLE__
+			kiwiPath = binaryPath + "/../../../kiwi.app/Contents/MacOS/kiwi";
+#else
+			kiwiPath = binaryPath + "kiwi";
+#endif
+#endif // QT_NO_DEBUG
+			kiwiProcess->start(kiwiPath);
+		}
 	}
 }
 
@@ -298,6 +319,11 @@ void MainWindow::mumbleCleanup() {
 		audioProcess->kill();
 		audioProcess->deleteLater();
 		audioProcess = NULL;
+	}
+	if (kiwiProcess != NULL) {
+		kiwiProcess->kill();
+		kiwiProcess->deleteLater();
+		kiwiProcess = NULL;
 	}
 
 }
