@@ -162,10 +162,8 @@ ConfigPage::ConfigPage(QWidget *parent)
 	emailLineEdit = new QLineEdit;
 	emailLabel->setBuddy(emailLineEdit);
 
-	// disable video for now
 	videoCheckBox = new QCheckBox(tr("Enable Video"));
 	privateConfBox = new QCheckBox(tr("Private Conference"));
-	videoCheckBox->setEnabled(false);
 
 	descLabel = new QLabel(tr("Conference &Description"));
 	descTextEdit = new QTextEdit;
