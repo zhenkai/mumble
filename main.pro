@@ -51,10 +51,6 @@ CONFIG *= ordered debug_and_release no-11x no-plugins no-g15 no-overlay
   SUBDIRS *= src/murmur
 }
 
-!CONFIG(no-actd) {
-  SUBDIRS *= src/actd
-}
-
 DIST=LICENSE INSTALL README README.Linux CHANGES
 
 include(scripts/scripts.pro)
